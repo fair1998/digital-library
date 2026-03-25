@@ -5,6 +5,18 @@ from django.utils.html import format_html
 from .models import Author, Book, BookAuthor, BookCategory, Category, Publisher
 
 
+class BookAuthorInline(admin.TabularInline):
+    model = BookAuthor
+    extra = 1
+    autocomplete_fields = ("author",)
+
+
+class BookCategoryInline(admin.TabularInline):
+    model = BookCategory
+    extra = 1
+    autocomplete_fields = ("category",)
+
+
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "books_count", "created_at", "updated_at")
@@ -94,10 +106,11 @@ class BookAdmin(admin.ModelAdmin):
         "publisher__name",
     )
     list_filter = ("publish_year", "publisher", "available_quantity", "authors", "categories")
-    filter_horizontal = ("authors", "categories")
+    autocomplete_fields = ("publisher",)
     ordering = ("-created_at",)
     list_select_related = ("publisher",)
     list_per_page = 20
+    inlines = [BookAuthorInline, BookCategoryInline]
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

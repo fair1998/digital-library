@@ -29,6 +29,8 @@
 - ✅ Configured list_display, search_fields, list_filter
 - ✅ Admin interface พร้อมใช้จัดการข้อมูลหนังสือ
 - ✅ Cover image preview ใน admin
+- ✅ **Fixed:** ใช้ Inline Admin สำหรับ Authors และ Categories (เพราะใช้ through model)
+- ✅ **UX:** เพิ่มปุ่ม "+" สำหรับเพิ่ม Author/Category/Publisher ได้ทันที (autocomplete_fields ใน inlines)
 
 ### Phase 3: Reservation System Data Layer
 

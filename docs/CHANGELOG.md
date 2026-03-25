@@ -1,5 +1,80 @@
 # Changelog - Digital Library System
 
+## [Critical Fix] - 2026-03-25
+
+### 🔧 Book Admin - Authors และ Categories Fields Missing
+
+**Issue:** ฟอร์มเพิ่ม Book ไม่แสดง fields สำหรับเลือก Authors และ Categories เลย
+
+**Root Cause:**
+
+- Book model ใช้ ManyToMany แบบมี intermediate model (`through="BookAuthor"` และ `through="BookCategory"`)
+- Django ไม่สามารถสร้าง form fields อัตโนมัติสำหรับ ManyToMany ที่มี `through` model
+- การใช้ `autocomplete_fields = ("authors", "categories")` จะไม่ทำงาน เพราะ fields เหล่านี้ไม่สามารถแก้ไขได้โดยตรง
+
+**Solution:**
+
+- สร้าง `BookAuthorInline` และ `BookCategoryInline` แบบ TabularInline
+- เพิ่ม `inlines = [BookAuthorInline, BookCategoryInline]` ใน BookAdmin
+- ใช้ `autocomplete_fields` ภายใน inline เพื่อมีปุ่ม "+" สำหรับเพิ่ม Author/Category ใหม่
+
+**Code Changes:**
+
+```python
+# เพิ่ม Inline classes
+class BookAuthorInline(admin.TabularInline):
+    model = BookAuthor
+    extra = 1
+    autocomplete_fields = ("author",)
+
+class BookCategoryInline(admin.TabularInline):
+    model = BookCategory
+    extra = 1
+    autocomplete_fields = ("category",)
+
+# อัปเดต BookAdmin
+class BookAdmin(admin.ModelAdmin):
+    autocomplete_fields = ("publisher",)  # เหลือแค่ publisher
+    inlines = [BookAuthorInline, BookCategoryInline]  # เพิ่ม inlines
+```
+
+**Benefits:**
+
+- ✅ แสดง Authors และ Categories ในฟอร์ม Book แล้ว
+- ✅ สามารถเพิ่ม/ลบ authors และ categories แบบ inline
+- ✅ มีปุ่ม "+" สำหรับเพิ่ม Author/Category ใหม่ได้ทันที
+- ✅ UI แบบตาราง เห็นภาพรวมได้ชัดเจน
+
+---
+
+## [Improvement] - 2026-03-25
+
+### 🔧 Book Admin UX Enhancement
+
+**Issue:** เมื่อเพิ่ม Book ใหม่ใน Django Admin ไม่มีปุ่ม "+" สำหรับเพิ่ม Author, Category, หรือ Publisher ใหม่ได้ทันที ต้องออกไปเพิ่มที่หน้าอื่นก่อน
+
+**Root Cause:** การใช้ `filter_horizontal` widget สำหรับ ManyToMany fields (authors, categories) ไม่รองรับการเพิ่มรายการใหม่แบบ inline
+
+**Solution:**
+
+- เปลี่ยนจาก `filter_horizontal = ("authors", "categories")`
+- เป็น `autocomplete_fields = ("authors", "categories", "publisher")`
+
+**Benefits:**
+
+- ✅ มีปุ่ม "+" ข้างๆ dropdown ทุกฟิลด์
+- ✅ สามารถเพิ่ม Author/Category/Publisher ใหม่ได้ทันทีโดยไม่ต้องออกจากหน้า Book
+- ✅ UI แบบ autocomplete ค้นหาง่าย รองรับข้อมูลเยอะ
+- ✅ ลด steps ในการเพิ่มหนังสือใหม่
+
+**Technical Details:**
+
+- `autocomplete_fields` ใช้งานได้เพราะ AuthorAdmin, CategoryAdmin, และ PublisherAdmin มี `search_fields` กำหนดไว้แล้ว
+- Django จะสร้าง AJAX endpoint อัตโนมัติสำหรับ autocomplete search
+- Publisher ถูกเพิ่มเข้ามาด้วยเพื่อความสมบูรณ์
+
+---
+
 ## [Phase 7 Complete] - 2026-03-25
 
 ### ✅ Phase 7: Fine System
