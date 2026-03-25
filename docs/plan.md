@@ -382,15 +382,24 @@
   - เปลี่ยน batch status เป็น cancelled
   - เปลี่ยน reservation items เป็น cancelled
   - ถ้าเคยลดจำนวนแล้ว ต้องคืนจำนวนอย่างระมัดระวังตามเงื่อนไขจริง
+- [x] **เพิ่ม: Admin สามารถสร้างการจองแทน user ได้**
+  - เปิด has_add_permission สำหรับ ReservationBatch และ Reservation
+  - เพิ่ม save_model override เพื่อตั้งค่า expires_at อัตโนมัติ
+  - เพิ่ม has_delete_permission สำหรับป้องกันการลบ batch
+  - ปรับ readonly_fields ให้ admin เลือก user และ book ได้
 
 ## Deliverables
 
 - Admin ตรวจสอบและจัดการการจองได้
+- **Admin สร้างการจองแทน user ได้** (เพิ่มใหม่)
 
 ## Acceptance Criteria
 
 - Admin ยืนยันการจองได้
 - Admin ยกเลิกการจองได้
+- **Admin สร้าง reservation batch และเลือก user ได้**
+- **Admin เพิ่ม reservation items (หนังสือ) ได้**
+- **ระบบตั้งค่า expires_at อัตโนมัติ (3 วัน)**
 - จำนวน available_quantity สอดคล้องกับสถานะการจอง
 
 ## Status: ✅ COMPLETED

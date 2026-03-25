@@ -1,5 +1,58 @@
 # Changelog - Digital Library System
 
+## [Enhancement] - 2026-03-25
+
+### ✨ Admin Can Create Reservations for Users
+
+**Issue:** Admin ไม่สามารถสร้างการจองแทน user ได้ เพราะ `has_add_permission` return False
+
+**Changes:**
+
+- เปลี่ยน `ReservationBatchAdmin.has_add_permission()` จาก `return False` เป็น `return True`
+- เปลี่ยน `ReservationAdmin.has_add_permission()` จาก `return False` เป็น `return True`
+- **เปลี่ยน `ReservationInline.has_add_permission()` เป็น `return True` เพื่อให้เพิ่มหนังสือได้ใน Reservation Batch โดยตรง**
+- **ลบ `'book'` ออกจาก `readonly_fields` ใน ReservationInline เพื่อให้เลือกหนังสือได้**
+- **เพิ่ม `autocomplete_fields = ['book']` ใน ReservationInline สำหรับค้นหาหนังสือได้ง่าย**
+- **เปลี่ยน `extra = 1` ใน ReservationInline เพื่อแสดง empty form 1 แถว**
+- เพิ่ม `has_delete_permission` ใน ReservationBatchAdmin (return False)
+- เพิ่ม `save_model` override ใน ReservationBatchAdmin เพื่อตั้งค่า `expires_at` อัตโนมัติ
+- **สร้าง config `RESERVATION_EXPIRY_DAYS = 3` ใน settings.py เพื่อง่ายต่อ maintenance และ reuse ได้**
+- ปรับ readonly_fields ใน ReservationAdmin: ลบ `reservation_batch` และ `book` ออกเพื่อให้ admin เลือกได้
+- เพิ่ม import `timezone`, `timedelta`, `settings` และ `Book` model
+
+**Workflow:**
+
+1. Admin ไปทื่ Reservation Batches → Add Reservation Batch
+2. เลือก User ที่ต้องการจองให้
+3. **เพิ่มหนังสือที่ต้องการจองได้ทันทีใน Inline table ข้างล่าง** (คลิกเลือก Book จาก dropdown)
+4. กด Save (ระบบจะตั้ง expires_at อัตโนมัติ)
+5. เมื่อพร้อม ใช้ admin action "Confirm selected reservations" เพื่อยืนยันการจอง
+
+**ทางเลือก (ถ้าไม่อยากใช้ Inline):**
+
+- ไปที่ Reservations → Add Reservation → เลือก Batch และ Book
+
+**Benefits:**
+
+- ✅ Admin สามารถสร้างการจองแทน user ได้ (use case: user โทรมาจอง, walk-in reservation)
+- ✅ **สามารถเพิ่มหนังสือได้ทันทีในหน้า Reservation Batch เดียว ไม่ต้องไปหน้าอื่น**
+- ✅ **ใช้ autocomplete ค้นหาหนังสือได้ง่ายและรวดเร็ว**
+- ✅ ระบบตั้งค่า expires_at อัตโนมัติ (3 วัน)
+- ✅ **จำนวนวันหมดอายุอยู่ใน settings.py เพื่อง่ายต่อ maintenance และ reuse**
+- ✅ Admin ยังคงใช้ admin action ยืนยัน/ยกเลิกการจองได้เหมือนเดิม
+- ✅ ป้องกันการลบ reservation batch (ใช้ cancel แทน)
+
+**Technical Details:**
+
+- `save_model` ตรวจสอบว่าเป็นการสร้างใหม่ (`not change`) ก่อนตั้งค่า expires_at
+- **ใช้ `getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)` เพื่อดึงค่า config จาก settings และมี fallback เป็น 3**
+- **ReservationInline ใช้ `autocomplete_fields` เพื่อค้นหาหนังสือแบบ realtime**
+- **ตั้ง `extra = 1` เพื่อแสดง empty form 1 แถวสำหรับเพิ่มหนังสือ**
+- `has_delete_permission` return False เพื่อบังคับใช้ workflow cancel
+- Validation เดิมยังคงทำงาน (ตรวจสอบ available_quantity ก่อน confirm)
+
+---
+
 ## [Critical Fix] - 2026-03-25
 
 ### 🔧 Book Admin - Authors และ Categories Fields Missing

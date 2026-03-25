@@ -1,20 +1,25 @@
 from django.contrib import admin
 from django.contrib import messages
 from django.db import transaction
+from django.utils import timezone
+from django.conf import settings
+from datetime import timedelta
 from .models import ReservationBatch, Reservation
+from books.models import Book
 
 
 class ReservationInline(admin.TabularInline):
     model = Reservation
-    extra = 0
+    extra = 1
     can_delete = False
     fields = ('book', 'status', 'created_at', 'updated_at')
-    readonly_fields = ('book', 'created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at')
+    autocomplete_fields = ['book']
     show_change_link = True
     
     def has_add_permission(self, request, obj=None):
-        # ห้ามเพิ่มหนังสือใหม่ใน reservation batch
-        return False
+        # อนุญาตให้เพิ่มหนังสือใน reservation batch
+        return True
 
 
 @admin.register(ReservationBatch)
@@ -26,7 +31,7 @@ class ReservationBatchAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     list_per_page = 20
     inlines = [ReservationInline]
-    readonly_fields = ('user', 'expires_at', 'created_at', 'updated_at', 'reservation_count')
+    readonly_fields = ('expires_at', 'created_at', 'updated_at', 'reservation_count')
     actions = ['confirm_reservations', 'cancel_reservations']
     autocomplete_fields = ['user']
     
@@ -45,8 +50,8 @@ class ReservationBatchAdmin(admin.ModelAdmin):
     )
     
     def has_add_permission(self, request):
-        # ห้าม admin สร้าง reservation batch ใหม่
-        return False
+        # อนุญาตให้ admin สร้าง reservation batch แทน user ได้
+        return True
     
     def has_delete_permission(self, request, obj=None):
         # ห้ามลบ reservation batch (ใช้ status cancelled แทน)
@@ -55,6 +60,13 @@ class ReservationBatchAdmin(admin.ModelAdmin):
     def reservation_count(self, obj):
         return obj.reservations.count()
     reservation_count.short_description = 'Books Reserved'
+    
+    def save_model(self, request, obj, form, change):
+        """Override save_model เพื่อตั้งค่า expires_at อัตโนมัติเมื่อสร้างใหม่"""
+        if not change:  # ถ้าเป็นการสร้างใหม่
+            expiry_days = getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)
+            obj.expires_at = timezone.now() + timedelta(days=expiry_days)
+        super().save_model(request, obj, form, change)
     
     @admin.action(description='ยืนยันการจอง (Confirm selected reservations)')
     def confirm_reservations(self, request, queryset):
@@ -188,7 +200,7 @@ class ReservationAdmin(admin.ModelAdmin):
     list_select_related = ('book', 'reservation_batch', 'reservation_batch__user')
     autocomplete_fields = ['book', 'reservation_batch']
     list_per_page = 20
-    readonly_fields = ('reservation_batch', 'book', 'created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at')
     
     fieldsets = (
         ('Reservation Details', {
@@ -205,8 +217,8 @@ class ReservationAdmin(admin.ModelAdmin):
     )
     
     def has_add_permission(self, request):
-        # ห้าม admin สร้าง reservation ใหม่
-        return False
+        # อนุญาตให้ admin สร้าง reservation ได้
+        return True
     
     def has_delete_permission(self, request, obj=None):
         # ห้ามลบ reservation (ใช้ status cancelled แทน)

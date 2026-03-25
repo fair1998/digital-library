@@ -553,6 +553,7 @@ Digital Library System
 - ดูรายการจองทั้งหมด
 - ดูว่าใครจองอะไร
 - ดูวันหมดอายุของการจอง
+- **สร้างการจองแทน user ได้** (เพิ่มใหม่)
 - ยืนยันการจอง
 - ยกเลิกการจอง
 
@@ -568,6 +569,24 @@ Digital Library System
 - การยืนยันควรเปลี่ยนสถานะทั้ง batch และ item
 - การยกเลิกควรเปลี่ยนสถานะทั้ง batch และ item
 - การยืนยัน/ยกเลิกต้องสอดคล้องกับจำนวน available_quantity
+- **Admin สามารถสร้าง reservation batch ใหม่และเลือก user ได้**
+- **ระบบจะตั้งค่า expires_at อัตโนมัติเป็น 3 วันจากวันที่สร้าง**
+
+### Workflow สำหรับ Admin สร้างการจองแทน User
+
+1. Admin ไปที่ Django Admin → Reservation Batches → Add Reservation Batch
+2. เลือก User ที่ต้องการจองให้
+3. **เพิ่มหนังสือที่ต้องการจองได้ทันทีใน Inline table ข้างล่าง** (autocomplete search)
+4. กด Save (ระบบตั้ง expires_at อัตโนมัติ)
+5. ใช้ admin action "Confirm selected reservations" เพื่อยืนยันการจอง
+
+**ทางเลือก (ถ้าไม่อยากใช้ Inline):**
+
+- ไปที่ Reservations → Add Reservation → เลือก Batch และ Book
+
+### Configuration
+
+- `RESERVATION_EXPIRY_DAYS` (ใน settings.py) = จำนวนวันที่การจองจะหมดอายุ (default: 3 วัน)
 
 ---
 
