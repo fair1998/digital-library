@@ -1,5 +1,72 @@
 # Changelog - Digital Library System
 
+## [Phase 4 Complete] - 2026-03-25
+
+### ✅ Phase 4: Reservation Admin Workflow
+
+**Status:** COMPLETED
+
+#### What was done:
+
+- ลงทะเบียน `ReservationBatch` และ `Reservation` models ใน Django Admin
+- ปรับปรุง `ReservationBatchAdmin`:
+  - เพิ่ม list_display: id, user, status, expires_at, reservation_count, timestamps
+  - เพิ่ม list_filter: status, expires_at, created_at
+  - เพิ่ม search_fields: username, email, first_name, last_name
+  - เพิ่ม inline display สำหรับ reservations
+  - เพิ่ม admin actions: confirm_reservations, cancel_reservations
+- ปรับปรุง `ReservationAdmin`:
+  - เพิ่ม list_display: id, book, batch_id, batch_user, batch_status, status, timestamps
+  - เพิ่ม list_filter: status, created_at, batch status
+  - เพิ่ม search_fields: book title, user username/email
+  - เพิ่ม list_select_related เพื่อ optimize queries
+- สร้าง admin action `confirm_reservations`:
+  - ตรวจสอบว่า batch สามารถยืนยันได้ (pending, ไม่หมดอายุ)
+  - เปลี่ยน batch status เป็น confirmed
+  - เปลี่ยน reservation items ทั้งหมดเป็น confirmed
+  - ลด `books.available_quantity` สำหรับแต่ละเล่ม
+  - ใช้ `transaction.atomic()` เพื่อป้องกันข้อมูลไม่สอดคล้อง
+  - แสดง error/warning messages ที่ชัดเจน
+- สร้าง admin action `cancel_reservations`:
+  - ตรวจสอบว่า batch สามารถยกเลิกได้ (pending หรือ confirmed)
+  - เปลี่ยน batch status เป็น cancelled
+  - เปลี่ยน reservation items ทั้งหมดเป็น cancelled
+  - คืน `books.available_quantity` สำหรับ items ที่เคย confirmed
+  - ใช้ `transaction.atomic()` เพื่อป้องกันข้อมูลไม่สอดคล้อง
+  - แสดง error/warning messages ที่ชัดเจน
+
+#### Business Logic Implemented:
+
+- **Confirm Workflow:**
+  - ตรวจสอบ available_quantity ก่อนยืนยันการจอง
+  - อัปเดต status ของ batch และ items พร้อมกัน
+  - ลด available_quantity อัตโนมัติเมื่อยืนยัน
+  - ป้องกันการยืนยันซ้ำหรือการยืนยันที่หมดอายุ
+
+- **Cancel Workflow:**
+  - รองรับการยกเลิกทั้ง pending และ confirmed status
+  - คืน available_quantity เฉพาะ items ที่เคย confirmed
+  - ป้องกันข้อมูล available_quantity ไม่สอดคล้อง
+  - อัปเดต status ของ batch และ items พร้อมกัน
+
+#### Error Handling:
+
+- ใช้ try-except เพื่อจัดการ errors ในแต่ละ batch
+- แสดง error messages แบบ batch-by-batch
+- แสดงสรุปผลรวม (success/failed counts)
+- ป้องกันการ confirm เมื่อหนังสือไม่พอ
+
+#### Deliverables:
+
+- ✅ Admin สามารถดูรายการจองทั้งหมด
+- ✅ Admin สามารถค้นหาตาม username หรือชื่อหนังสือ
+- ✅ Admin สามารถกรองตาม status
+- ✅ Admin สามารถยืนยันการจองได้
+- ✅ Admin สามารถยกเลิกการจองได้
+- ✅ จำนวน available_quantity สอดคล้องกับสถานะการจอง
+
+---
+
 ## [Phase 3 Complete] - 2026-03-25
 
 ### ✅ Phase 3: Reservation System Data Layer

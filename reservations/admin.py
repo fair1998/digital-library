@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib import messages
+from django.db import transaction
 from .models import ReservationBatch, Reservation
 
 
@@ -25,6 +27,7 @@ class ReservationBatchAdmin(admin.ModelAdmin):
     list_per_page = 20
     inlines = [ReservationInline]
     readonly_fields = ('user', 'expires_at', 'created_at', 'updated_at', 'reservation_count')
+    actions = ['confirm_reservations', 'cancel_reservations']
     
     fieldsets = (
         ('Reservation Information', {
@@ -51,6 +54,127 @@ class ReservationBatchAdmin(admin.ModelAdmin):
     def reservation_count(self, obj):
         return obj.reservations.count()
     reservation_count.short_description = 'Books Reserved'
+    
+    @admin.action(description='ยืนยันการจอง (Confirm selected reservations)')
+    def confirm_reservations(self, request, queryset):
+        """Confirm selected reservation batches and update book availability."""
+        confirmed_count = 0
+        failed_count = 0
+        
+        for batch in queryset:
+            if not batch.can_be_confirmed():
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f'Batch #{batch.id} cannot be confirmed (status: {batch.status}, expired: {batch.is_expired()})',
+                    level=messages.WARNING
+                )
+                continue
+            
+            try:
+                with transaction.atomic():
+                    # Check availability for all items first
+                    for reservation in batch.reservations.all():
+                        if reservation.book.available_quantity <= 0:
+                            raise ValueError(f'Book "{reservation.book.title}" is not available')
+                    
+                    # Update batch status
+                    batch.status = 'confirmed'
+                    batch.save()
+                    
+                    # Update each reservation and decrease book quantity
+                    for reservation in batch.reservations.all():
+                        reservation.status = 'confirmed'
+                        reservation.save()
+                        
+                        # Decrease available quantity
+                        book = reservation.book
+                        book.available_quantity -= 1
+                        book.save()
+                    
+                    confirmed_count += 1
+                    
+            except Exception as e:
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f'Error confirming Batch #{batch.id}: {str(e)}',
+                    level=messages.ERROR
+                )
+        
+        if confirmed_count > 0:
+            self.message_user(
+                request,
+                f'Successfully confirmed {confirmed_count} reservation batch(es)',
+                level=messages.SUCCESS
+            )
+        
+        if failed_count > 0:
+            self.message_user(
+                request,
+                f'Failed to confirm {failed_count} reservation batch(es)',
+                level=messages.WARNING
+            )
+    
+    @admin.action(description='ยกเลิกการจอง (Cancel selected reservations)')
+    def cancel_reservations(self, request, queryset):
+        """Cancel selected reservation batches and restore book availability if needed."""
+        cancelled_count = 0
+        failed_count = 0
+        
+        for batch in queryset:
+            if not batch.can_be_cancelled():
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f'Batch #{batch.id} cannot be cancelled (status: {batch.status})',
+                    level=messages.WARNING
+                )
+                continue
+            
+            try:
+                with transaction.atomic():
+                    # Store old status to check if we need to restore quantities
+                    old_status = batch.status
+                    
+                    # Update batch status
+                    batch.status = 'cancelled'
+                    batch.save()
+                    
+                    # Update each reservation and restore book quantity if it was confirmed
+                    for reservation in batch.reservations.all():
+                        # If reservation was confirmed, we need to restore the quantity
+                        if reservation.status == 'confirmed':
+                            book = reservation.book
+                            book.available_quantity += 1
+                            book.save()
+                        
+                        reservation.status = 'cancelled'
+                        reservation.save()
+                    
+                    cancelled_count += 1
+                    
+            except Exception as e:
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f'Error cancelling Batch #{batch.id}: {str(e)}',
+                    level=messages.ERROR
+                )
+        
+        if cancelled_count > 0:
+            self.message_user(
+                request,
+                f'Successfully cancelled {cancelled_count} reservation batch(es)',
+                level=messages.SUCCESS
+            )
+        
+        if failed_count > 0:
+            self.message_user(
+                request,
+                f'Failed to cancel {failed_count} reservation batch(es)',
+                level=messages.WARNING
+            )
 
 
 @admin.register(Reservation)
