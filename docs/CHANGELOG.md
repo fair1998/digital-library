@@ -1,5 +1,48 @@
 # Changelog - Digital Library System
 
+## [Phase 3 Complete] - 2026-03-25
+
+### ✅ Phase 3: Reservation System Data Layer
+
+**Status:** COMPLETED
+
+#### What was done:
+
+- สร้าง `ReservationBatch` model พร้อม:
+  - Fields ครบถ้วนตาม data dictionary (user, status, expires_at, created_at, updated_at)
+  - Status choices: pending, confirmed, cancelled
+  - Helper methods: `is_expired()`, `can_be_confirmed()`, `can_be_cancelled()`
+  - ForeignKey ไปยัง User model
+- สร้าง `Reservation` model พร้อม:
+  - Fields ครบถ้วนตาม data dictionary (book, reservation_batch, status, created_at, updated_at)
+  - Status choices: pending, confirmed, cancelled
+  - Helper methods: `can_be_confirmed()`, `can_be_cancelled()`
+  - ForeignKey ไปยัง Book และ ReservationBatch
+- Migrations ถูกสร้างและ apply เรียบร้อยแล้ว:
+  - `reservations/migrations/0001_initial.py`
+  - `reservations/migrations/0002_initial.py`
+
+#### Business Rules Implemented:
+
+- ตรวจสอบว่าการจองหมดอายุหรือไม่ผ่าน `is_expired()`
+- ตรวจสอบว่าสามารถยืนยันการจองได้หรือไม่ (ต้องเป็น pending, ไม่หมดอายุ, และหนังสือมีจำนวนเพียงพอ)
+- ตรวจสอบว่าสามารถยกเลิกการจองได้หรือไม่ (สถานะต้องเป็น pending หรือ confirmed)
+- 1 batch สามารถมีหลาย reservation items ได้
+
+#### Database Tables Created:
+
+- `reservation_batches`
+- `reservations`
+
+#### Deliverables:
+
+- ✅ Models ของการจองพร้อมใช้งาน
+- ✅ สร้าง reservation batch ได้
+- ✅ สร้าง reservation items หลายเล่มใน batch เดียวได้
+- ✅ ความสัมพันธ์ user -> reservation_batches -> reservations ถูกต้อง
+
+---
+
 ## [Phase 0-2 Complete] - 2026-03-25
 
 ### ✅ Phase 0: Project Setup
