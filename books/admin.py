@@ -86,6 +86,7 @@ class BookAdmin(admin.ModelAdmin):
         "updated_at",
     )
     search_fields = (
+        "id",
         "title",
         "description",
         "authors__name",

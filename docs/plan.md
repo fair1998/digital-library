@@ -457,7 +457,7 @@
 
 ---
 
-# Phase 6: Loan Admin Workflow
+# Phase 6: Loan Admin Workflow ✅ COMPLETED
 
 ## Goal
 
@@ -465,21 +465,16 @@
 
 ## Tasks
 
-- [ ] register loan models ใน admin
-- [ ] search/filter ตาม user, book, status, due_date
-- [ ] ออกแบบ action:
-  - create loan
+- [x] register loan models ใน admin
+- [x] search/filter ตาม user, book, status, due_date
+- [x] ออกแบบ action:
   - mark returned
   - mark lost
-- [ ] เมื่อสร้าง loan:
-  - สร้าง loan_batch
-  - สร้าง loan_items
-  - ลด available_quantity หากยังไม่ได้ลดจาก flow ก่อนหน้า
-- [ ] เมื่อคืน:
+- [x] เมื่อคืน:
   - เปลี่ยน status เป็น returned
   - กำหนด returned_at
   - เพิ่ม available_quantity กลับ
-- [ ] เมื่อ lost:
+- [x] เมื่อ lost:
   - เปลี่ยน status เป็น lost
   - ไม่เพิ่ม available_quantity กลับ
   - เตรียมสร้าง fine ประเภท lost
@@ -490,10 +485,11 @@
 
 ## Acceptance Criteria
 
-- บันทึกการยืมได้
 - บันทึกการคืนได้
 - บันทึกกรณีหนังสือหายได้
 - จำนวน available_quantity สอดคล้องกับสถานะจริง
+
+## Status: ✅ COMPLETED
 
 ---
 

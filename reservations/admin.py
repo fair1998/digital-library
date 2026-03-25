@@ -21,13 +21,14 @@ class ReservationInline(admin.TabularInline):
 class ReservationBatchAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'status', 'expires_at', 'reservation_count', 'created_at', 'updated_at')
     list_filter = ('status', 'expires_at', 'created_at')
-    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
+    search_fields = ('id', 'user__username', 'user__email', 'user__first_name', 'user__last_name')
     date_hierarchy = 'created_at'
     ordering = ('-created_at',)
     list_per_page = 20
     inlines = [ReservationInline]
     readonly_fields = ('user', 'expires_at', 'created_at', 'updated_at', 'reservation_count')
     actions = ['confirm_reservations', 'cancel_reservations']
+    autocomplete_fields = ['user']
     
     fieldsets = (
         ('Reservation Information', {
@@ -181,10 +182,11 @@ class ReservationBatchAdmin(admin.ModelAdmin):
 class ReservationAdmin(admin.ModelAdmin):
     list_display = ('id', 'book', 'reservation_batch_id', 'batch_user', 'batch_status', 'status', 'created_at', 'updated_at')
     list_filter = ('status', 'created_at', 'reservation_batch__status')
-    search_fields = ('book__title', 'reservation_batch__user__username', 'reservation_batch__user__email')
+    search_fields = ('id', 'book__title', 'book__id', 'reservation_batch__user__username', 'reservation_batch__user__email')
     date_hierarchy = 'created_at'
     ordering = ('-created_at',)
     list_select_related = ('book', 'reservation_batch', 'reservation_batch__user')
+    autocomplete_fields = ['book', 'reservation_batch']
     list_per_page = 20
     readonly_fields = ('reservation_batch', 'book', 'created_at', 'updated_at')
     

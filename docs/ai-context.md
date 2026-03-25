@@ -13,14 +13,17 @@
 - **Phase 1**: Data Model Foundation - Models หนังสือครบถ้วน (Author, Category, Publisher, Book)
 - **Phase 2**: Admin Foundation - Django Admin พร้อมจัดการข้อมูลหนังสือ
 - **Phase 3**: Reservation System Data Layer - Models การจองครบถ้วน (ReservationBatch, Reservation)
+- **Phase 4**: Reservation Admin Workflow - Admin สามารถยืนยัน/ยกเลิกการจอง
+- **Phase 5**: Loan System Data Layer - Models การยืมครบถ้วน (LoanBatch, LoanItem)
+- **Phase 6**: Loan Admin Workflow - Admin สามารถบันทึกการคืน/หาย
 
 ### 🚧 Current Phase
 
-- **Phase 4**: Reservation Admin Workflow (Next)
+- **Phase 7**: Fine System (Next)
 
 ### 📋 Remaining Phases
 
-- Phase 5-11: Loans, Fines, Member Pages, Testing, Documentation
+- Phase 7-11: Fines, Member Pages, Testing, Documentation
 
 ---
 

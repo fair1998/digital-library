@@ -8,7 +8,7 @@
 2. docs/plan.md - แผนการพัฒนาและ checklist
 3. docs/data-dictionary.md - โครงสร้างฐานข้อมูล
 
-## ✅ Completed Work (Phases 0-2)
+## ✅ Completed Work (Phases 0-6)
 
 ### Phase 0: Project Setup
 
@@ -30,12 +30,37 @@
 - ✅ Admin interface พร้อมใช้จัดการข้อมูลหนังสือ
 - ✅ Cover image preview ใน admin
 
+### Phase 3: Reservation System Data Layer
+
+- ✅ ReservationBatch และ Reservation models
+- ✅ Status tracking (pending/confirmed/cancelled)
+- ✅ Business rules implementation
+
+### Phase 4: Reservation Admin Workflow
+
+- ✅ Admin actions สำหรับยืนยัน/ยกเลิกการจอง
+- ✅ อัปเดต available_quantity อัตโนมัติ
+- ✅ Error handling และ validation
+
+### Phase 5: Loan System Data Layer
+
+- ✅ LoanBatch และ LoanItem models
+- ✅ Status tracking (borrowed/returned/lost)
+- ✅ Link to reservations
+
+### Phase 6: Loan Admin Workflow
+
+- ✅ Admin actions สำหรับทำเครื่องหมายคืน/หาย
+- ✅ อัปเดต available_quantity เมื่อคืนหนังสือ
+- ✅ ไม่คืน stock เมื่อหนังสือหาย
+- ✅ Error handling และ validation
+
 ## 🚧 Next Steps
 
-**Phase 3:** Reservation System Data Layer
+**Phase 7:** Fine System
 
-- สร้าง ReservationBatch และ Reservation models
-- เตรียมพร้อมสำหรับระบบจองหนังสือ
+- สร้าง Fine model
+- เพิ่ม admin interface สำหรับจัดการค่าปรับ
 
 ## 📋 Rules:
 

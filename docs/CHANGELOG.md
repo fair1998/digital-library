@@ -1,5 +1,94 @@
 # Changelog - Digital Library System
 
+## [Phase 6 Complete] - 2026-03-25
+
+### ✅ Phase 6: Loan Admin Workflow
+
+**Status:** COMPLETED
+
+#### What was done:
+
+- ปรับปรุง `LoanBatchAdmin`:
+  - เพิ่ม list_display: id, user, due_date, items_count, borrowed_count, returned_count, lost_count, created_at
+  - เพิ่ม search_fields: username, email, first_name, last_name
+  - เพิ่ม list_filter: created_at, due_date
+  - เพิ่ม autocomplete_fields: user
+  - เพิ่ม inline editing สำหรับ LoanItems
+  - แสดงสถิติการยืมแบบ real-time (borrowed/returned/lost counts)
+
+- ปรับปรุง `LoanItemAdmin`:
+  - เพิ่ม list_display: id, book, batch_user, batch_due_date, status, returned_at, created_at
+  - เพิ่ม list_filter: status, created_at, returned_at, batch due_date
+  - เพิ่ม search_fields: book title, user details
+  - เพิ่ม autocomplete_fields: book, loan_batch, reservation
+  - เพิ่ม list_select_related เพื่อ optimize queries
+  - เพิ่ม admin actions: mark_as_returned, mark_as_lost
+
+- สร้าง admin action `mark_as_returned`:
+  - ตรวจสอบว่า loan item สามารถคืนได้ (borrowed status)
+  - ป้องกันการคืนซ้ำ (already returned)
+  - ป้องกันการคืนหนังสือที่หาย (lost status)
+  - เปลี่ยน status เป็น returned
+  - บันทึก returned_at timestamp
+  - เพิ่ม available_quantity กลับคืน
+  - แสดง success/error messages แบบ batch-by-batch
+
+- สร้าง admin action `mark_as_lost`:
+  - ตรวจสอบว่า loan item สามารถทำเครื่องหมายเป็น lost ได้
+  - ป้องกันการทำเครื่องหมาย lost กับหนังสือที่คืนแล้ว
+  - ป้องกันการทำเครื่องหมาย lost ซ้ำ
+  - เปลี่ยน status เป็น lost
+  - **ไม่เพิ่ม** available_quantity กลับ (หนังสือหาย)
+  - แจ้งเตือน admin ให้สร้าง fine สำหรับหนังสือหาย
+  - แสดง success/error messages แบบ batch-by-batch
+
+- ปรับปรุง search และ autocomplete:
+  - เพิ่ม id ใน search_fields ของ Book, Reservation, ReservationBatch
+  - เพิ่ม autocomplete_fields ใน ReservationAdmin
+  - เพิ่ม autocomplete_fields ใน ReservationBatchAdmin
+
+#### Business Logic Implemented:
+
+- **Return Workflow:**
+  - ตรวจสอบสถานะก่อนคืน (ต้องเป็น borrowed)
+  - บันทึก timestamp ของการคืน
+  - อัปเดต available_quantity อัตโนมัติ
+  - Transaction safety ด้วย atomic
+  - Error handling แบบ per-item
+
+- **Lost Workflow:**
+  - ตรวจสอบสถานะก่อนทำเครื่องหมาย lost
+  - ไม่คืน stock กลับ (หนังสือหายจริง)
+  - เตือน admin ให้สร้าง fine
+  - Transaction safety ด้วย atomic
+  - Error handling แบบ per-item
+
+#### Error Handling:
+
+- ใช้ try-except เพื่อจัดการ errors ในแต่ละ loan item
+- แสดง error messages แบบ item-by-item
+- แสดงสรุปผลรวม (success/failed counts)
+- ป้องกันการคืนซ้ำหรือ lost ซ้ำ
+- ป้องกัน workflow ที่ไม่สมเหตุสมผล (เช่น คืนหนังสือที่หายแล้ว)
+
+#### Query Optimization:
+
+- เพิ่ม list_select_related ใน LoanItemAdmin
+- ใช้ autocomplete_fields แทน dropdown ธรรมดา
+- Optimize การแสดงข้อมูล user และ batch
+
+#### Deliverables:
+
+- ✅ Admin สามารถดูรายการยืมทั้งหมด
+- ✅ Admin สามารถค้นหาตาม user, book, status
+- ✅ Admin สามารถกรองตาม status, due_date
+- ✅ Admin สามารถทำเครื่องหมายหนังสือเป็น returned
+- ✅ Admin สามารถทำเครื่องหมายหนังสือเป็น lost
+- ✅ จำนวน available_quantity สอดคล้องกับสถานะการยืมคืน
+- ✅ ระบบป้องกัน workflow ที่ไม่สมเหตุสมผล
+
+---
+
 ## [Phase 5 Complete] - 2026-03-25
 
 ### ✅ Phase 5: Loan System Data Layer
