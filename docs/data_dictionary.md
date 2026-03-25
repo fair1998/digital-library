@@ -38,7 +38,7 @@ This document describes the database schema for a digital library management sys
 | `id`                 | int          | PK, increment                       | Primary key - Unique book identifier                               |
 | `title`              | varchar(255) | not null                            | Book title                                                         |
 | `description`        | text         | nullable                            | Book description or summary                                        |
-| `image_url`          | text         | nullable                            | URL path to book cover image                                       |
+| `image_url`          | varchar(255) | nullable                            | File path / URL to book cover image (stored by Django file fields) |
 | `total_quantity`     | int          | not null, default `0`, check `>= 0` | Total copies of this book in the library (including borrowed ones) |
 | `available_quantity` | int          | not null, default `0`, check `>= 0` | Number of copies currently available for borrowing or reservation  |
 | `publish_year`       | int          | nullable, check `>= 0`              | Year the book was published                                        |
