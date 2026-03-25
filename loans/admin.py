@@ -55,6 +55,7 @@ class LoanItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'book', 'batch_user', 'batch_due_date', 'status', 'returned_at', 'created_at')
     list_filter = ('status', 'created_at', 'returned_at', 'loan_batch__due_date')
     search_fields = (
+        'id',
         'book__title',
         'loan_batch__user__username',
         'loan_batch__user__email',

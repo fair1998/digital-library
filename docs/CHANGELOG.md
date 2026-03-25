@@ -1,5 +1,93 @@
 # Changelog - Digital Library System
 
+## [Phase 7 Complete] - 2026-03-25
+
+### ✅ Phase 7: Fine System
+
+**Status:** COMPLETED
+
+#### What was done:
+
+- Fine model already existed with all required fields:
+  - loan_item (FK to LoanItem)
+  - amount (DecimalField)
+  - type (choices: late_return, lost, damaged)
+  - reason (TextField, optional)
+  - status (choices: unpaid, paid, default=unpaid)
+  - paid_at (DateTimeField, nullable)
+  - created_at, updated_at (auto timestamps)
+
+- Enhanced `FineAdmin` with comprehensive features:
+  - เพิ่ม list_display: id, loan_item_display, book_title, borrower_name, type, amount_display, status_display, paid_at, created_at
+  - เพิ่ม list_filter: type, status, created_at, paid_at
+  - เพิ่ม search_fields: id, loan_item book title, user details, reason
+  - เพิ่ม autocomplete_fields: loan_item
+  - เพิ่ม list_select_related เพื่อ optimize queries
+  - เพิ่ม date_hierarchy: created_at
+  - เพิ่ม custom display methods:
+    - loan_item_display: แสดง Loan Item ID พร้อม link
+    - book_title: แสดงชื่อหนังสือ
+    - borrower_name: แสดงชื่อผู้ยืม
+    - amount_display: แสดงจำนวนเงินพร้อมสัญลักษณ์ $
+    - status_display: แสดง status badge แบบมีสี (green=paid, red=unpaid)
+
+- สร้าง admin action `mark_as_paid`:
+  - ตรวจสอบว่า fine ยังไม่ได้ชำระ
+  - ป้องกันการชำระซ้ำ (already paid)
+  - เปลี่ยน status เป็น paid
+  - บันทึก paid_at timestamp
+  - แสดง success/error messages แบบ item-by-item
+
+- สร้าง admin action `mark_as_unpaid`:
+  - ตรวจสอบว่า fine ถูกชำระแล้ว
+  - ป้องกันการเปลี่ยนสถานะซ้ำ (already unpaid)
+  - เปลี่ยน status เป็น unpaid
+  - ล้าง paid_at (set to None)
+  - แสดง success/error messages แบบ item-by-item
+
+- ปรับปรุง `LoanItemAdmin`:
+  - เพิ่ม 'id' ใน search_fields เพื่อรองรับ autocomplete ใน FineAdmin
+
+#### Business Logic Implemented:
+
+- **Fine Management Workflow:**
+  - Admin สร้าง fine ได้โดยเลือก loan_item และกำหนด type, amount, reason
+  - Admin จัดการสถานะการชำระผ่าน admin actions
+  - ป้องกันการชำระซ้ำ
+  - รองรับการ revert สถานะเป็น unpaid ถ้าจำเป็น
+
+#### Error Handling:
+
+- ใช้ try-except เพื่อจัดการ errors ในแต่ละ fine
+- แสดง error messages แบบ item-by-item
+- แสดงสรุปผลรวม (success/failed counts)
+- ป้องกัน workflow ที่ไม่สมเหตุสมผล
+
+#### Query Optimization:
+
+- เพิ่ม list_select_related ใน FineAdmin
+- ใช้ autocomplete_fields แทน dropdown ธรรมดา
+- Optimize การแสดงข้อมูล loan_item, book, และ user
+
+#### UI/UX Enhancements:
+
+- Status badge มีสีแยกชัดเจน (paid=เขียว, unpaid=แดง)
+- แสดงจำนวนเงินพร้อมสัญลักษณ์ $
+- แสดงข้อมูล loan item, book, และ borrower ที่ครบถ้วน
+- Date hierarchy สำหรับการกรองตามวันที่
+
+#### Deliverables:
+
+- ✅ Fine model พร้อมใช้งาน
+- ✅ Admin สามารถสร้าง fine ได้
+- ✅ Admin สามารถค้นหาตาม loan item, book, user
+- ✅ Admin สามารถกรองตาม type, status, dates
+- ✅ Admin สามารถทำเครื่องหมาย fine เป็น paid/unpaid
+- ✅ ระบบป้องกัน workflow ที่ไม่สมเหตุสมผล
+- ✅ UI/UX ใช้งานง่ายและชัดเจน
+
+---
+
 ## [Phase 6 Complete] - 2026-03-25
 
 ### ✅ Phase 6: Loan Admin Workflow
@@ -383,17 +471,18 @@
 
 ## 📋 Next Phase
 
-### Phase 3: Reservation System Data Layer
+### Phase 8: Member-Facing Pages
 
 **Status:** รอดำเนินการ
 
 #### Planned Tasks:
 
-- [ ] สร้าง ReservationBatch model
-- [ ] สร้าง Reservation model
-- [ ] สร้าง migrations
-- [ ] เพิ่ม status choices (pending, confirmed, cancelled)
-- [ ] ตรวจสอบ business logic การจอง
+- [ ] สร้างหน้า home page
+- [ ] สร้างหน้า book list และ book detail
+- [ ] สร้างหน้า my reservations
+- [ ] สร้างหน้า my loans
+- [ ] สร้างหน้า my fines
+- [ ] เพิ่ม search และ filter ใน book list
 
 ---
 

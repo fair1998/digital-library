@@ -8,7 +8,7 @@
 2. docs/plan.md - แผนการพัฒนาและ checklist
 3. docs/data-dictionary.md - โครงสร้างฐานข้อมูล
 
-## ✅ Completed Work (Phases 0-6)
+## ✅ Completed Work (Phases 0-7)
 
 ### Phase 0: Project Setup
 
@@ -55,12 +55,21 @@
 - ✅ ไม่คืน stock เมื่อหนังสือหาย
 - ✅ Error handling และ validation
 
+### Phase 7: Fine System
+
+- ✅ Fine model พร้อม type choices (late_return/lost/damaged)
+- ✅ Admin interface สำหรับจัดการค่าปรับ
+- ✅ Admin actions สำหรับทำเครื่องหมาย paid/unpaid
+- ✅ Status badge แบบมีสี
+- ✅ Query optimization และ autocomplete
+
 ## 🚧 Next Steps
 
-**Phase 7:** Fine System
+**Phase 8:** Member-Facing Pages
 
-- สร้าง Fine model
-- เพิ่ม admin interface สำหรับจัดการค่าปรับ
+- สร้างหน้า home, book list, book detail
+- สร้างหน้า my reservations, my loans, my fines
+- เพิ่ม search และ filter functionality
 
 ## 📋 Rules:
 

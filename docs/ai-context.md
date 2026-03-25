@@ -16,14 +16,15 @@
 - **Phase 4**: Reservation Admin Workflow - Admin สามารถยืนยัน/ยกเลิกการจอง
 - **Phase 5**: Loan System Data Layer - Models การยืมครบถ้วน (LoanBatch, LoanItem)
 - **Phase 6**: Loan Admin Workflow - Admin สามารถบันทึกการคืน/หาย
+- **Phase 7**: Fine System - Admin สามารถจัดการค่าปรับ (สร้าง/ชำระ/ดูประวัติ)
 
 ### 🚧 Current Phase
 
-- **Phase 7**: Fine System (Next)
+- **Phase 8**: Member-Facing Pages (Next)
 
 ### 📋 Remaining Phases
 
-- Phase 7-11: Fines, Member Pages, Testing, Documentation
+- Phase 8-11: Member Pages, Testing, Documentation
 
 ---
 

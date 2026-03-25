@@ -493,7 +493,7 @@
 
 ---
 
-# Phase 7: Fine System
+# Phase 7: Fine System ✅ COMPLETED
 
 ## Goal
 
@@ -505,8 +505,8 @@
 
 ## Tasks
 
-- [ ] สร้าง model `Fine`
-- [ ] fields:
+- [x] สร้าง model `Fine`
+- [x] fields:
   - id
   - loan_item
   - amount
@@ -516,15 +516,19 @@
   - paid_at
   - created_at
   - updated_at
-- [ ] type choices:
+- [x] type choices:
   - late_return
   - lost
   - damaged
-- [ ] status choices:
+- [x] status choices:
   - unpaid
   - paid
-- [ ] register fine model ใน admin
-- [ ] เพิ่ม filter/search
+- [x] register fine model ใน admin
+- [x] เพิ่ม filter/search
+- [x] เพิ่ม admin actions: mark_as_paid, mark_as_unpaid
+- [x] เพิ่ม list_display ที่ครบถ้วน
+- [x] เพิ่ม autocomplete_fields
+- [x] เพิ่ม status badge แบบมีสี
 
 ## Business Rules
 
@@ -542,6 +546,8 @@
 - Admin สร้าง fine ได้
 - Admin เปลี่ยนสถานะเป็น paid ได้
 - Fine ผูกกับ loan_item ได้ถูกต้อง
+
+## Status: ✅ COMPLETED
 
 ---
 
