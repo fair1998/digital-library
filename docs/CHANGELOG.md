@@ -1,5 +1,74 @@
 # Changelog - Digital Library System
 
+## [Phase 5 Complete] - 2026-03-25
+
+### ✅ Phase 5: Loan System Data Layer
+
+**Status:** COMPLETED
+
+#### What was done:
+
+- สร้าง `LoanBatch` model พร้อม:
+  - Fields ครบถ้วนตาม data dictionary (user, due_date, created_at, updated_at)
+  - ForeignKey ไปยัง User model
+  - Meta options: db_table='loan_batches', ordering by created_at
+  - `__str__` method แสดง batch ID และ username
+- สร้าง `LoanItem` model พร้อม:
+  - Fields ครบถ้วนตาม data dictionary (book, loan_batch, reservation, status, returned_at, created_at, updated_at)
+  - Status choices: borrowed, returned, lost
+  - ForeignKey ไปยัง Book, LoanBatch, และ Reservation (nullable)
+  - Meta options: db_table='loan_items', ordering by created_at
+  - `__str__` method แสดงชื่อหนังสือและสถานะ
+- Migrations ถูกสร้างและ apply เรียบร้อยแล้ว:
+  - `loans/migrations/0001_initial.py`
+  - `loans/migrations/0002_initial.py`
+  - `loans/migrations/0003_initial.py`
+
+#### Business Rules Implemented:
+
+- รองรับการยืมที่มาจาก reservation และไม่มาจาก reservation (ผ่าน nullable reservation field)
+- ออกแบบ flow ยืมหลายเล่มใน batch เดียว (1 LoanBatch มีหลาย LoanItems)
+- พร้อมสำหรับตรวจสอบ available_quantity ก่อนสร้าง loan (จะทำใน Phase 6)
+- Status tracking: borrowed → returned หรือ lost
+- บันทึกวันที่คืนหนังสือ (returned_at) เมื่อเปลี่ยนสถานะเป็น returned
+
+#### Database Tables Created:
+
+- `loan_batches` - Header record for borrowing transactions
+  - id (PK)
+  - user_id (FK → users)
+  - due_date
+  - created_at
+  - updated_at
+
+- `loan_items` - Individual borrowed books
+  - id (PK)
+  - book_id (FK → books)
+  - loan_batch_id (FK → loan_batches)
+  - reservation_id (FK → reservations, nullable)
+  - status (borrowed/returned/lost)
+  - returned_at
+  - created_at
+  - updated_at
+
+#### Relationships:
+
+- User → LoanBatch (one-to-many)
+- LoanBatch → LoanItem (one-to-many)
+- Book → LoanItem (one-to-many)
+- Reservation → LoanItem (one-to-one, optional)
+
+#### Deliverables:
+
+- ✅ LoanBatch model พร้อมใช้งาน
+- ✅ LoanItem model พร้อมใช้งาน
+- ✅ สร้าง loan batch ได้
+- ✅ สร้าง loan items หลายรายการได้
+- ✅ loan item เชื่อม reservation ได้ถ้ามาจากการจอง
+- ✅ Migrations สำเร็จ
+
+---
+
 ## [Phase 4 Complete] - 2026-03-25
 
 ### ✅ Phase 4: Reservation Admin Workflow

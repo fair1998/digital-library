@@ -397,7 +397,7 @@
 
 ---
 
-# Phase 5: Loan System Data Layer
+# Phase 5: Loan System Data Layer ✅ COMPLETED
 
 ## Goal
 
@@ -412,8 +412,8 @@
 
 ### 5.1 LoanBatch Model
 
-- [ ] สร้าง model `LoanBatch`
-- [ ] fields:
+- [x] สร้าง model `LoanBatch`
+- [x] fields:
   - id
   - user
   - due_date
@@ -422,8 +422,8 @@
 
 ### 5.2 LoanItem Model
 
-- [ ] สร้าง model `LoanItem`
-- [ ] fields:
+- [x] สร้าง model `LoanItem`
+- [x] fields:
   - id
   - book
   - loan_batch
@@ -432,16 +432,16 @@
   - returned_at
   - created_at
   - updated_at
-- [ ] status choices:
+- [x] status choices:
   - borrowed
   - returned
   - lost
 
 ### 5.3 Rules
 
-- [ ] รองรับทั้งการยืมที่มาจาก reservation และไม่มาจาก reservation
-- [ ] ออกแบบ flow ยืมหลายเล่มใน batch เดียว
-- [ ] ตรวจสอบ available_quantity ก่อนสร้าง loan
+- [x] รองรับทั้งการยืมที่มาจาก reservation และไม่มาจาก reservation
+- [x] ออกแบบ flow ยืมหลายเล่มใน batch เดียว
+- [x] ตรวจสอบ available_quantity ก่อนสร้าง loan
 
 ## Deliverables
 
@@ -452,6 +452,8 @@
 - สร้าง loan batch ได้
 - สร้าง loan items หลายรายการได้
 - loan item เชื่อม reservation ได้ถ้ามาจากการจอง
+
+## Status: ✅ COMPLETED
 
 ---
 
