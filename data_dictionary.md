@@ -1,206 +1,234 @@
 # Data Dictionary: Digital Library System
 
-เอกสารนี้อธิบายความหมายของแต่ละตารางและแต่ละฟิลด์ในฐานข้อมูลระบบจัดการห้องสมุดดิจิทัล
+This document describes the database schema for a digital library management system. The database consists of multiple tables that manage users, books, reservations, loans, and fines.
 
 ---
 
-## Table: `users`
+## Table: `users` (User Model)
 
-| Field          | Type         | Constraints               | Description                                |
-| -------------- | ------------ | ------------------------- | ------------------------------------------ |
-| `id`           | int          | PK, increment             | รหัสผู้ใช้ เป็น Primary Key ของตารางผู้ใช้ |
-| `username`     | varchar(150) | not null, unique          | ชื่อผู้ใช้สำหรับเข้าสู่ระบบ ต้องไม่ซ้ำกัน  |
-| `password`     | varchar(128) | not null                  | รหัสผ่านที่ถูกเข้ารหัสแบบ hash แล้ว        |
-| `first_name`   | varchar(150) | not null                  | ชื่อจริงของผู้ใช้                          |
-| `last_name`    | varchar(150) | not null                  | นามสกุลของผู้ใช้                           |
-| `email`        | varchar(254) | unique                    | อีเมลของผู้ใช้ ใช้สำหรับติดต่อ             |
-| `is_active`    | boolean      | not null, default `true`  | สถานะการใช้งานของผู้ใช้                    |
-| `is_superuser` | boolean      | not null, default `false` | สิทธิ์ผู้ดูแลระบบ                          |
-| `last_login`   | timestamp    | nullable                  | วันเวลาที่ผู้ใช้เข้าสู่ระบบล่าสุด          |
-| `date_joined`  | timestamp    | not null, default `now()` | วันเวลาที่สร้างบัญชีผู้ใช้                 |
-| `phone_number` | varchar(10)  | nullable                  | เบอร์โทรศัพท์ (ตัวเลข 10 หลัก)             |
+**Base Model:** Django's built-in `AbstractUser` model (provides default authentication fields)
 
-**คำอธิบายตาราง:** เก็บข้อมูลผู้ใช้งานทั้งหมดในระบบ
+**Custom Fields Added:**
 
----
+| Field          | Type        | Constraints | Description                                      |
+| -------------- | ----------- | ----------- | ------------------------------------------------ |
+| `phone_number` | varchar(10) | nullable    | User's phone number (10 digits) for contact info |
 
-## Table: `books`
+**Standard Django User Fields (Inherited):**
 
-| Field                | Type         | Constraints                         | Description                                    |
-| -------------------- | ------------ | ----------------------------------- | ---------------------------------------------- |
-| `id`                 | int          | PK, increment                       | รหัสหนังสือ เป็น Primary Key ของตารางหนังสือ   |
-| `title`              | varchar(255) | not null                            | ชื่อหนังสือ                                    |
-| `description`        | text         | nullable                            | รายละเอียดหรือคำอธิบายหนังสือ                  |
-| `image_url`          | text         | nullable                            | URL ของรูปปกหนังสือ                            |
-| `total_quantity`     | int          | not null, default `0`, check `>= 0` | จำนวนหนังสือทั้งหมดในระบบ รวมทั้งที่ถูกยืมอยู่ |
-| `available_quantity` | int          | not null, default `0`, check `>= 0` | จำนวนหนังสือที่ยังสามารถยืมหรือจองได้ในขณะนั้น |
-| `publish_year`       | int          | nullable, check `>= 0`              | ปีที่พิมพ์หนังสือ                              |
-| `publisher_id`       | int          | FK -> `publishers.id`, nullable     | อ้างอิงไปยังสำนักพิมพ์ของหนังสือ               |
-| `updated_at`         | timestamp    | default `now()`                     | วันและเวลาที่แก้ไขข้อมูลล่าสุด                 |
-| `created_at`         | timestamp    | default `now()`                     | วันและเวลาที่เพิ่มหนังสือเข้าระบบ              |
+- `id`: Primary key (auto-increment integer)
+- `username`: Unique username for login (varchar 150)
+- `password`: Hashed password (varchar 128)
+- `first_name`: User's first name (varchar 150)
+- `last_name`: User's last name (varchar 150)
+- `email`: Unique email address (varchar 254)
+- `is_active`: Account active status (boolean, default True)
+- `is_superuser`: Admin privileges flag (boolean, default False)
+- `last_login`: Timestamp of last login (nullable)
+- `date_joined`: Account creation timestamp (auto-set on creation)
 
-**คำอธิบายตาราง:** เก็บข้อมูลหนังสือทั้งหมดในระบบ
+**Purpose:** Stores all user accounts in the system, extending Django's built-in User model with phone number field
 
 ---
 
-## Table: `authors`
+## Table: `books` (Book Catalog)
 
-| Field        | Type         | Constraints     | Description                    |
-| ------------ | ------------ | --------------- | ------------------------------ |
-| `id`         | int          | PK, increment   | รหัสผู้แต่ง                    |
-| `name`       | varchar(255) | not null        | ชื่อผู้แต่งหนังสือ             |
-| `updated_at` | timestamp    | default `now()` | วันและเวลาที่แก้ไขข้อมูลล่าสุด |
-| `created_at` | timestamp    | default `now()` | วันและเวลาที่สร้างข้อมูล       |
+| Field                | Type         | Constraints                         | Description                                                        |
+| -------------------- | ------------ | ----------------------------------- | ------------------------------------------------------------------ |
+| `id`                 | int          | PK, increment                       | Primary key - Unique book identifier                               |
+| `title`              | varchar(255) | not null                            | Book title                                                         |
+| `description`        | text         | nullable                            | Book description or summary                                        |
+| `image_url`          | text         | nullable                            | URL path to book cover image                                       |
+| `total_quantity`     | int          | not null, default `0`, check `>= 0` | Total copies of this book in the library (including borrowed ones) |
+| `available_quantity` | int          | not null, default `0`, check `>= 0` | Number of copies currently available for borrowing or reservation  |
+| `publish_year`       | int          | nullable, check `>= 0`              | Year the book was published                                        |
+| `publisher_id`       | int          | FK -> `publishers.id`, nullable     | Foreign key reference to publisher                                 |
+| `updated_at`         | timestamp    | default `now()`                     | Timestamp of last update                                           |
+| `created_at`         | timestamp    | default `now()`                     | Timestamp when book was added to system                            |
 
-**คำอธิบายตาราง:** เก็บข้อมูลผู้แต่งหนังสือ
-
----
-
-## Table: `categories`
-
-| Field        | Type         | Constraints      | Description                       |
-| ------------ | ------------ | ---------------- | --------------------------------- |
-| `id`         | int          | PK, increment    | รหัสหมวดหมู่                      |
-| `name`       | varchar(255) | not null, unique | ชื่อหมวดหมู่หนังสือ ต้องไม่ซ้ำกัน |
-| `updated_at` | timestamp    | default `now()`  | วันและเวลาที่แก้ไขข้อมูลล่าสุด    |
-| `created_at` | timestamp    | default `now()`  | วันและเวลาที่สร้างข้อมูล          |
-
-**คำอธิบายตาราง:** เก็บข้อมูลหมวดหมู่ของหนังสือ
+**Purpose:** Stores all book records in the library system. Each book can have multiple copies tracked via `total_quantity` and `available_quantity`.
 
 ---
 
-## Table: `publishers`
+## Table: `authors` (Book Authors)
 
-| Field        | Type         | Constraints      | Description                    |
-| ------------ | ------------ | ---------------- | ------------------------------ |
-| `id`         | int          | PK, increment    | รหัสสำนักพิมพ์                 |
-| `name`       | varchar(255) | not null, unique | ชื่อสำนักพิมพ์ ต้องไม่ซ้ำกัน   |
-| `updated_at` | timestamp    | default `now()`  | วันและเวลาที่แก้ไขข้อมูลล่าสุด |
-| `created_at` | timestamp    | default `now()`  | วันและเวลาที่สร้างข้อมูล       |
+| Field        | Type         | Constraints     | Description                     |
+| ------------ | ------------ | --------------- | ------------------------------- |
+| `id`         | int          | PK, increment   | Primary key - Author identifier |
+| `name`       | varchar(255) | not null        | Author's name                   |
+| `updated_at` | timestamp    | default `now()` | Timestamp of last update        |
+| `created_at` | timestamp    | default `now()` | Timestamp when author was added |
 
-**คำอธิบายตาราง:** เก็บข้อมูลสำนักพิมพ์
-
----
-
-## Table: `book_authors`
-
-| Field       | Type | Constraints                  | Description                              |
-| ----------- | ---- | ---------------------------- | ---------------------------------------- |
-| `id`        | int  | PK, increment                | รหัสรายการเชื่อมระหว่างหนังสือกับผู้แต่ง |
-| `book_id`   | int  | not null, FK -> `books.id`   | อ้างอิงไปยังหนังสือ                      |
-| `author_id` | int  | not null, FK -> `authors.id` | อ้างอิงไปยังผู้แต่ง                      |
-
-**Unique Index:** (`book_id`, `author_id`) เพื่อป้องกันข้อมูลซ้ำ
-
-**คำอธิบายตาราง:** ตารางเชื่อมความสัมพันธ์แบบ many-to-many ระหว่างหนังสือกับผู้แต่ง
+**Purpose:** Stores information about book authors. Authors have a many-to-many relationship with books via `book_authors` table.
 
 ---
 
-## Table: `book_categories`
+## Table: `categories` (Book Categories)
 
-| Field         | Type | Constraints                     | Description                               |
-| ------------- | ---- | ------------------------------- | ----------------------------------------- |
-| `id`          | int  | PK, increment                   | รหัสรายการเชื่อมระหว่างหนังสือกับหมวดหมู่ |
-| `book_id`     | int  | not null, FK -> `books.id`      | อ้างอิงไปยังหนังสือ                       |
-| `category_id` | int  | not null, FK -> `categories.id` | อ้างอิงไปยังหมวดหมู่                      |
+| Field        | Type         | Constraints      | Description                                            |
+| ------------ | ------------ | ---------------- | ------------------------------------------------------ |
+| `id`         | int          | PK, increment    | Primary key - Category identifier                      |
+| `name`       | varchar(255) | not null, unique | Category name (must be unique, e.g., Fiction, Science) |
+| `updated_at` | timestamp    | default `now()`  | Timestamp of last update                               |
+| `created_at` | timestamp    | default `now()`  | Timestamp when category was created                    |
 
-**Unique Index:** (`book_id`, `category_id`) เพื่อป้องกันข้อมูลซ้ำ
-
-**คำอธิบายตาราง:** ตารางเชื่อมความสัมพันธ์แบบ many-to-many ระหว่างหนังสือกับหมวดหมู่
-
----
-
-## Table: `reservation_batches`
-
-| Field        | Type        | Constraints                                                              | Description                                                                                             |
-| ------------ | ----------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `id`         | int         | PK, increment                                                            | รหัสชุดการจอง                                                                                           |
-| `user_id`    | int         | not null, FK -> `users.id`                                               | ผู้ใช้ที่ทำรายการจอง                                                                                    |
-| `status`     | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | สถานะของชุดการจอง โดย `pending` คือรอดำเนินการ, `confirmed` คือยืนยันแล้ว, `cancelled` คือยกเลิกทั้งชุด |
-| `expires_at` | timestamp   | not null                                                                 | วันและเวลาหมดอายุของการจอง                                                                              |
-| `updated_at` | timestamp   | default `now()`                                                          | วันและเวลาที่แก้ไขข้อมูลล่าสุด                                                                          |
-| `created_at` | timestamp   | default `now()`                                                          | วันและเวลาที่สร้างชุดการจอง                                                                             |
-
-**คำอธิบายตาราง:** เก็บหัวรายการจอง 1 ครั้ง ซึ่ง 1 ชุดการจองสามารถมีหนังสือได้หลายเล่ม
+**Purpose:** Stores book categories/genres. Books have a many-to-many relationship with categories via `book_categories` table.
 
 ---
 
-## Table: `reservations`
+## Table: `publishers` (Book Publishers)
 
-| Field                  | Type        | Constraints                                                              | Description                                                                                   |
-| ---------------------- | ----------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `id`                   | int         | PK, increment                                                            | รหัสรายการจอง                                                                                 |
-| `book_id`              | int         | not null, FK -> `books.id`                                               | หนังสือที่ถูกจอง                                                                              |
-| `reservation_batch_id` | int         | not null, FK -> `reservation_batches.id`                                 | อ้างอิงไปยังชุดการจอง                                                                         |
-| `status`               | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | สถานะของรายการจอง โดย `pending` คือรออนุมัติ, `confirmed` คือจองสำเร็จ, `cancelled` คือยกเลิก |
-| `updated_at`           | timestamp   | default `now()`                                                          | วันและเวลาที่แก้ไขข้อมูลล่าสุด                                                                |
-| `created_at`           | timestamp   | default `now()`                                                          | วันและเวลาที่สร้างรายการจอง                                                                   |
+| Field        | Type         | Constraints      | Description                        |
+| ------------ | ------------ | ---------------- | ---------------------------------- |
+| `id`         | int          | PK, increment    | Primary key - Publisher identifier |
+| `name`       | varchar(255) | not null, unique | Publisher name (must be unique)    |
+| `updated_at` | timestamp    | default `now()`  | Timestamp of last update           |
+| `created_at` | timestamp    | default `now()`  | Timestamp when publisher was added |
 
-**คำอธิบายตาราง:** เก็บรายการหนังสือแต่ละเล่มที่อยู่ภายในชุดการจอง
+**Purpose:** Stores information about book publishers. Referenced by books through `publisher_id` foreign key.
 
 ---
 
-## Table: `loan_batches`
+## Table: `book_authors` (Many-to-Many: Books ↔ Authors)
 
-| Field        | Type      | Constraints                | Description                    |
-| ------------ | --------- | -------------------------- | ------------------------------ |
-| `id`         | int       | PK, increment              | รหัสชุดการยืม                  |
-| `user_id`    | int       | not null, FK -> `users.id` | ผู้ใช้ที่ยืมหนังสือ            |
-| `due_date`   | timestamp | nullable                   | วันและเวลาที่ต้องคืนหนังสือ    |
-| `updated_at` | timestamp | default `now()`            | วันและเวลาที่แก้ไขข้อมูลล่าสุด |
-| `created_at` | timestamp | default `now()`            | วันและเวลาที่สร้างรายการยืม    |
+| Field       | Type | Constraints                  | Description                      |
+| ----------- | ---- | ---------------------------- | -------------------------------- |
+| `id`        | int  | PK, increment                | Primary key - Junction record ID |
+| `book_id`   | int  | not null, FK -> `books.id`   | Foreign key reference to book    |
+| `author_id` | int  | not null, FK -> `authors.id` | Foreign key reference to author  |
 
-**คำอธิบายตาราง:** เก็บหัวรายการยืม 1 ครั้ง ซึ่ง 1 ครั้งสามารถมีหนังสือได้หลายเล่ม
+**Unique Constraint:** (`book_id`, `author_id`) - Prevents duplicate book-author pairs
 
----
-
-## Table: `loan_items`
-
-| Field            | Type        | Constraints                                                          | Description                                                                              |
-| ---------------- | ----------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `id`             | int         | PK, increment                                                        | รหัสรายการยืมหนังสือ                                                                     |
-| `book_id`        | int         | not null, FK -> `books.id`                                           | หนังสือที่ถูกยืม                                                                         |
-| `loan_batch_id`  | int         | not null, FK -> `loan_batches.id`                                    | อ้างอิงไปยังชุดการยืม                                                                    |
-| `reservation_id` | int         | nullable, FK -> `reservations.id`                                    | อ้างอิงไปยังรายการจองเดิม หากการยืมนี้มาจากการจอง                                        |
-| `status`         | varchar(20) | not null, default `borrowed`, check (`borrowed`, `returned`, `lost`) | สถานะของหนังสือที่ยืม โดย `borrowed` คือกำลังยืม, `returned` คือคืนแล้ว, `lost` คือทำหาย |
-| `returned_at`    | timestamp   | nullable                                                             | วันและเวลาที่คืนหนังสือจริง                                                              |
-| `updated_at`     | timestamp   | default `now()`                                                      | วันและเวลาที่แก้ไขข้อมูลล่าสุด                                                           |
-| `created_at`     | timestamp   | default `now()`                                                      | วันและเวลาที่สร้างรายการยืม                                                              |
-
-**คำอธิบายตาราง:** เก็บรายการหนังสือแต่ละเล่มในชุดการยืม
+**Purpose:** Junction table enabling many-to-many relationship between books and authors. One book can have multiple authors, and one author can write multiple books.
 
 ---
 
-## Table: `fines`
+## Table: `book_categories` (Many-to-Many: Books ↔ Categories)
 
-| Field          | Type          | Constraints                                          | Description                                                                           |
-| -------------- | ------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `id`           | int           | PK, increment                                        | รหัสค่าปรับ                                                                           |
-| `loan_item_id` | int           | not null, FK -> `loan_items.id`                      | อ้างอิงไปยังรายการยืมที่เกิดค่าปรับ                                                   |
-| `amount`       | decimal(10,2) | not null                                             | จำนวนเงินค่าปรับ                                                                      |
-| `type`         | varchar(20)   | not null, check (`late_return`, `lost`, `damaged`)   | ประเภทค่าปรับ โดย `late_return` คือคืนช้า, `lost` คือทำหาย, `damaged` คือชำรุดเสียหาย |
-| `reason`       | text          | nullable                                             | รายละเอียดเพิ่มเติมหรือสาเหตุของค่าปรับ                                               |
-| `status`       | varchar(20)   | not null, default `unpaid`, check (`unpaid`, `paid`) | สถานะการชำระค่าปรับ โดย `unpaid` คือยังไม่ชำระ และ `paid` คือชำระแล้ว                 |
-| `paid_at`      | timestamp     | nullable                                             | วันและเวลาที่ชำระค่าปรับ                                                              |
-| `updated_at`   | timestamp     | default `now()`                                      | วันและเวลาที่แก้ไขข้อมูลล่าสุด                                                        |
-| `created_at`   | timestamp     | default `now()`                                      | วันและเวลาที่สร้างรายการค่าปรับ                                                       |
+| Field         | Type | Constraints                     | Description                       |
+| ------------- | ---- | ------------------------------- | --------------------------------- |
+| `id`          | int  | PK, increment                   | Primary key - Junction record ID  |
+| `book_id`     | int  | not null, FK -> `books.id`      | Foreign key reference to book     |
+| `category_id` | int  | not null, FK -> `categories.id` | Foreign key reference to category |
 
-**คำอธิบายตาราง:** เก็บข้อมูลค่าปรับของแต่ละรายการยืมหนังสือ
+**Unique Constraint:** (`book_id`, `category_id`) - Prevents duplicate book-category pairs
+
+**Purpose:** Junction table enabling many-to-many relationship between books and categories. One book can belong to multiple categories, and one category can contain multiple books.
 
 ---
 
-## Relationship Summary
+## Table: `reservation_batches` (Reservation Transactions)
 
-- `books.publisher_id` อ้างอิง `publishers.id`
-- `book_authors.book_id` อ้างอิง `books.id`
-- `book_authors.author_id` อ้างอิง `authors.id`
-- `book_categories.book_id` อ้างอิง `books.id`
-- `book_categories.category_id` อ้างอิง `categories.id`
-- `reservation_batches.user_id` อ้างอิง `users.id`
-- `reservations.book_id` อ้างอิง `books.id`
-- `reservations.reservation_batch_id` อ้างอิง `reservation_batches.id`
-- `loan_batches.user_id` อ้างอิง `users.id`
-- `loan_items.book_id` อ้างอิง `books.id`
-- `loan_items.loan_batch_id` อ้างอิง `loan_batches.id`
-- `loan_items.reservation_id` อ้างอิง `reservations.id`
-- `fines.loan_item_id` อ้างอิง `loan_items.id`
+| Field        | Type        | Constraints                                                              | Description                                                                                  |
+| ------------ | ----------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `id`         | int         | PK, increment                                                            | Primary key - Reservation batch identifier                                                   |
+| `user_id`    | int         | not null, FK -> `users.id`                                               | Foreign key to user who made the reservation                                                 |
+| `status`     | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | Batch status: `pending` = awaiting approval, `confirmed` = approved, `cancelled` = cancelled |
+| `expires_at` | timestamp   | not null                                                                 | Expiration timestamp - when reservation becomes invalid                                      |
+| `updated_at` | timestamp   | default `now()`                                                          | Timestamp of last update                                                                     |
+| `created_at` | timestamp   | default `now()`                                                          | Timestamp when reservation batch was created                                                 |
+
+**Purpose:** Header/parent record for a single reservation transaction. One reservation batch can contain multiple books (stored in `reservations` table).
+
+---
+
+## Table: `reservations` (Individual Reserved Books)
+
+| Field                  | Type        | Constraints                                                              | Description                                                                                 |
+| ---------------------- | ----------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `id`                   | int         | PK, increment                                                            | Primary key - Individual reservation item identifier                                        |
+| `book_id`              | int         | not null, FK -> `books.id`                                               | Foreign key to the book being reserved                                                      |
+| `reservation_batch_id` | int         | not null, FK -> `reservation_batches.id`                                 | Foreign key to parent reservation batch                                                     |
+| `status`               | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | Item status: `pending` = awaiting approval, `confirmed` = reserved, `cancelled` = cancelled |
+| `updated_at`           | timestamp   | default `now()`                                                          | Timestamp of last update                                                                    |
+| `created_at`           | timestamp   | default `now()`                                                          | Timestamp when reservation item was created                                                 |
+
+**Purpose:** Child/detail records for individual books within a reservation batch. Each record represents one book reserved in a transaction.
+
+---
+
+## Table: `loan_batches` (Loan Transactions)
+
+| Field        | Type      | Constraints                | Description                                              |
+| ------------ | --------- | -------------------------- | -------------------------------------------------------- |
+| `id`         | int       | PK, increment              | Primary key - Loan batch identifier                      |
+| `user_id`    | int       | not null, FK -> `users.id` | Foreign key to user who borrowed the books               |
+| `due_date`   | timestamp | nullable                   | Due date - when all books in this batch must be returned |
+| `updated_at` | timestamp | default `now()`            | Timestamp of last update                                 |
+| `created_at` | timestamp | default `now()`            | Timestamp when loan batch was created                    |
+
+**Purpose:** Header/parent record for a single borrowing transaction. One loan batch can contain multiple books (stored in `loan_items` table).
+
+---
+
+## Table: `loan_items` (Individual Borrowed Books)
+
+| Field            | Type        | Constraints                                                          | Description                                                                           |
+| ---------------- | ----------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `id`             | int         | PK, increment                                                        | Primary key - Individual loan item identifier                                         |
+| `book_id`        | int         | not null, FK -> `books.id`                                           | Foreign key to the book being borrowed                                                |
+| `loan_batch_id`  | int         | not null, FK -> `loan_batches.id`                                    | Foreign key to parent loan batch                                                      |
+| `reservation_id` | int         | nullable, FK -> `reservations.id`                                    | Foreign key to reservation (if this loan originated from a reservation)               |
+| `status`         | varchar(20) | not null, default `borrowed`, check (`borrowed`, `returned`, `lost`) | Item status: `borrowed` = currently out, `returned` = returned, `lost` = lost/missing |
+| `returned_at`    | timestamp   | nullable                                                             | Actual return timestamp (null if not yet returned)                                    |
+| `updated_at`     | timestamp   | default `now()`                                                      | Timestamp of last update                                                              |
+| `created_at`     | timestamp   | default `now()`                                                      | Timestamp when loan item was created                                                  |
+
+**Purpose:** Child/detail records for individual books within a loan batch. Each record represents one book borrowed in a transaction. Links to `reservations` if the loan was made from a prior reservation.
+
+---
+
+## Table: `fines` (Library Fines/Penalties)
+
+| Field          | Type          | Constraints                                          | Description                                                                      |
+| -------------- | ------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `id`           | int           | PK, increment                                        | Primary key - Fine record identifier                                             |
+| `loan_item_id` | int           | not null, FK -> `loan_items.id`                      | Foreign key to loan item that incurred the fine                                  |
+| `amount`       | decimal(10,2) | not null                                             | Fine amount in currency (2 decimal places)                                       |
+| `type`         | varchar(20)   | not null, check (`late_return`, `lost`, `damaged`)   | Fine type: `late_return` = overdue, `lost` = book lost, `damaged` = book damaged |
+| `reason`       | text          | nullable                                             | Additional details or notes about the fine                                       |
+| `status`       | varchar(20)   | not null, default `unpaid`, check (`unpaid`, `paid`) | Payment status: `unpaid` = not yet paid, `paid` = paid                           |
+| `paid_at`      | timestamp     | nullable                                             | Timestamp when fine was paid (null if unpaid)                                    |
+| `updated_at`   | timestamp     | default `now()`                                      | Timestamp of last update                                                         |
+| `created_at`   | timestamp     | default `now()`                                      | Timestamp when fine was created                                                  |
+
+**Purpose:** Stores fines/penalties associated with loan items. Fines are created for late returns, lost books, or damaged books. Each fine is linked to a specific loan item.
+
+---
+
+## Database Relationships Summary
+
+### Book-Related Relationships:
+
+- `books.publisher_id` → `publishers.id` (Many books to one publisher)
+- `book_authors.book_id` → `books.id` (Many-to-many junction)
+- `book_authors.author_id` → `authors.id` (Many-to-many junction)
+- `book_categories.book_id` → `books.id` (Many-to-many junction)
+- `book_categories.category_id` → `categories.id` (Many-to-many junction)
+
+### Reservation Workflow:
+
+- `reservation_batches.user_id` → `users.id` (Many reservation batches per user)
+- `reservations.book_id` → `books.id` (Each reservation item references a book)
+- `reservations.reservation_batch_id` → `reservation_batches.id` (Many items in one batch)
+
+### Loan Workflow:
+
+- `loan_batches.user_id` → `users.id` (Many loan batches per user)
+- `loan_items.book_id` → `books.id` (Each loan item references a book)
+- `loan_items.loan_batch_id` → `loan_batches.id` (Many items in one batch)
+- `loan_items.reservation_id` → `reservations.id` (Optional: links loan to original reservation)
+
+### Fines:
+
+- `fines.loan_item_id` → `loan_items.id` (Each fine is associated with a specific loan item)
+
+---
+
+## System Flow
+
+1. **User Registration**: Users are managed via Django's built-in User model with custom `phone_number` field
+2. **Book Catalog**: Books can have multiple authors and categories through junction tables
+3. **Reservation Process**: Users create reservation batches containing multiple books, with expiration dates
+4. **Loan Process**: Books can be borrowed either from reservations or directly. Loan batches track multiple books with a common due date
+5. **Fine Management**: Overdue, lost, or damaged books generate fines that must be paid
