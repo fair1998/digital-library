@@ -1,12 +1,10 @@
 {% extends 'base_admin.html' %}
 {% load static %}
-
 {% block title %}Reservations Management{% endblock %}
 {% block page_title %}Reservations Management{% endblock %}
-
 {% block content %}
-<!-- Statistics Cards -->
-<div class="row mb-4">
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
@@ -40,24 +38,28 @@
             </div>
         </div>
     </div>
-
     <!-- Filter -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-4">
                     <label for="status" class="form-label">Filter by Status</label>
-                    <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                    <select name="status"
+                            id="status"
+                            class="form-select"
+                            onchange="this.form.submit()">
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
-                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
-                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="pending"
+                                {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="confirmed"
+                                {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="cancelled"
+                                {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
                     </select>
                 </div>
             </form>
         </div>
     </div>
-
     <!-- Reservations List -->
     {% if reservation_batches %}
         <div class="table-responsive">
@@ -75,100 +77,110 @@
                 </thead>
                 <tbody>
                     {% for batch in reservation_batches %}
-                    <tr>
-                        <td>
-                            <strong>#{{ batch.id }}</strong>
-                        </td>
-                        <td>
-                            <i class="bi bi-person"></i> {{ batch.user.username }}
-                            {% if batch.user.get_full_name %}
-                                <br><small class="text-muted">{{ batch.user.get_full_name }}</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary" type="button" 
-                                    data-bs-toggle="collapse" 
-                                    data-bs-target="#books-{{ batch.id }}" 
-                                    aria-expanded="false">
-                                <i class="bi bi-book"></i> {{ batch.reservations.count }} books
-                            </button>
-                            <div class="collapse mt-2" id="books-{{ batch.id }}">
-                                <ul class="list-group list-group-flush">
-                                    {% for reservation in batch.reservations.all %}
-                                    <li class="list-group-item">
-                                        <strong>{{ reservation.book.title }}</strong>
-                                        <br><small class="text-muted">
-                                            Available: {{ reservation.book.available_quantity }}/{{ reservation.book.total_quantity }}
-                                        </small>
-                                        <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% else %}secondary{% endif %} ms-2">
-                                            {{ reservation.get_status_display }}
-                                        </span>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            {% if batch.status == 'pending' %}
-                                <span class="badge bg-warning text-dark">
-                                    <i class="bi bi-clock"></i> Pending
-                                </span>
-                            {% elif batch.status == 'confirmed' %}
-                                <span class="badge bg-success">
-                                    <i class="bi bi-check-circle"></i> Confirmed
-                                </span>
-                            {% elif batch.status == 'cancelled' %}
-                                <span class="badge bg-secondary">
-                                    <i class="bi bi-x-circle"></i> Cancelled
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <small>{{ batch.created_at|date:"d M Y H:i" }}</small>
-                        </td>
-                        <td>
-                            {% if batch.expires_at %}
-                                <small class="{% if batch.is_expired and batch.status == 'pending' %}text-danger fw-bold{% endif %}">
-                                    {{ batch.expires_at|date:"d M Y H:i" }}
-                                    {% if batch.is_expired and batch.status == 'pending' %}
-                                        <br><span class="badge bg-danger">Expired</span>
-                                    {% endif %}
-                                </small>
-                            {% else %}
-                                <small class="text-muted">-</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if batch.status == 'pending' %}
-                                <div class="btn-group" role="group">
-                                    <form method="post" action="{% url 'dashboard_reservations_confirm' batch.id %}">
+                        <tr>
+                            <td>
+                                <strong>#{{ batch.id }}</strong>
+                            </td>
+                            <td>
+                                <i class="bi bi-person"></i> {{ batch.user.username }}
+                                {% if batch.user.get_full_name %}
+                                    <br>
+                                    <small class="text-muted">{{ batch.user.get_full_name }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#books-{{ batch.id }}"
+                                        aria-expanded="false">
+                                    <i class="bi bi-book"></i> {{ batch.reservations.count }} books
+                                </button>
+                                <div class="collapse mt-2" id="books-{{ batch.id }}">
+                                    <ul class="list-group list-group-flush">
+                                        {% for reservation in batch.reservations.all %}
+                                            <li class="list-group-item">
+                                                <strong>{{ reservation.book.title }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Available: {{ reservation.book.available_quantity }}/{{ reservation.book.total_quantity }}
+                                                </small>
+                                                <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% else %}secondary{% endif %} ms-2">
+                                                    {{ reservation.get_status_display }}
+                                                </span>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </td>
+                            <td>
+                                {% if batch.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-clock"></i> Pending
+                                    </span>
+                                {% elif batch.status == 'confirmed' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Confirmed
+                                    </span>
+                                {% elif batch.status == 'cancelled' %}
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-x-circle"></i> Cancelled
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ batch.created_at|date:"d M Y H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if batch.expires_at %}
+                                    <small class="{% if batch.is_expired and batch.status == 'pending' %}text-danger fw-bold{% endif %}">
+                                        {{ batch.expires_at|date:"d M Y H:i" }}
+                                        {% if batch.is_expired and batch.status == 'pending' %}
+                                            <br>
+                                            <span class="badge bg-danger">Expired</span>
+                                        {% endif %}
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if batch.status == 'pending' %}
+                                    <div class="btn-group" role="group">
+                                        <form method="post"
+                                              action="{% url 'dashboard_reservations_confirm' batch.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-success"
+                                                    onclick="return confirm('ยืนยันการจอง #{{ batch.id }} ({{ batch.reservations.count }} เล่ม)?')">
+                                                <i class="bi bi-check-circle"></i> Confirm
+                                            </button>
+                                        </form>
+                                        <form method="post"
+                                              action="{% url 'dashboard_reservations_cancel' batch.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('ยกเลิกการจอง #{{ batch.id }}?')">
+                                                <i class="bi bi-x-circle"></i> Cancel
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% elif batch.status == 'confirmed' %}
+                                    <form method="post"
+                                          action="{% url 'dashboard_reservations_cancel' batch.id %}">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success" 
-                                                onclick="return confirm('ยืนยันการจอง #{{ batch.id }} ({{ batch.reservations.count }} เล่ม)?')">
-                                            <i class="bi bi-check-circle"></i> Confirm
-                                        </button>
-                                    </form>
-                                    <form method="post" action="{% url 'dashboard_reservations_cancel' batch.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-danger" 
-                                                onclick="return confirm('ยกเลิกการจอง #{{ batch.id }}?')">
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('ยกเลิกการจอง #{{ batch.id }} ที่ยืนยันแล้ว?\n(จะคืนจำนวนหนังสือกลับ)')">
                                             <i class="bi bi-x-circle"></i> Cancel
                                         </button>
                                     </form>
-                                </div>
-                            {% elif batch.status == 'confirmed' %}
-                                <form method="post" action="{% url 'dashboard_reservations_cancel' batch.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                            onclick="return confirm('ยกเลิกการจอง #{{ batch.id }} ที่ยืนยันแล้ว?\n(จะคืนจำนวนหนังสือกลับ)')">
-                                        <i class="bi bi-x-circle"></i> Cancel
-                                    </button>
-                                </form>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                    </tr>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
