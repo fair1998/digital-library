@@ -95,6 +95,7 @@ class BookAdmin(admin.ModelAdmin):
         "availability_status",
         "author_names",
         "category_names",
+        "created_at",
         "updated_at",
     )
     search_fields = (
@@ -105,12 +106,25 @@ class BookAdmin(admin.ModelAdmin):
         "categories__name",
         "publisher__name",
     )
-    list_filter = ("publish_year", "publisher", "available_quantity", "authors", "categories")
+    list_filter = ("publish_year", "publisher", "available_quantity", "authors", "categories", "created_at")
     autocomplete_fields = ("publisher",)
     ordering = ("-created_at",)
     list_select_related = ("publisher",)
     list_per_page = 20
     inlines = [BookAuthorInline, BookCategoryInline]
+    
+    fieldsets = (
+        ('Book Information', {
+            'fields': ('title', 'description', 'image_url', 'publisher', 'publish_year')
+        }),
+        ('Inventory', {
+            'fields': ('total_quantity', 'available_quantity')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

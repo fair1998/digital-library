@@ -15,13 +15,14 @@ class LoanItemInline(admin.TabularInline):
 
 @admin.register(LoanBatch)
 class LoanBatchAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'due_date', 'items_count', 'borrowed_count', 'returned_count', 'lost_count', 'created_at')
-    list_filter = ('created_at', 'due_date')
-    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
+    list_display = ('id', 'user', 'due_date', 'items_count', 'borrowed_count', 'returned_count', 'lost_count', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'due_date', 'updated_at')
+    search_fields = ('id', 'user__username', 'user__email', 'user__first_name', 'user__last_name')
     date_hierarchy = 'created_at'
     autocomplete_fields = ['user']
     inlines = [LoanItemInline]
     readonly_fields = ('created_at', 'updated_at')
+    list_per_page = 20
     
     fieldsets = (
         ('Loan Information', {
@@ -52,8 +53,8 @@ class LoanBatchAdmin(admin.ModelAdmin):
 
 @admin.register(LoanItem)
 class LoanItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'book', 'batch_user', 'batch_due_date', 'status', 'returned_at', 'created_at')
-    list_filter = ('status', 'created_at', 'returned_at', 'loan_batch__due_date')
+    list_display = ('id', 'book', 'batch_user', 'batch_due_date', 'reservation', 'status', 'returned_at', 'created_at', 'updated_at')
+    list_filter = ('status', 'created_at', 'returned_at', 'updated_at', 'loan_batch__due_date')
     search_fields = (
         'id',
         'book__title',
@@ -64,9 +65,10 @@ class LoanItemAdmin(admin.ModelAdmin):
     )
     date_hierarchy = 'created_at'
     autocomplete_fields = ['book', 'loan_batch', 'reservation']
-    readonly_fields = ('created_at', 'updated_at', 'returned_at')
+    readonly_fields = ('created_at', 'updated_at')
     actions = ['mark_as_returned', 'mark_as_lost']
-    list_select_related = ['book', 'loan_batch', 'loan_batch__user']
+    list_select_related = ['book', 'loan_batch', 'loan_batch__user', 'reservation']
+    list_per_page = 20
     
     fieldsets = (
         ('Loan Item Information', {

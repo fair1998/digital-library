@@ -47,11 +47,6 @@ class FineAdmin(admin.ModelAdmin):
     
     date_hierarchy = 'created_at'
     
-    def get_readonly_fields(self, request, obj=None):
-        if obj:  # editing an existing object
-            return self.readonly_fields + ['loan_item']
-        return self.readonly_fields
-    
     def loan_item_display(self, obj):
         """Display loan item ID with link."""
         return f"Loan Item #{obj.loan_item.id}"
