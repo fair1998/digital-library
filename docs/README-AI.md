@@ -65,13 +65,25 @@
 - ✅ Status badge แบบมีสี
 - ✅ Query optimization และ autocomplete
 
-## 🚧 Next Steps
+## 🚧 Current Phase
 
-**Phase 8:** Member-Facing Pages
+**Phase 8:** Member-Facing Pages (In Progress)
 
-- สร้างหน้า home, book list, book detail
-- สร้างหน้า my reservations, my loans, my fines
-- เพิ่ม search และ filter functionality
+### ✅ Completed:
+
+- Authentication System (Register, Login, Logout)
+- Home page with hero section and features
+- Base template with responsive navbar
+- User registration form with validation
+- Login/logout workflow
+
+### 🔄 In Progress:
+
+- Book list page
+- Book detail page
+- My reservations page
+- My loans page
+- My fines page
 
 ## 📋 Rules:
 

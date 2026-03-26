@@ -5,7 +5,7 @@
 
 ---
 
-## 📊 Project Status (Updated: March 25, 2026)
+## 📊 Project Status (Updated: March 26, 2026)
 
 ### ✅ Completed Phases
 
@@ -20,7 +20,12 @@
 
 ### 🚧 Current Phase
 
-- **Phase 8**: Member-Facing Pages (Next)
+- **Phase 8**: Member-Facing Pages (In Progress)
+  - ✅ Authentication System (Register, Login, Logout)
+  - ✅ Home Page
+  - ⏳ Book List Page
+  - ⏳ Book Detail Page
+  - ⏳ My Reservations/Loans/Fines Pages
 
 ### 📋 Remaining Phases
 
@@ -227,7 +232,61 @@ Digital Library System
 
 ด้านล่างคือหน้าหลักฝั่งผู้ใช้ทั่วไป
 
-## 7.1 Home Page
+## 7.0 Authentication Pages ✅ IMPLEMENTED
+
+### Register Page
+
+**URL:** `/users/register/`
+
+**Purpose:** ลงทะเบียนสมาชิกใหม่
+
+**Features:**
+
+- Form validation (username, email, password, phone number)
+- Password strength validation
+- Phone number validation (10 digits)
+- Bootstrap 5 styling
+- Redirect ไป login หลังสำเร็จ
+
+**Fields:**
+
+- Username (required)
+- Email (required)
+- First Name (optional)
+- Last Name (optional)
+- Phone Number (optional, 10 digits)
+- Password (required, min 8 chars)
+- Password Confirmation (required)
+
+### Login Page
+
+**URL:** `/users/login/`
+
+**Purpose:** เข้าสู่ระบบ
+
+**Features:**
+
+- Username/Password authentication
+- Remember me checkbox
+- Success/error messages
+- Redirect to home or requested page
+- Link to register page
+
+### Logout
+
+**URL:** `/users/logout/`
+
+**Purpose:** ออกจากระบบ
+
+**Features:**
+
+- Requires login (@login_required)
+- Success message
+- Redirect to home
+
+---
+
+## 7.1 Home Page ✅ IMPLEMENTED
 
 ### URL
 
@@ -240,13 +299,29 @@ Digital Library System
 ### Member Can Do
 
 - ดูข้อความต้อนรับ
-- ไปหน้ารายการหนังสือ
-- ค้นหาหนังสือ
-- ดูหนังสือแนะนำหรือหนังสือใหม่
+- ดู features ของระบบ (ค้นหา, จอง, ติดตามสถานะ)
+- ไปหน้าลงทะเบียนหรือเข้าสู่ระบบ (ถ้ายังไม่ได้ login)
+- เห็น navbar พร้อมลิงก์ไปหน้าต่างๆ (ถ้า login แล้ว)
+
+### Features
+
+- Hero section พร้อม call-to-action buttons
+- Feature cards (ค้นหาหนังสือ, จองหนังสือ, ติดตามสถานะ)
+- Dynamic content based on authentication status
+- Responsive navbar with user menu
+- Bootstrap 5 styling
 
 ### Related Data
 
-- books
+- None (static page with dynamic authentication status)
+
+### UI Components
+
+- Navbar with authentication status
+- Hero section
+- Feature cards
+- Call-to-action buttons
+- Footer
 
 ---
 

@@ -560,7 +560,7 @@
 
 ---
 
-# Phase 8: Member-Facing Pages
+# Phase 8: Member-Facing Pages 🚧 IN PROGRESS
 
 ## Goal
 
@@ -568,6 +568,7 @@
 
 ## Scope
 
+- authentication (register, login, logout)
 - home
 - book list
 - book detail
@@ -577,10 +578,27 @@
 
 ## Tasks
 
-### 8.1 Home Page
+### 8.0 Authentication System ✅ COMPLETED
 
-- [ ] แสดงภาพรวมระบบ
-- [ ] แสดงหนังสือแนะนำหรือหนังสือใหม่
+- [x] สร้าง UserRegistrationForm พร้อม validation
+- [x] สร้าง UserLoginForm
+- [x] สร้าง register_view, login_view, logout_view
+- [x] สร้าง URLs สำหรับ authentication
+- [x] สร้าง register template
+- [x] สร้าง login template
+- [x] Validation เบอร์โทรศัพท์ (10 หลัก)
+- [x] Success/Error messages
+- [x] Redirect logic หลังล็อกอิน
+- [x] ตั้งค่า LOGIN_URL, LOGIN_REDIRECT_URL, LOGOUT_REDIRECT_URL
+
+### 8.1 Home Page ✅ COMPLETED
+
+- [x] แสดงภาพรวมระบบ
+- [x] แสดง features ของระบบ (ค้นหา, จอง, ติดตาม)
+- [x] สร้าง base template พร้อม navbar
+- [x] แสดงสถานะผู้ใช้ใน navbar
+- [x] Hero section พร้อม call-to-action
+- [x] Responsive design ด้วย Bootstrap 5
 
 ### 8.2 Book List Page
 

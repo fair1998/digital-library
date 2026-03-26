@@ -1,5 +1,109 @@
 # Changelog - Digital Library System
 
+## [Feature] - 2026-03-26
+
+### 🎉 User Registration System (Phase 8 - Authentication)
+
+**New Features:**
+
+**1. User Registration**
+
+- สร้าง `UserRegistrationForm` พร้อม validation
+  - Username validation (Django standard)
+  - Email validation (required)
+  - Password strength validation (min 8 chars)
+  - Phone number validation (10 digits, numbers only)
+  - First name / Last name (optional)
+- สร้าง `/users/register/` endpoint
+- Bootstrap 5 form styling
+- Field-level error messages
+- Success message หลังลงทะเบียนสำเร็จ
+- Redirect ไป login page หลังสำเร็จ
+
+**2. User Login**
+
+- สร้าง `UserLoginForm` with Bootstrap styling
+- สร้าง `/users/login/` endpoint
+- Remember me checkbox
+- Support "next" parameter for redirect after login
+- Success/error messages
+- Link to register page
+
+**3. User Logout**
+
+- สร้าง `/users/logout/` endpoint
+- Requires login (`@login_required`)
+- Success message
+- Redirect to home
+
+**4. Home Page**
+
+- สร้าง responsive home page (`/`)
+- Hero section with call-to-action
+- Feature cards (ค้นหา, จอง, ติดตาม)
+- Dynamic content based on authentication status
+- Different UI for logged in vs guest users
+
+**5. Base Template & Navigation**
+
+- สร้าง `templates/base.html` with Bootstrap 5
+- Responsive navbar with:
+  - Logo and site name
+  - Navigation links (visible when logged in)
+  - User dropdown menu (profile, admin, logout)
+  - Login/Register links (visible when guest)
+- Message alerts with auto-dismiss
+- Footer section
+
+**Files Created:**
+
+- `users/forms.py` - Registration and login forms
+- `users/urls.py` - User authentication URLs
+- `templates/base.html` - Base template with navbar
+- `templates/home.html` - Home page
+- `templates/users/register.html` - Registration form
+- `templates/users/login.html` - Login form
+
+**Files Modified:**
+
+- `users/views.py` - Added authentication views
+- `config/urls.py` - Include users URLs and home route
+- `config/settings.py`:
+  - Added `TEMPLATES['DIRS'] = [BASE_DIR / 'templates']`
+  - Added `LOGIN_URL = 'login'`
+  - Added `LOGIN_REDIRECT_URL = 'home'`
+  - Added `LOGOUT_REDIRECT_URL = 'home'`
+
+**Configuration:**
+
+- Login URL: `/users/login/`
+- Default redirect after login: home page
+- Default redirect after logout: home page
+
+**Benefits:**
+
+- ✅ Member สามารถลงทะเบียนและเข้าสู่ระบบได้
+- ✅ Form validation ครบถ้วน
+- ✅ Responsive design พร้อมใช้งานบนมือถือ
+- ✅ User-friendly error messages
+- ✅ เตรียมพร้อมสำหรับ Phase 8 ต่อ (Book List, My Pages)
+
+**Next Steps:**
+
+- Book List Page
+- Book Detail Page with Reserve button
+- My Reservations Page
+- My Loans Page
+- My Fines Page
+
+**Documentation Updated:**
+
+- `docs/README-AI.md` - Updated progress
+- `docs/plan.md` - Marked Phase 8.0 and 8.1 as completed
+- `docs/ai-context.md` - Added authentication documentation
+
+---
+
 ## [Enhancement] - 2026-03-25
 
 ### ✨ Admin Can Create Reservations for Users
