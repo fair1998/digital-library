@@ -55,25 +55,21 @@ class ReservationBatchAdmin(admin.ModelAdmin):
         return obj.reservations.count()
     reservation_count.short_description = 'Books Reserved'
     
-    def save_model(self, request, obj, form, change):
-        """Override save_model เพื่อตั้งค่า expires_at อัตโนมัติเมื่อสร้างใหม่"""
-        if not change:  # ถ้าเป็นการสร้างใหม่
-            expiry_days = getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)
-            obj.expires_at = timezone.now() + timedelta(days=expiry_days)
-        super().save_model(request, obj, form, change)
-    
     @admin.action(description='ยืนยันการจอง (Confirm selected reservations)')
     def confirm_reservations(self, request, queryset):
-        """Confirm selected reservation batches and update book availability."""
+        """Confirm selected reservation batches, set expiry date, and update book availability."""
         confirmed_count = 0
         failed_count = 0
+        
+        # Get expiry days from settings or use default (3 days)
+        expiry_days = getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)
         
         for batch in queryset:
             if not batch.can_be_confirmed():
                 failed_count += 1
                 self.message_user(
                     request,
-                    f'Batch #{batch.id} cannot be confirmed (status: {batch.status}, expired: {batch.is_expired()})',
+                    f'Batch #{batch.id} cannot be confirmed (status: {batch.status})',
                     level=messages.WARNING
                 )
                 continue
@@ -85,8 +81,9 @@ class ReservationBatchAdmin(admin.ModelAdmin):
                         if reservation.book.available_quantity <= 0:
                             raise ValueError(f'Book "{reservation.book.title}" is not available')
                     
-                    # Update batch status
+                    # Update batch status and set expiry date
                     batch.status = 'confirmed'
+                    batch.expires_at = timezone.now() + timedelta(days=expiry_days)
                     batch.save()
                     
                     # Update each reservation and decrease book quantity
@@ -112,7 +109,7 @@ class ReservationBatchAdmin(admin.ModelAdmin):
         if confirmed_count > 0:
             self.message_user(
                 request,
-                f'Successfully confirmed {confirmed_count} reservation batch(es)',
+                f'Successfully confirmed {confirmed_count} reservation batch(es) with {expiry_days}-day expiry',
                 level=messages.SUCCESS
             )
         

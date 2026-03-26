@@ -119,16 +119,23 @@ This document describes the database schema for a digital library management sys
 
 ## Table: `reservation_batches` (Reservation Transactions)
 
-| Field        | Type        | Constraints                                                              | Description                                                                                  |
-| ------------ | ----------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `id`         | int         | PK, increment                                                            | Primary key - Reservation batch identifier                                                   |
-| `user_id`    | int         | not null, FK -> `users.id`                                               | Foreign key to user who made the reservation                                                 |
-| `status`     | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | Batch status: `pending` = awaiting approval, `confirmed` = approved, `cancelled` = cancelled |
-| `expires_at` | timestamp   | not null                                                                 | Expiration timestamp - when reservation becomes invalid                                      |
-| `updated_at` | timestamp   | default `now()`                                                          | Timestamp of last update                                                                     |
-| `created_at` | timestamp   | default `now()`                                                          | Timestamp when reservation batch was created                                                 |
+| Field        | Type        | Constraints                                                              | Description                                                                                                                     |
+| ------------ | ----------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | int         | PK, increment                                                            | Primary key - Reservation batch identifier                                                                                      |
+| `user_id`    | int         | not null, FK -> `users.id`                                               | Foreign key to user who made the reservation                                                                                    |
+| `status`     | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | Batch status: `pending` = awaiting approval, `confirmed` = approved, `cancelled` = cancelled                                    |
+| `expires_at` | timestamp   | **nullable**                                                             | Expiration timestamp - **Set by admin when confirming reservation** (null for pending reservations awaiting admin confirmation) |
+| `updated_at` | timestamp   | default `now()`                                                          | Timestamp of last update                                                                                                        |
+| `created_at` | timestamp   | default `now()`                                                          | Timestamp when reservation batch was created                                                                                    |
 
 **Purpose:** Header/parent record for a single reservation transaction. One reservation batch can contain multiple books (stored in `reservations` table).
+
+**Business Rules:**
+
+- `expires_at` is **null** when user creates reservation (status = `pending`)
+- Admin sets `expires_at` when confirming reservation (typically 3 days from confirmation date)
+- User can cancel reservation while status is `pending`
+- Once confirmed, only admin can cancel
 
 ---
 

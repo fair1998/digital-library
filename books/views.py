@@ -195,11 +195,11 @@ def confirm_cart_view(request):
                 return redirect('books:view_cart')
             
             # Create reservation batch
-            expires_at = timezone.now() + timedelta(days=3)
+            # Note: expires_at will be set by admin when confirming
             reservation_batch = ReservationBatch.objects.create(
                 user=request.user,
                 status='pending',
-                expires_at=expires_at
+                expires_at=None  # Admin will set this when confirming
             )
             
             # Create reservation items
@@ -216,7 +216,7 @@ def confirm_cart_view(request):
             messages.success(
                 request,
                 f'จองหนังสือ {len(books)} เล่มสำเร็จ! '
-                f'กรุณารอการยืนยันจากเจ้าหน้าที่ภายใน 3 วัน'
+                f'กรุณารอการยืนยันจากเจ้าหน้าที่'
             )
             return redirect('reservations:my_reservations')
             

@@ -1,5 +1,136 @@
 # Changelog - Digital Library System
 
+## [Enhancement] - 2026-03-26 - User Can Cancel Reservations & Admin-Controlled Expiry
+
+### 🔄 Reservation Cancellation & Expiry Management
+
+**ปรับปรุงระบบการจองให้มีความยืดหยุ่นมากขึ้น**
+
+**New Features:**
+
+**1. User Can Cancel Pending Reservations**
+
+- เพิ่ม `can_be_cancelled_by_user()` method ใน ReservationBatch
+- User สามารถยกเลิกการจองที่อยู่ในสถานะ `pending` เท่านั้น
+- เมื่อยกเลิก:
+  - เปลี่ยน batch status เป็น `cancelled`
+  - เปลี่ยน reservation items ทั้งหมดเป็น `cancelled`
+  - Transaction-safe with rollback
+- UI: ปุ่มยกเลิกแสดงเฉพาะ pending batches
+- Confirmation dialog ป้องกันการกดผิด
+
+**2. Admin-Controlled Expiry Date**
+
+- `expires_at` เปลี่ยนเป็น nullable field
+- **ไม่** set expires_at ตอนที่ user สร้างการจอง
+- Admin กำหนด expires_at ตอน **ยืนยัน** การจอง
+- Default: 3 วันจากวันที่ยืนยัน (configurable via `RESERVATION_EXPIRY_DAYS`)
+- แสดงข้อความ "รอเจ้าหน้าที่ยืนยันและกำหนดวันหมดอายุ" สำหรับ pending batches
+
+**Changes:**
+
+**Model Changes** (`reservations/models.py`):
+
+```python
+# Before
+expires_at = models.DateTimeField()
+
+# After
+expires_at = models.DateTimeField(
+    null=True,
+    blank=True,
+    help_text='Will be set by admin when confirming reservation'
+)
+```
+
+- ปรับ `is_expired()`: ตรวจสอบ null ก่อน
+- ปรับ `can_be_confirmed()`: ไม่ตรวจสอบ expiry (admin กำหนดตอนยืนยัน)
+- เพิ่ม `can_be_cancelled_by_user()`: user ยกเลิกได้เฉพาะ pending
+
+**View Changes**:
+
+1. `books/views.py` - `confirm_cart_view`:
+   - ไม่ set expires_at ตอนสร้าง ReservationBatch
+   - ส่งข้อความเปลี่ยนเป็น "กรุณารอการยืนยันจากเจ้าหน้าที่" (ไม่มี "ภายใน 3 วัน")
+
+2. `reservations/views.py` - NEW: `cancel_reservation_view`:
+   - POST-only, login required
+   - ตรวจสอบ ownership (user ยกเลิกได้เฉพาะของตัวเอง)
+   - ตรวจสอบ `can_be_cancelled_by_user()`
+   - Transaction atomic
+   - Update batch และ items status
+
+**Admin Changes** (`reservations/admin.py`):
+
+- ลบ `save_model` override (ไม่ set expires_at ตอนสร้าง)
+- อัปเดต `confirm_reservations` action:
+  - Set `expires_at = timezone.now() + timedelta(days=expiry_days)`
+  - Success message แสดงจำนวนวันหมดอายุ
+  - Configurable via `settings.RESERVATION_EXPIRY_DAYS`
+
+**Template Changes** (`templates/reservations/my_reservations.html`):
+
+- แสดง expires_at เฉพาะเมื่อมีค่า (ยืนยันแล้ว)
+- แสดง badge "รอเจ้าหน้าที่ยืนยัน" สำหรับ pending batches ที่ยังไม่มี expires_at
+- เพิ่มปุ่ม "ยกเลิกการจอง" สำหรับ pending batches
+- Confirmation dialog ก่อนยกเลิก
+- คำอธิบาย: "คุณสามารถยกเลิกการจองที่ยังไม่ได้รับการยืนยันได้"
+
+**URL Changes** (`reservations/urls.py`):
+
+```python
+path('<int:batch_id>/cancel/', views.cancel_reservation_view, name='cancel_reservation')
+```
+
+**Migration**:
+
+- `reservations/migrations/0003_alter_reservationbatch_expires_at.py`
+- เปลี่ยน expires_at เป็น nullable
+
+**Benefits:**
+
+✅ **User Flexibility**: ยกเลิกการจองที่ไม่ต้องการได้ (ก่อน admin ยืนยัน)  
+✅ **Admin Control**: admin กำหนดระยะเวลาหมดอายุเองได้ตอนยืนยัน  
+✅ **Future-Ready**: พร้อมสำหรับ dashboard ที่ให้ admin กำหนด expiry_days แบบ dynamic  
+✅ **Clear Status**: แยกชัดเจนระหว่าง pending (ยังไม่มี expiry) และ confirmed (มี expiry)  
+✅ **Reduced Confusion**: user ไม่เห็นวันหมดอายุจนกว่า admin จะยืนยัน
+
+**Workflow:**
+
+**Before:**
+
+1. User สร้างการจอง → expires_at = now + 3 days
+2. User เห็นวันหมดอายุทันที (แต่ยังไม่ได้ยืนยัน)
+3. ไม่สามารถยกเลิกได้
+
+**After:**
+
+1. User สร้างการจอง → expires_at = null
+2. แสดง "รอเจ้าหน้าที่ยืนยัน"
+3. **User สามารถยกเลิกได้** (ถ้ายังเป็น pending)
+4. Admin ยืนยัน → set expires_at = now + 3 days
+5. User เห็นวันหมดอายุจริง
+
+**Files Modified:**
+
+- `reservations/models.py` - expires_at nullable, add can_be_cancelled_by_user()
+- `reservations/views.py` - add cancel_reservation_view
+- `reservations/urls.py` - add cancel URL
+- `reservations/admin.py` - set expires_at on confirm
+- `books/views.py` - don't set expires_at on create
+- `templates/reservations/my_reservations.html` - add cancel button, conditional expiry display
+- `reservations/migrations/0003_alter_reservationbatch_expires_at.py` - NEW
+
+**Settings:**
+
+เพิ่ม optional setting:
+
+```python
+RESERVATION_EXPIRY_DAYS = 3  # Default if not set
+```
+
+---
+
 ## [Feature] - 2026-03-26 - Shopping Cart System for Book Reservations
 
 ### 🛒 Shopping Cart Workflow (Phase 8 Enhancement)
