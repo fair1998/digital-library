@@ -616,10 +616,17 @@
 - [x] แสดงรายละเอียดหนังสือ
 - [x] แสดงผู้แต่ง หมวดหมู่ สำนักพิมพ์
 - [x] แสดงจำนวน available_quantity
-- [x] ปุ่มจองหนังสือ (UI เตรียมไว้แล้ว)
+- [x] ปุ่มจองหนังสือ (ใช้งานได้จริง)
 - [x] Breadcrumb navigation
 - [x] Large cover image display
 - [x] Login prompt for non-authenticated users
+- [x] Shopping cart system for multiple book selection
+- [x] Add to cart functionality
+- [x] View cart with real-time availability check
+- [x] Remove from cart functionality
+- [x] Confirm reservation from cart (creates ReservationBatch)
+- [x] Success/error messages
+- [x] Redirect to My Reservations after booking
 
 ### 8.4 My Reservations Page ✅ COMPLETED
 
@@ -649,17 +656,26 @@
 
 ## Deliverables
 
-- ✅ ผู้ใช้ใช้งานระบบหลักได้
+- ✅ ผู้ใช้ใช้งานระบบหลักได้สมบูรณ์
 
 ## Acceptance Criteria
 
 - ✅ ผู้ใช้ดูหนังสือได้
-- ⏳ ผู้ใช้จองหนังสือได้ (ฟังก์ชันจองยังไม่เสร็จ)
+- ✅ ผู้ใช้จองหนังสือได้ (สร้าง ReservationBatch และ Reservation)
 - ✅ ผู้ใช้ดูประวัติการจอง ยืม และค่าปรับของตัวเองได้
+- ✅ ระบบตรวจสอบ available_quantity ก่อนจอง
+- ✅ ระบบแสดง success/error messages
 
 ## Status: ✅ COMPLETED
 
-**Note:** ฟังก์ชันจองหนังสือ (reservation workflow) ยังไม่ได้เชื่อมต่อกับปุ่ม แต่ admin สามารถสร้างการจองแทน user ได้แล้ว
+**Implementation Details:**
+
+- Member สามารถจองหนังสือผ่านปุ่มในหน้า Book Detail
+- ระบบสร้าง ReservationBatch พร้อม status='pending' และ expires_at (3 วัน)
+- ระบบสร้าง Reservation item เชื่อมกับหนังสือที่เลือก
+- ตรวจสอบ available_quantity > 0 ก่อนอนุญาตให้จอง
+- Admin ต้องยืนยันการจองผ่าน Django Admin
+- Admin สามารถสร้างการจองแทน user ได้ผ่าน admin interface
 
 ---
 

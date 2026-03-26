@@ -21,10 +21,11 @@
   - ✅ Authentication System (Register, Login, Logout)
   - ✅ Home Page with hero section and features
   - ✅ Book List Page with search and filter
-  - ✅ Book Detail Page
+  - ✅ Book Detail Page with Reservation Functionality
   - ✅ My Reservations Page
   - ✅ My Loans Page
   - ✅ My Fines Page
+  - ✅ Member Reservation Workflow with Shopping Cart (ระบบตะกร้าจองหนังสือ)
 
 ### 📋 Remaining Phases
 

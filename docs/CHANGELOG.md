@@ -1,5 +1,209 @@
 # Changelog - Digital Library System
 
+## [Feature] - 2026-03-26 - Shopping Cart System for Book Reservations
+
+### 🛒 Shopping Cart Workflow (Phase 8 Enhancement)
+
+**เปลี่ยนจากการจองทีละเล่ม เป็นระบบตะกร้าที่สามารถเลือกหนังสือหลายเล่มก่อนยืนยัน**
+
+**New Features:**
+
+**1. Cart Utility Class** (`books/cart.py`)
+
+- Session-based cart system
+- Methods: `add()`, `remove()`, `clear()`, `get_book_ids()`, `count()`
+- Persistent across requests
+- No database required for cart items
+
+**2. Cart Views** (`books/views.py`)
+
+- `add_to_cart_view`: เพิ่มหนังสือไปยังตะกร้า
+  - ตรวจสอบ availability
+  - ป้องกันการเพิ่มซ้ำ
+  - Success/info messages
+- `view_cart`: แสดงรายการหนังสือในตะกร้า
+  - แสดงรูปปก, ชื่อ, ผู้แต่ง
+  - แสดงสถานะ available/unavailable
+  - Real-time availability check
+- `remove_from_cart_view`: ลบหนังสือออกจากตะกร้า
+- `confirm_cart_view`: ยืนยันการจองทั้งหมด
+  - สร้าง ReservationBatch
+  - สร้าง Reservation items หลายรายการ
+  - Transaction-safe
+  - ตรวจสอบ availability ทุกเล่มก่อน confirm
+  - Clear cart หลังยืนยันสำเร็จ
+
+**3. Cart Template** (`templates/books/cart.html`)
+
+- Responsive cart page with Bootstrap 5
+- Table แสดงรายการหนังสือ:
+  - ปกหนังสือ (thumbnail)
+  - ชื่อและปีพิมพ์
+  - ผู้แต่ง (badges)
+  - สถานะพร้อมยืม (color-coded)
+  - ปุ่มลบ
+- Summary card:
+  - จำนวนหนังสือทั้งหมด
+  - ระยะเวลาจอง (3 วัน)
+  - หมายเหตุและเงื่อนไข
+  - ปุ่มยืนยันการจอง (disabled ถ้ามีหนังสือไม่พร้อมยืม)
+- Empty cart state with call-to-action
+- Breadcrumb navigation
+
+**4. Updated Book Detail Page**
+
+- เปลี่ยนปุ่ม "จองหนังสือ" → "เพิ่มไปยังตะกร้า"
+- เพิ่มปุ่ม "ดูตะกร้า"
+- ข้อความแจ้งเตือนใหม่: "เพิ่มหนังสือหลายเล่มแล้วค่อยยืนยันการจอง"
+
+**5. Navigation Bar Enhancement** (`templates/base.html`)
+
+- เพิ่ม Cart icon พร้อม badge แสดงจำนวน
+- Badge สีแดงแสดงจำนวนหนังสือในตะกร้า
+- Real-time update (via context processor)
+- ปรากฏเฉพาะเมื่อล็อกอินแล้ว
+
+**6. Context Processor** (`books/context_processors.py`)
+
+- ทำให้ `cart_count` พร้อมใช้ในทุก template
+- เพิ่มใน `settings.py` TEMPLATES configuration
+
+**7. URL Configuration** (`books/urls.py`)
+
+- `cart/` - view cart
+- `<id>/add-to-cart/` - add book to cart
+- `<id>/remove-from-cart/` - remove book from cart
+- `cart/confirm/` - confirm reservation
+- `<id>/reserve/` - deprecated (backward compatibility)
+
+**Technical Details:**
+
+- Session-based storage (no cart model required)
+- Transaction safety with `@transaction.atomic()`
+- Select for update locking to prevent race conditions
+- Query optimization: `select_related()`, `prefetch_related()`
+- Comprehensive error handling
+- User-friendly messages in Thai
+- Bootstrap 5 responsive design
+- Accessibility features (ARIA labels, semantic HTML)
+
+**Business Flow:**
+
+1. User คลิก "เพิ่มไปยังตะกร้า" ในหน้า Book Detail
+2. หนังสือถูกเพิ่มไปยัง session cart
+3. Badge ใน navbar แสดงจำนวน
+4. User สามารถเพิ่มหนังสือหลายเล่ม
+5. User คลิก "ตะกร้า" เพื่อดูรายการ
+6. ระบบตรวจสอบ availability real-time
+7. User สามารถลบหนังสือที่ไม่ต้องการ
+8. User คลิก "ยืนยันการจอง"
+9. ระบบสร้าง ReservationBatch + Reservation items ทั้งหมด
+10. Cart ถูกล้าง
+11. Redirect ไปหน้า My Reservations
+
+**Files Modified:**
+
+- `books/cart.py` - NEW: Cart utility class
+- `books/context_processors.py` - NEW: Cart context processor
+- `books/views.py` - เพิ่ม cart views, deprecate old reserve_book_view
+- `books/urls.py` - เพิ่ม cart URLs
+- `templates/books/cart.html` - NEW: Cart page template
+- `templates/books/book_detail.html` - เปลี่ยนจาก "จอง" เป็น "เพิ่มไปยังตะกร้า"
+- `templates/base.html` - เพิ่ม cart icon ใน navbar
+- `config/settings.py` - เพิ่ม cart context processor
+
+**Benefits:**
+
+✅ Better UX - เลือกหนังสือหลายเล่มในครั้งเดียว
+✅ Flexibility - สามารถแก้ไขรายการก่อนยืนยัน
+✅ Transparency - เห็นสถานะ availability ชัดเจน
+✅ Efficiency - ลด admin workload (1 batch มีหลาย items)
+✅ Consistency - ทุกหนังสือในตะกร้ายืนยันพร้อมกัน
+
+---
+
+## [Feature] - 2026-03-26 - Member Reservation Functionality
+
+### 🎉 Member Can Reserve Books (Phase 8 Final)
+
+**New Features:**
+
+**1. Book Reservation View**
+
+- สร้าง `reserve_book_view` ใน `books/views.py`
+- POST-only endpoint สำหรับจองหนังสือ
+- Requires login (`@login_required`)
+- Transaction-safe (uses `@transaction.atomic`)
+- Validation:
+  - ตรวจสอบ `available_quantity > 0`
+  - ป้องกันการจองหนังสือที่ไม่มีให้ยืม
+- สร้าง `ReservationBatch` อัตโนมัติ
+  - Status: `pending`
+  - Expires in 3 days
+  - User: ผู้ที่ล็อกอินอยู่
+- สร้าง `Reservation` item สำหรับหนังสือที่เลือก
+- Success/error messages
+- Redirect to My Reservations หลังจองสำเร็จ
+
+**2. Updated Book Detail Page**
+
+- เปลี่ยนปุ่ม "จองหนังสือ" จาก disabled เป็นใช้งานได้
+- เพิ่ม form with CSRF protection
+- POST to `/books/<id>/reserve/`
+- แสดงข้อความแจ้งเตือน "การจองจะหมดอายุภายใน 3 วัน"
+- UI แยกชัดเจนระหว่าง:
+  - มีหนังสือให้ยืม → แสดงปุ่มจอง
+  - ไม่มีหนังสือ → แสดงปุ่ม disabled
+  - ยังไม่ล็อกอิน → แสดงปุ่ม login
+
+**3. URL Configuration**
+
+- เพิ่ม path ใหม่: `books/<int:book_id>/reserve/`
+- Name: `books:reserve_book`
+- Maps to `reserve_book_view`
+
+**Technical Details:**
+
+- Import dependencies: `timezone`, `timedelta`, `transaction`, `messages`
+- Import models: `ReservationBatch`, `Reservation`
+- Error handling ครบถ้วน
+- User-friendly error messages ภาษาไทย
+
+**Business Flow:**
+
+1. Member คลิกปุ่ม "จองหนังสือ" ในหน้า Book Detail
+2. ระบบตรวจสอบ available_quantity
+3. สร้าง ReservationBatch (expires ใน 3 วัน)
+4. สร้าง Reservation item เชื่อมกับหนังสือ
+5. แสดง success message
+6. Redirect ไปหน้า My Reservations
+7. Admin ต้องยืนยันการจองภายใน 3 วัน
+8. เมื่อ admin confirm → ลด available_quantity
+
+**Files Modified:**
+
+- `books/views.py` - เพิ่ม reserve_book_view
+- `books/urls.py` - เพิ่ม reserve_book path
+- `templates/books/book_detail.html` - เปลี่ยนปุ่มเป็น form
+- `docs/ai-context.md` - อัปเดต Phase 8 status
+- `docs/plan.md` - อัปเดต Phase 8 เป็น COMPLETED
+- `docs/README-AI.md` - อัปเดต current phase
+
+**Phase 8 Status:** ✅ **COMPLETED**
+
+All member-facing features are now fully functional:
+
+- ✅ Authentication (Register, Login, Logout)
+- ✅ Home Page
+- ✅ Book List with Search/Filter
+- ✅ Book Detail with Reservation
+- ✅ My Reservations
+- ✅ My Loans
+- ✅ My Fines
+- ✅ **Member Reservation Workflow**
+
+---
+
 ## [Feature] - 2026-03-26
 
 ### 🎉 User Registration System (Phase 8 - Authentication)

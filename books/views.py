@@ -1,7 +1,14 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db import transaction
+from django.utils import timezone
+from datetime import timedelta
 from .models import Book, Category, Publisher
+from reservations.models import ReservationBatch, Reservation
+from .cart import Cart
 
 
 def book_list_view(request):
@@ -63,3 +70,156 @@ def book_detail_view(request, book_id):
     }
     
     return render(request, 'books/book_detail.html', context)
+
+
+@login_required
+def reserve_book_view(request, book_id):
+    """
+    DEPRECATED: This view is replaced by add_to_cart + confirm_cart workflow.
+    Kept for backward compatibility but should not be used.
+    """
+    messages.warning(request, 'กรุณาใช้ระบบตะกร้าสำหรับการจองหนังสือ')
+    return redirect('books:book_detail', book_id=book_id)
+
+
+@login_required
+def add_to_cart_view(request, book_id):
+    """
+    Add a book to the reservation cart.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('books:book_detail', book_id=book_id)
+    
+    book = get_object_or_404(Book, id=book_id)
+    
+    # Check if book is available
+    if book.available_quantity <= 0:
+        messages.error(request, f'ขออภัย หนังสือ "{book.title}" ไม่มีให้จองในขณะนี้')
+        return redirect('books:book_detail', book_id=book_id)
+    
+    # Add to cart
+    cart = Cart(request)
+    if cart.add(book_id):
+        messages.success(request, f'เพิ่ม "{book.title}" ไปยังตะกร้าแล้ว')
+    else:
+        messages.info(request, f'"{book.title}" อยู่ในตะกร้าอยู่แล้ว')
+    
+    return redirect('books:book_detail', book_id=book_id)
+
+
+@login_required
+def view_cart(request):
+    """
+    Display cart contents.
+    """
+    cart = Cart(request)
+    book_ids = cart.get_book_ids()
+    
+    # Get book details
+    books = Book.objects.filter(id__in=book_ids).select_related('publisher').prefetch_related('authors', 'categories')
+    
+    # Create a list with availability check
+    cart_items = []
+    has_unavailable = False
+    for book in books:
+        is_available = book.available_quantity > 0
+        if not is_available:
+            has_unavailable = True
+        cart_items.append({
+            'book': book,
+            'is_available': is_available,
+        })
+    
+    context = {
+        'cart_items': cart_items,
+        'cart_count': cart.count(),
+        'has_unavailable': has_unavailable,
+    }
+    
+    return render(request, 'books/cart.html', context)
+
+
+@login_required
+def remove_from_cart_view(request, book_id):
+    """
+    Remove a book from cart.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('books:view_cart')
+    
+    book = get_object_or_404(Book, id=book_id)
+    cart = Cart(request)
+    
+    if cart.remove(book_id):
+        messages.success(request, f'ลบ "{book.title}" ออกจากตะกร้าแล้ว')
+    else:
+        messages.error(request, 'ไม่พบหนังสือในตะกร้า')
+    
+    return redirect('books:view_cart')
+
+
+@login_required
+def confirm_cart_view(request):
+    """
+    Confirm reservation for all books in cart.
+    Creates a ReservationBatch with multiple Reservation items.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('books:view_cart')
+    
+    cart = Cart(request)
+    book_ids = cart.get_book_ids()
+    
+    if not book_ids:
+        messages.warning(request, 'ตะกร้าของคุณว่างเปล่า')
+        return redirect('books:view_cart')
+    
+    try:
+        with transaction.atomic():
+            # Get all books and check availability
+            books = Book.objects.filter(id__in=book_ids).select_for_update()
+            
+            unavailable_books = []
+            for book in books:
+                if book.available_quantity <= 0:
+                    unavailable_books.append(book.title)
+            
+            if unavailable_books:
+                messages.error(
+                    request,
+                    f'ไม่สามารถจองได้เนื่องจากหนังสือต่อไปนี้ไม่มีให้ยืม: {", ".join(unavailable_books)}'
+                )
+                return redirect('books:view_cart')
+            
+            # Create reservation batch
+            expires_at = timezone.now() + timedelta(days=3)
+            reservation_batch = ReservationBatch.objects.create(
+                user=request.user,
+                status='pending',
+                expires_at=expires_at
+            )
+            
+            # Create reservation items
+            for book in books:
+                Reservation.objects.create(
+                    book=book,
+                    reservation_batch=reservation_batch,
+                    status='pending'
+                )
+            
+            # Clear cart
+            cart.clear()
+            
+            messages.success(
+                request,
+                f'จองหนังสือ {len(books)} เล่มสำเร็จ! '
+                f'กรุณารอการยืนยันจากเจ้าหน้าที่ภายใน 3 วัน'
+            )
+            return redirect('reservations:my_reservations')
+            
+    except Exception as e:
+        messages.error(request, f'เกิดข้อผิดพลาดในการจองหนังสือ: {str(e)}')
+        return redirect('books:view_cart')

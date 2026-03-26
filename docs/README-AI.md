@@ -1,6 +1,6 @@
 # AI Entry Point
 
-**Last Updated:** March 25, 2026
+**Last Updated:** March 26, 2026
 
 ## 📖 Read these files in order:
 
@@ -67,7 +67,7 @@
 
 ## 🚧 Current Phase
 
-**Phase 8:** Member-Facing Pages (In Progress)
+### Phase 8: Member-Facing Pages (Completed)
 
 ### ✅ Completed:
 
@@ -76,14 +76,16 @@
 - Base template with responsive navbar
 - User registration form with validation
 - Login/logout workflow
-
-### 🔄 In Progress:
-
-- Book list page
-- Book detail page
+- Book list page with search and filter
+- Book detail page with reservation functionality
 - My reservations page
 - My loans page
 - My fines page
+- Member reservation workflow with shopping cart (จองหนังสือได้จริงแบบตะกร้า)
+
+## � Next Phase
+
+**Phase 9:** Business Logic Hardening
 
 ## 📋 Rules:
 
