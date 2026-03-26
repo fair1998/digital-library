@@ -86,8 +86,13 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     {% if user.is_staff %}
                                         <li>
+                                            <a class="dropdown-item" href="{% url 'dashboard_home' %}">
+                                                <i class="bi bi-speedometer2"></i> Admin Dashboard
+                                            </a>
+                                        </li>
+                                        <li>
                                             <a class="dropdown-item" href="{% url 'admin:index' %}">
-                                                <i class="bi bi-gear"></i> จัดการระบบ
+                                                <i class="bi bi-gear"></i> Django Admin
                                             </a>
                                         </li>
                                         <li>

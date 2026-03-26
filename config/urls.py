@@ -20,15 +20,21 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from users.views import home_view
+from users.dashboard_views import dashboard_home_view
+from reservations.urls import dashboard_urlpatterns as reservations_dashboard_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view, name='home'),
     path('users/', include('users.urls')),
     path('books/', include('books.urls')),
-    path('', include('reservations.urls')),
+    path('reservations/', include('reservations.urls')),
     path('', include('loans.urls')),
     path('', include('fines.urls')),
+    
+    # Admin Dashboard
+    path('dashboard/', dashboard_home_view, name='dashboard_home'),
+    path('dashboard/', include(reservations_dashboard_urls)),
 ]
 
 if settings.DEBUG:
