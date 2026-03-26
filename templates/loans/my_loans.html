@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}รายการยืมของฉัน - Digital Library{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>รายการยืมของฉัน</h1>
+            <p class="text-muted">ประวัติการยืมหนังสือทั้งหมดของคุณ</p>
+        </div>
+    </div>
+
+    {% if loan_batches %}
+    <div class="row">
+        <div class="col">
+            {% for batch in loan_batches %}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="bi bi-journal-check"></i> 
+                            การยืม #{{ batch.id }}
+                        </h5>
+                        <small class="text-muted">
+                            <i class="bi bi-calendar"></i> วันที่ยืม: {{ batch.created_at|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    <div>
+                        {% if batch.is_overdue %}
+                        <span class="badge bg-danger fs-6">
+                            <i class="bi bi-exclamation-triangle"></i> เกินกำหนด
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Due Date Information -->
+                    {% if batch.due_date %}
+                    <div class="mb-3">
+                        <strong>กำหนดคืน:</strong> 
+                        <span class="{% if batch.is_overdue %}text-danger fw-bold{% endif %}">
+                            {{ batch.due_date|date:"d/m/Y H:i" }}
+                        </span>
+                        {% if batch.is_overdue %}
+                        <span class="badge bg-danger ms-2">เกินกำหนด</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Borrowed Books -->
+                    <h6 class="mb-3">รายการหนังสือที่ยืม ({{ batch.loan_items.count }} เล่ม)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>หนังสือ</th>
+                                    <th>ผู้แต่ง</th>
+                                    <th>สำนักพิมพ์</th>
+                                    <th>สถานะ</th>
+                                    <th>วันที่คืน</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in batch.loan_items.all %}
+                                <tr class="{% if item.is_overdue %}table-warning{% endif %}">
+                                    <td>
+                                        <a href="{% url 'books:book_detail' item.book.id %}" class="text-decoration-none">
+                                            {{ item.book.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if item.book.authors.all %}
+                                            {% for author in item.book.authors.all %}
+                                                {{ author.name }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.book.publisher.name|default:"-" }}</td>
+                                    <td>
+                                        {% if item.status == 'borrowed' %}
+                                            {% if item.is_overdue %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-exclamation-triangle"></i> กำลังยืม (เกินกำหนด)
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-primary">กำลังยืม</span>
+                                            {% endif %}
+                                        {% elif item.status == 'returned' %}
+                                        <span class="badge bg-success">คืนแล้ว</span>
+                                        {% elif item.status == 'lost' %}
+                                        <span class="badge bg-dark">สูญหาย</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.returned_at %}
+                                        {{ item.returned_at|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            สรุป: 
+                            {% with borrowed=batch.loan_items.filter|add:"status=borrowed" returned=batch.loan_items.filter|add:"status=returned" lost=batch.loan_items.filter|add:"status=lost" %}
+                                กำลังยืม: {{ batch.loan_items.all|length|add:"-"|add:batch.loan_items.filter|length }} เล่ม |
+                                คืนแล้ว: {{ batch.loan_items.all|length|add:"-"|add:batch.loan_items.filter|length }} เล่ม
+                                {% if batch.loan_items.filter.exists %}
+                                | สูญหาย: {{ batch.loan_items.all|length|add:"-"|add:batch.loan_items.filter|length }} เล่ม
+                                {% endif %}
+                            {% endwith %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> คุณยังไม่มีประวัติการยืมหนังสือ
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

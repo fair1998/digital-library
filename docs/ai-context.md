@@ -17,19 +17,20 @@
 - **Phase 5**: Loan System Data Layer - Models การยืมครบถ้วน (LoanBatch, LoanItem)
 - **Phase 6**: Loan Admin Workflow - Admin สามารถบันทึกการคืน/หาย
 - **Phase 7**: Fine System - Admin สามารถจัดการค่าปรับ (สร้าง/ชำระ/ดูประวัติ)
-
-### 🚧 Current Phase
-
-- **Phase 8**: Member-Facing Pages (In Progress)
+- **Phase 8**: Member-Facing Pages - หน้าเว็บสำหรับผู้ใช้ทั่วไปครบถ้วน
   - ✅ Authentication System (Register, Login, Logout)
-  - ✅ Home Page
-  - ⏳ Book List Page
-  - ⏳ Book Detail Page
-  - ⏳ My Reservations/Loans/Fines Pages
+  - ✅ Home Page with hero section and features
+  - ✅ Book List Page with search and filter
+  - ✅ Book Detail Page
+  - ✅ My Reservations Page
+  - ✅ My Loans Page
+  - ✅ My Fines Page
 
 ### 📋 Remaining Phases
 
-- Phase 8-11: Member Pages, Testing, Documentation
+- Phase 9: Business Logic Hardening
+- Phase 10: Testing
+- Phase 11: Documentation and Cleanup
 
 ---
 
@@ -325,11 +326,11 @@ Digital Library System
 
 ---
 
-## 7.2 Book List Page
+## 7.2 Book List Page ✅ IMPLEMENTED
 
 ### URL
 
-`/books`
+`/books/`
 
 ### Purpose
 
@@ -344,6 +345,17 @@ Digital Library System
 - ไปหน้ารายละเอียดหนังสือ
 - ดูสถานะว่ามีหนังสือให้จองหรือไม่
 
+### Features Implemented
+
+- Search by book title
+- Filter by category dropdown
+- Filter by publisher dropdown
+- Pagination (12 books per page)
+- Book cards with cover images
+- Available quantity badge
+- Query optimization (select_related, prefetch_related)
+- Responsive grid layout
+
 ### Related Data
 
 - books
@@ -351,24 +363,22 @@ Digital Library System
 - book_categories
 - publishers
 
-### Important UI Information
+### UI Components
 
-ควรแสดงอย่างน้อย:
-
-- รูปปก
-- ชื่อหนังสือ
-- สำนักพิมพ์
-- ปีพิมพ์
-- จำนวนคงเหลือ
-- ปุ่มดูรายละเอียด
+- Search and filter form
+- Book grid with cards
+- Book cover images
+- Author and publisher info
+- Availability badges
+- Pagination controls
 
 ---
 
-## 7.3 Book Detail Page
+## 7.3 Book Detail Page ✅ IMPLEMENTED
 
 ### URL
 
-`/books/<id>`
+`/books/<id>/`
 
 ### Purpose
 
@@ -384,7 +394,20 @@ Digital Library System
 - ดูสำนักพิมพ์
 - ดูจำนวนทั้งหมด
 - ดูจำนวนที่พร้อมให้ยืมหรือจอง
-- กดจองหนังสือ
+- กดจองหนังสือ (ปุ่มพร้อมแล้วแต่ยังไม่ได้เชื่อมฟังก์ชัน)
+
+### Features Implemented
+
+- Breadcrumb navigation
+- Large cover image display
+- Author badges
+- Category badges
+- Publisher information
+- Publish year
+- Availability status with color-coded badges
+- Reserve button (disabled, waiting for reservation workflow)
+- Login prompt for non-authenticated users
+- Back to list button
 
 ### Related Data
 
@@ -397,16 +420,17 @@ Digital Library System
 
 ### Important Rules
 
-- ถ้า available_quantity <= 0 ต้องไม่ให้จอง
-- ถ้ายังไม่ได้ login อาจบังคับ login ก่อนจอง
+- ถ้า available_quantity <= 0 แสดงปุ่มที่ disabled
+- ถ้ายังไม่ได้ login แสดงปุ่มให้ไปหน้า login
+- ใช้ query optimization
 
 ---
 
-## 7.4 My Reservations Page
+## 7.4 My Reservations Page ✅ IMPLEMENTED
 
 ### URL
 
-`/my-reservations`
+`/my-reservations/`
 
 ### Purpose
 
@@ -418,16 +442,125 @@ Digital Library System
 - ดูสถานะของ batch
 - ดูรายการหนังสือในแต่ละ batch
 - ดูวันหมดอายุของการจอง
+- เห็นสถานะว่าหมดอายุหรือไม่
+
+### Features Implemented
+
+- @login_required decorator
+- List all reservation batches for current user
+- Show batch status with color-coded badges
+- Show expiry date with warning for expired
+- Show all books in each batch
+- Book details with links
+- Status badges for each reservation item
+- Query optimization (prefetch_related)
 
 ### Related Data
 
 - reservation_batches
 - reservations
 - books
+- users
 
 ### Important Information
 
 ควรแสดง:
+
+- เลข batch หรือรหัสรายการ
+- วันที่จอง
+- expires_at
+- status (pending/confirmed/cancelled)
+- รายการหนังสือใน batch
+- สถานะแต่ละเล่ม
+
+---
+
+## 7.5 My Loans Page ✅ IMPLEMENTED
+
+### URL
+
+`/my-loans/`
+
+### Purpose
+
+ให้สมาชิกดูประวัติการยืมของตัวเอง
+
+### Member Can Do
+
+- ดูรายการยืมปัจจุบัน
+- ดูประวัติการยืมเก่า
+- ดู due_date
+- ดูสถานะ borrowed / returned / lost
+- เห็นสถานะเกินกำหนด (overdue)
+
+### Features Implemented
+
+- @login_required decorator
+- List all loan batches for current user
+- Calculate overdue status dynamically
+- Show due date with warning for overdue
+- Show all books in each batch
+- Book details with links
+- Status badges for each loan item
+- Overdue warnings with color coding
+- Returned date display
+- Query optimization (prefetch_related)
+
+### Related Data
+
+- loan_batches
+- loan_items
+- books
+- users
+
+---
+
+## 7.6 My Fines Page ✅ IMPLEMENTED
+
+### URL
+
+`/my-fines/`
+
+### Purpose
+
+ให้สมาชิกดูค่าปรับของตัวเอง
+
+### Member Can Do
+
+- ดูรายการค่าปรับ
+- ดูประเภทค่าปรับ
+- ดูจำนวนเงิน
+- ดูสถานะการชำระ
+- ดูเหตุผลเพิ่มเติม
+- เห็นสรุปยอดค่าปรับทั้งหมด
+
+### Features Implemented
+
+- @login_required decorator
+- List all fines for current user
+- Summary cards (unpaid total, paid total)
+- Fine type badges (late_return, lost, damaged)
+- Status badges (unpaid, paid)
+- Amount display with proper formatting
+- Created and paid dates
+- Reason popover
+- Table view with all fine details
+- Warning alert for unpaid fines
+- Query optimization (select_related, prefetch_related)
+
+### Related Data
+
+- fines
+- loan_items
+- loan_batches
+- books
+- users
+
+---
+
+## 8. Admin Pages
+
+ในระยะแรก admin หลักของระบบอิงบน Django Admin
 
 - เลข batch หรือรหัสรายการ
 - วันที่จอง

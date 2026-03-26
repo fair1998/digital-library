@@ -25,6 +25,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view, name='home'),
     path('users/', include('users.urls')),
+    path('books/', include('books.urls')),
+    path('', include('reservations.urls')),
+    path('', include('loans.urls')),
+    path('', include('fines.urls')),
 ]
 
 if settings.DEBUG:

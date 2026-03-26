@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}รายการจองของฉัน - Digital Library{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>รายการจองของฉัน</h1>
+            <p class="text-muted">ประวัติการจองหนังสือทั้งหมดของคุณ</p>
+        </div>
+    </div>
+
+    {% if reservation_batches %}
+    <div class="row">
+        <div class="col">
+            {% for batch in reservation_batches %}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="bi bi-bookmark-fill"></i> 
+                            การจอง #{{ batch.id }}
+                        </h5>
+                        <small class="text-muted">
+                            <i class="bi bi-calendar"></i> วันที่จอง: {{ batch.created_at|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    <div>
+                        {% if batch.status == 'pending' %}
+                            {% if batch.is_expired %}
+                            <span class="badge bg-warning text-dark fs-6">หมดอายุแล้ว</span>
+                            {% else %}
+                            <span class="badge bg-info fs-6">รอดำเนินการ</span>
+                            {% endif %}
+                        {% elif batch.status == 'confirmed' %}
+                        <span class="badge bg-success fs-6">ยืนยันแล้ว</span>
+                        {% elif batch.status == 'cancelled' %}
+                        <span class="badge bg-danger fs-6">ยกเลิกแล้ว</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Expiry Information -->
+                    <div class="mb-3">
+                        <strong>วันหมดอายุ:</strong> 
+                        <span class="{% if batch.is_expired %}text-danger{% endif %}">
+                            {{ batch.expires_at|date:"d/m/Y H:i" }}
+                        </span>
+                        {% if batch.is_expired and batch.status == 'pending' %}
+                        <span class="badge bg-warning text-dark ms-2">หมดอายุ</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reserved Books -->
+                    <h6 class="mb-3">รายการหนังสือที่จอง ({{ batch.reservations.count }} เล่ม)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>หนังสือ</th>
+                                    <th>ผู้แต่ง</th>
+                                    <th>สำนักพิมพ์</th>
+                                    <th>สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reservation in batch.reservations.all %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'books:book_detail' reservation.book.id %}" class="text-decoration-none">
+                                            {{ reservation.book.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if reservation.book.authors.all %}
+                                            {% for author in reservation.book.authors.all %}
+                                                {{ author.name }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ reservation.book.publisher.name|default:"-" }}</td>
+                                    <td>
+                                        {% if reservation.status == 'pending' %}
+                                        <span class="badge bg-info">รอดำเนินการ</span>
+                                        {% elif reservation.status == 'confirmed' %}
+                                        <span class="badge bg-success">ยืนยันแล้ว</span>
+                                        {% elif reservation.status == 'cancelled' %}
+                                        <span class="badge bg-danger">ยกเลิกแล้ว</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> คุณยังไม่มีประวัติการจองหนังสือ
+        <a href="{% url 'books:book_list' %}" class="alert-link">ค้นหาหนังสือเพื่อจอง</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

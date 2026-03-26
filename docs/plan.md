@@ -600,45 +600,66 @@
 - [x] Hero section พร้อม call-to-action
 - [x] Responsive design ด้วย Bootstrap 5
 
-### 8.2 Book List Page
+### 8.2 Book List Page ✅ COMPLETED
 
-- [ ] แสดงรายการหนังสือทั้งหมด
-- [ ] search ตามชื่อหนังสือ
-- [ ] filter ตาม category / publisher
-- [ ] pagination
+- [x] แสดงรายการหนังสือทั้งหมด
+- [x] search ตามชื่อหนังสือ
+- [x] filter ตาม category / publisher
+- [x] pagination
+- [x] Query optimization (select_related, prefetch_related)
+- [x] Responsive grid layout
+- [x] Book cards with cover images
+- [x] Availability badges
 
-### 8.3 Book Detail Page
+### 8.3 Book Detail Page ✅ COMPLETED
 
-- [ ] แสดงรายละเอียดหนังสือ
-- [ ] แสดงผู้แต่ง หมวดหมู่ สำนักพิมพ์
-- [ ] แสดงจำนวน available_quantity
-- [ ] ปุ่มจองหนังสือ
+- [x] แสดงรายละเอียดหนังสือ
+- [x] แสดงผู้แต่ง หมวดหมู่ สำนักพิมพ์
+- [x] แสดงจำนวน available_quantity
+- [x] ปุ่มจองหนังสือ (UI เตรียมไว้แล้ว)
+- [x] Breadcrumb navigation
+- [x] Large cover image display
+- [x] Login prompt for non-authenticated users
 
-### 8.4 My Reservations Page
+### 8.4 My Reservations Page ✅ COMPLETED
 
-- [ ] แสดง batch และ items ของการจอง
-- [ ] แสดงสถานะ
+- [x] แสดง batch และ items ของการจอง
+- [x] แสดงสถานะ
+- [x] แสดงวันหมดอายุ
+- [x] Status badges พร้อมสี
+- [x] Query optimization
 
-### 8.5 My Loans Page
+### 8.5 My Loans Page ✅ COMPLETED
 
-- [ ] แสดงรายการยืม
-- [ ] แสดง due_date
-- [ ] แสดงสถานะ borrowed / returned / lost
+- [x] แสดงรายการยืม
+- [x] แสดง due_date
+- [x] แสดงสถานะ borrowed / returned / lost
+- [x] คำนวณและแสดงสถานะ overdue
+- [x] แสดง returned date
+- [x] Status badges พร้อมสี
 
-### 8.6 My Fines Page
+### 8.6 My Fines Page ✅ COMPLETED
 
-- [ ] แสดงรายการค่าปรับ
-- [ ] แสดงยอดเงิน ประเภท และสถานะการชำระ
+- [x] แสดงรายการค่าปรับ
+- [x] แสดงยอดเงิน ประเภท และสถานะการชำระ
+- [x] Summary cards (total unpaid, total paid)
+- [x] Fine type badges
+- [x] Reason popover
+- [x] Warning alert for unpaid fines
 
 ## Deliverables
 
-- ผู้ใช้ใช้งานระบบหลักได้
+- ✅ ผู้ใช้ใช้งานระบบหลักได้
 
 ## Acceptance Criteria
 
-- ผู้ใช้ดูหนังสือได้
-- ผู้ใช้จองหนังสือได้
-- ผู้ใช้ดูประวัติการจอง ยืม และค่าปรับของตัวเองได้
+- ✅ ผู้ใช้ดูหนังสือได้
+- ⏳ ผู้ใช้จองหนังสือได้ (ฟังก์ชันจองยังไม่เสร็จ)
+- ✅ ผู้ใช้ดูประวัติการจอง ยืม และค่าปรับของตัวเองได้
+
+## Status: ✅ COMPLETED
+
+**Note:** ฟังก์ชันจองหนังสือ (reservation workflow) ยังไม่ได้เชื่อมต่อกับปุ่ม แต่ admin สามารถสร้างการจองแทน user ได้แล้ว
 
 ---
 

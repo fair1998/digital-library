@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}รายการหนังสือ - Digital Library{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>รายการหนังสือทั้งหมด</h1>
+        </div>
+    </div>
+
+    <!-- Search and Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="{% url 'books:book_list' %}" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">ค้นหาหนังสือ</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="ชื่อหนังสือ" value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="category" class="form-label">หมวดหมู่</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">ทั้งหมด</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="publisher" class="form-label">สำนักพิมพ์</label>
+                    <select class="form-select" id="publisher" name="publisher">
+                        <option value="">ทั้งหมด</option>
+                        {% for publisher in publishers %}
+                        <option value="{{ publisher.id }}" {% if selected_publisher == publisher.id|stringformat:"s" %}selected{% endif %}>
+                            {{ publisher.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">ค้นหา</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    {% if search_query or selected_category or selected_publisher %}
+    <div class="alert alert-info">
+        พบ {{ page_obj.paginator.count }} รายการ
+        {% if search_query %} | ค้นหา: "{{ search_query }}"{% endif %}
+        <a href="{% url 'books:book_list' %}" class="alert-link ms-2">ล้างการค้นหา</a>
+    </div>
+    {% endif %}
+
+    <!-- Book Grid -->
+    {% if page_obj %}
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+        {% for book in page_obj %}
+        <div class="col">
+            <div class="card h-100">
+                {% if book.image_url %}
+                <img src="{{ book.image_url.url }}" class="card-img-top" alt="{{ book.title }}" 
+                     style="height: 300px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" 
+                     style="height: 300px;">
+                    <i class="bi bi-book" style="font-size: 4rem; color: white;"></i>
+                </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text text-muted small mb-2">
+                        {% if book.authors.all %}
+                            <i class="bi bi-person"></i>
+                            {% for author in book.authors.all %}
+                                {{ author.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </p>
+                    {% if book.publisher %}
+                    <p class="card-text text-muted small">
+                        <i class="bi bi-building"></i> {{ book.publisher.name }}
+                    </p>
+                    {% endif %}
+                    <p class="card-text small">
+                        {% if book.available_quantity > 0 %}
+                        <span class="badge bg-success">มีให้ยืม {{ book.available_quantity }} เล่ม</span>
+                        {% else %}
+                        <span class="badge bg-danger">ไม่มีให้ยืม</span>
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'books:book_detail' book.id %}" class="btn btn-primary btn-sm mt-auto">
+                        ดูรายละเอียด
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning">ไม่พบหนังสือที่ค้นหา</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_publisher %}&publisher={{ selected_publisher }}{% endif %}">
+                    หน้าแรก
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_publisher %}&publisher={{ selected_publisher }}{% endif %}">
+                    ก่อนหน้า
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    หน้า {{ page_obj.number }} จาก {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_publisher %}&publisher={{ selected_publisher }}{% endif %}">
+                    ถัดไป
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_publisher %}&publisher={{ selected_publisher }}{% endif %}">
+                    หน้าสุดท้าย
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="alert alert-info">ยังไม่มีหนังสือในระบบ</div>
+    {% endif %}
+</div>
+{% endblock %}

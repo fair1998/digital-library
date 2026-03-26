@@ -39,18 +39,18 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}">หน้าแรก</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'books:book_list' %}">หนังสือทั้งหมด</a>
+                    </li>
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#">หนังสือทั้งหมด</a>
+                        <a class="nav-link" href="{% url 'reservations:my_reservations' %}">การจองของฉัน</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">การจองของฉัน</a>
+                        <a class="nav-link" href="{% url 'loans:my_loans' %}">การยืมของฉัน</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">การยืมของฉัน</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">ค่าปรับของฉัน</a>
+                        <a class="nav-link" href="{% url 'fines:my_fines' %}">ค่าปรับของฉัน</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -67,19 +67,19 @@
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">
+                            <li><a class="dropdown-item" href="{% url 'users:logout' %}">
                                 <i class="bi bi-box-arrow-right"></i> ออกจากระบบ
                             </a></li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">
+                        <a class="nav-link" href="{% url 'users:login' %}">
                             <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">
+                        <a class="nav-link" href="{% url 'users:register' %}">
                             <i class="bi bi-person-plus"></i> ลงทะเบียน
                         </a>
                     </li>

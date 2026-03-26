@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}ค่าปรับของฉัน - Digital Library{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>ค่าปรับของฉัน</h1>
+            <p class="text-muted">รายการค่าปรับทั้งหมดของคุณ</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-exclamation-circle"></i> ค่าปรับที่ยังไม่ชำระ
+                    </h5>
+                    <h2 class="mb-0">฿{{ total_unpaid|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-check-circle"></i> ค่าปรับที่ชำระแล้ว
+                    </h5>
+                    <h2 class="mb-0">฿{{ total_paid|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fines List -->
+    {% if fines %}
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">รายการค่าปรับทั้งหมด ({{ fines.count }} รายการ)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>รหัส</th>
+                                    <th>หนังสือ</th>
+                                    <th>ประเภท</th>
+                                    <th>จำนวนเงิน</th>
+                                    <th>สถานะ</th>
+                                    <th>วันที่สร้าง</th>
+                                    <th>วันที่ชำระ</th>
+                                    <th>เหตุผล</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fine in fines %}
+                                <tr class="{% if fine.status == 'unpaid' %}table-warning{% endif %}">
+                                    <td>#{{ fine.id }}</td>
+                                    <td>
+                                        <a href="{% url 'books:book_detail' fine.loan_item.book.id %}" class="text-decoration-none">
+                                            {{ fine.loan_item.book.title }}
+                                        </a>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if fine.loan_item.book.authors.all %}
+                                                {% for author in fine.loan_item.book.authors.all %}
+                                                    {{ author.name }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if fine.type == 'late_return' %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-clock"></i> คืนช้า
+                                        </span>
+                                        {% elif fine.type == 'lost' %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle"></i> สูญหาย
+                                        </span>
+                                        {% elif fine.type == 'damaged' %}
+                                        <span class="badge bg-dark">
+                                            <i class="bi bi-bandaid"></i> ชำรุด
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-bold">฿{{ fine.amount|floatformat:2 }}</td>
+                                    <td>
+                                        {% if fine.status == 'unpaid' %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle"></i> ยังไม่ชำระ
+                                        </span>
+                                        {% elif fine.status == 'paid' %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> ชำระแล้ว
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ fine.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if fine.paid_at %}
+                                        {{ fine.paid_at|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if fine.reason %}
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                data-bs-toggle="popover" 
+                                                data-bs-trigger="focus"
+                                                data-bs-content="{{ fine.reason }}"
+                                                title="เหตุผล">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> ยินดีด้วย! คุณไม่มีค่าปรับ
+    </div>
+    {% endif %}
+
+    <!-- Info Alert -->
+    {% if total_unpaid > 0 %}
+    <div class="alert alert-warning mt-4">
+        <h5 class="alert-heading">
+            <i class="bi bi-exclamation-triangle"></i> แจ้งเตือน
+        </h5>
+        <p class="mb-0">
+            คุณมีค่าปรับที่ยังไม่ชำระจำนวน <strong>฿{{ total_unpaid|floatformat:2 }}</strong>
+            กรุณาติดต่อเจ้าหน้าที่เพื่อชำระค่าปรับ
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Initialize Bootstrap popovers
+document.addEventListener('DOMContentLoaded', function () {
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+    });
+});
+</script>
+{% endblock %}
