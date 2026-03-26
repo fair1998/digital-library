@@ -16,7 +16,7 @@ class ReservationBatch(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservation_batches')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    expires_at = models.DateTimeField(null=True, blank=True, help_text='Will be set by admin when confirming reservation')
+    expires_at = models.DateTimeField(null=True, blank=True, help_text='Expiry time for confirmed reservation - user must pick up books before this time')
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
     

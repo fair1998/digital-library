@@ -1,0 +1,221 @@
+{% extends "base_admin.html" %}
+{% block title %}Reservation #{{ batch.id }} Detail{% endblock %}
+{% block page_title %}Reservation #{{ batch.id }} - {{ batch.user.username }}{% endblock %}
+{% block content %}
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'dashboard_reservations' %}"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+        <div>
+            <span class="badge bg-{% if batch.status == 'pending' %}warning{% elif batch.status == 'confirmed' %}success{% else %}secondary{% endif %} fs-6">
+                {{ batch.get_status_display }}
+            </span>
+        </div>
+    </div>
+    <!-- User Info Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-person-circle"></i> User Information
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>
+                        <strong>Username:</strong> {{ batch.user.username }}
+                    </p>
+                    <p>
+                        <strong>Full Name:</strong> {{ batch.user.get_full_name|default:"-" }}
+                    </p>
+                    <p>
+                        <strong>Email:</strong> {{ batch.user.email|default:"-" }}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p>
+                        <strong>Created:</strong> {{ batch.created_at|date:"d M Y H:i" }}
+                    </p>
+                    <p>
+                        <strong>Expires:</strong>
+                        <span class="{% if batch.is_expired and batch.status == 'pending' %}text-danger fw-bold{% endif %}">
+                            {{ batch.expires_at|date:"d M Y H:i" }}
+                            {% if batch.is_expired and batch.status == 'pending' %}<span class="badge bg-danger">Expired</span>{% endif %}
+                        </span>
+                    </p>
+                    <p>
+                        <strong>Total Books:</strong> {{ batch.reservations.count }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Books List -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="bi bi-book"></i> Reserved Books
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if has_out_of_stock %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning!</strong> Some books are out of stock and cannot be confirmed.
+                </div>
+            {% endif %}
+            <form method="post"
+                  action="{% url 'dashboard_reservations_confirm_selected' batch.id %}"
+                  id="confirmForm">
+                {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                {% if batch.status == 'pending' %}
+                                    <th style="width: 50px;">
+                                        <input type="checkbox"
+                                               class="form-check-input"
+                                               id="selectAll"
+                                               {% if not has_available_books %}disabled{% endif %}>
+                                    </th>
+                                {% endif %}
+                                <th>Book Title</th>
+                                <th>Author</th>
+                                <th>Publisher</th>
+                                <th>Stock Status</th>
+                                <th>Reservation Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in batch.reservations.all %}
+                                <tr class="{% if reservation.book.available_quantity == 0 %}table-danger{% endif %}">
+                                    {% if batch.status == 'pending' %}
+                                        <td>
+                                            {% if reservation.book.available_quantity > 0 %}
+                                                <input type="checkbox"
+                                                       class="form-check-input reservation-checkbox"
+                                                       name="reservation_ids"
+                                                       value="{{ reservation.id }}">
+                                            {% else %}
+                                                <input type="checkbox" class="form-check-input" disabled>
+                                            {% endif %}
+                                        </td>
+                                    {% endif %}
+                                    <td>
+                                        <strong>{{ reservation.book.title }}</strong>
+                                        <br>
+                                        <small class="text-muted">ISBN: {{ reservation.book.isbn|default:"-" }}</small>
+                                    </td>
+                                    <td>
+                                        {% for author in reservation.book.authors.all %}
+                                            <span class="badge bg-secondary">{{ author.name }}</span>
+                                        {% empty %}
+                                            -
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ reservation.book.publisher.name|default:"-" }}</td>
+                                    <td>
+                                        {% if reservation.book.available_quantity > 0 %}
+                                            <span class="badge bg-success fs-6">
+                                                <i class="bi bi-check-circle"></i>
+                                                {{ reservation.book.available_quantity }}/{{ reservation.book.total_quantity }} available
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger fs-6">
+                                                <i class="bi bi-x-circle"></i>
+                                                Out of Stock (0/{{ reservation.book.total_quantity }})
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% else %}secondary{% endif %} fs-6">
+                                            {{ reservation.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if batch.status == 'pending' %}
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span id="selectedCount" class="text-muted">0 books selected</span>
+                            </div>
+                            <div class="btn-group">
+                                <button type="submit"
+                                        class="btn btn-success"
+                                        id="confirmBtn"
+                                        disabled
+                                        onclick="return confirm('ยืนยันการจองหนังสือที่เลือก?')">
+                                    <i class="bi bi-check-circle"></i> Confirm Selected Books
+                                </button>
+                                <button type="button"
+                                        class="btn btn-danger"
+                                        onclick="if(confirm('ยกเลิกการจองทั้งหมด?')) { document.getElementById('cancelForm').submit(); }">
+                                    <i class="bi bi-x-circle"></i> Cancel All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% elif batch.status == 'confirmed' %}
+                    <div class="mt-4">
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                onclick="if(confirm('ยกเลิกการจองที่ยืนยันแล้ว?\n(จะคืนจำนวนหนังสือกลับ)')) { document.getElementById('cancelForm').submit(); }">
+                            <i class="bi bi-x-circle"></i> Cancel This Reservation
+                        </button>
+                    </div>
+                {% endif %}
+            </form>
+            <!-- Hidden Cancel Form -->
+            <form method="post"
+                  action="{% url 'dashboard_reservations_cancel' batch.id %}"
+                  id="cancelForm"
+                  style="display: none">
+                {% csrf_token %}
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_js %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.reservation-checkbox');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                });
+                updateSelectedCount();
+            });
+        }
+        
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateSelectedCount);
+        });
+        
+        function updateSelectedCount() {
+            const checkedCount = document.querySelectorAll('.reservation-checkbox:checked').length;
+            selectedCount.textContent = checkedCount + ' book' + (checkedCount !== 1 ? 's' : '') + ' selected';
+            confirmBtn.disabled = checkedCount === 0;
+            
+            if (selectAll) {
+                const allChecked = checkedCount === checkboxes.length && checkboxes.length > 0;
+                selectAll.checked = allChecked;
+                selectAll.indeterminate = checkedCount > 0 && !allChecked;
+            }
+        }
+    });
+    </script>
+{% endblock %}

@@ -4,7 +4,10 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
+from django.conf import settings
+from datetime import timedelta
 from .models import ReservationBatch, Reservation
+from books.models import Book
 
 
 @login_required
@@ -112,9 +115,146 @@ def admin_dashboard_view(request):
 
 
 @staff_member_required
+def admin_reservation_detail_view(request, batch_id):
+    """
+    Display detailed view of a reservation batch with ability to manage individual items.
+    """
+    batch = get_object_or_404(
+        ReservationBatch.objects.select_related('user').prefetch_related(
+            'reservations__book__authors',
+            'reservations__book__publisher'
+        ),
+        id=batch_id
+    )
+    
+    # Check expiry
+    now = timezone.now()
+    batch.is_expired = batch.expires_at < now if batch.expires_at else False
+    
+    # Check stock availability
+    has_out_of_stock = False
+    has_available_books = False
+    for reservation in batch.reservations.all():
+        if reservation.book.available_quantity == 0:
+            has_out_of_stock = True
+        else:
+            has_available_books = True
+    
+    context = {
+        'batch': batch,
+        'has_out_of_stock': has_out_of_stock,
+        'has_available_books': has_available_books,
+    }
+    
+    return render(request, 'reservations/reservation_detail.html', context)
+
+
+@staff_member_required
+def admin_confirm_selected_reservations_view(request, batch_id):
+    """
+    Admin action to confirm selected reservation items.
+    Unselected items will be automatically rejected/cancelled.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('dashboard_reservations')
+    
+    batch = get_object_or_404(ReservationBatch, id=batch_id)
+    
+    # Check if can be confirmed
+    if batch.status != 'pending':
+        messages.error(
+            request,
+            f'ไม่สามารถยืนยันการจอง #{batch.id} ได้ (สถานะ: {batch.get_status_display()})'
+        )
+        return redirect('dashboard_reservation_detail', batch_id=batch_id)
+    
+    # Get selected reservation IDs
+    selected_ids = request.POST.getlist('reservation_ids')
+    
+    if not selected_ids:
+        messages.warning(request, 'กรุณาเลือกหนังสือที่ต้องการยืนยัน')
+        return redirect('dashboard_reservation_detail', batch_id=batch_id)
+    
+    try:
+        with transaction.atomic():
+            # Get all pending reservations
+            all_pending = batch.reservations.filter(status='pending').select_related('book')
+            
+            # Get selected reservations
+            selected_reservations = all_pending.filter(id__in=selected_ids)
+            
+            # Get unselected reservations (to be rejected)
+            unselected_reservations = all_pending.exclude(id__in=selected_ids)
+            
+            # Check availability for selected books
+            insufficient_books = []
+            confirmed_count = 0
+            
+            for reservation in selected_reservations:
+                if reservation.book.available_quantity < 1:
+                    insufficient_books.append(reservation.book.title)
+                else:
+                    # Confirm this reservation
+                    reservation.status = 'confirmed'
+                    reservation.save()
+                    
+                    # Decrease available quantity
+                    book = reservation.book
+                    book.available_quantity -= 1
+                    book.save()
+                    
+                    confirmed_count += 1
+            
+            # Reject all unselected items
+            rejected_count = 0
+            for reservation in unselected_reservations:
+                reservation.status = 'cancelled'
+                reservation.save()
+                rejected_count += 1
+            
+            # Update batch status
+            has_confirmed = batch.reservations.filter(status='confirmed').exists()
+            all_processed = not batch.reservations.filter(status='pending').exists()
+            
+            if has_confirmed:
+                batch.status = 'confirmed'
+                # Set expiry time for confirmed reservation (user must pick up books before this time)
+                expiry_days = getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)
+                batch.expires_at = timezone.now() + timedelta(days=expiry_days)
+                batch.save()
+            elif all_processed:
+                batch.status = 'cancelled'
+                batch.save()
+            
+            # Build success message
+            msg_parts = []
+            if confirmed_count > 0:
+                msg_parts.append(f'ยืนยัน {confirmed_count} เล่ม')
+            if rejected_count > 0:
+                msg_parts.append(f'ยกเลิก {rejected_count} เล่ม')
+            
+            messages.success(
+                request,
+                f'ดำเนินการสำเร็จ: {", ".join(msg_parts)}'
+            )
+            
+            if insufficient_books:
+                messages.warning(
+                    request,
+                    f'ไม่สามารถยืนยันหนังสือต่อไปนี้ได้ (สต็อคไม่พอ): {", ".join(insufficient_books)}'
+                )
+            
+    except Exception as e:
+        messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
+    
+    return redirect('dashboard_reservation_detail', batch_id=batch_id)
+
+
+@staff_member_required
 def admin_confirm_reservation_view(request, batch_id):
     """
-    Admin action to confirm a pending reservation batch.
+    Admin action to confirm a pending reservation batch (all items at once).
     Updates batch status, reservation items status, and book availability.
     """
     if request.method != 'POST':
@@ -133,9 +273,16 @@ def admin_confirm_reservation_view(request, batch_id):
     
     try:
         with transaction.atomic():
-            # Check book availability
+            # Refresh batch data to get latest status
+            batch.refresh_from_db()
+            
+            # Check book availability (only for pending reservations)
             insufficient_books = []
-            for reservation in batch.reservations.all():
+            pending_reservations = batch.reservations.filter(status='pending').select_related('book')
+            
+            for reservation in pending_reservations:
+                # Refresh to get latest available_quantity
+                reservation.book.refresh_from_db()
                 if reservation.book.available_quantity < 1:
                     insufficient_books.append(reservation.book.title)
             
@@ -146,23 +293,54 @@ def admin_confirm_reservation_view(request, batch_id):
                 )
                 return redirect('dashboard_reservations')
             
-            # Update batch status
-            batch.status = 'confirmed'
-            batch.save()
+            # Count how many can be confirmed
+            confirmable_count = pending_reservations.filter(
+                book__available_quantity__gt=0
+            ).count()
             
-            # Update all reservation items and decrease book quantity
-            for reservation in batch.reservations.all():
-                reservation.status = 'confirmed'
-                reservation.save()
+            if confirmable_count == 0:
+                messages.error(request, 'ไม่มีหนังสือที่สามารถยืนยันได้')
+                return redirect('dashboard_reservations')
+            
+            # Update reservation items and decrease book quantity (only pending items)
+            confirmed_count = 0
+            for reservation in pending_reservations:
+                # Refresh reservation to check current status
+                reservation.refresh_from_db()
                 
-                # Decrease available quantity
-                book = reservation.book
-                book.available_quantity -= 1
-                book.save()
+                # Only process if still pending (might have been changed)
+                if reservation.status == 'pending' and reservation.book.available_quantity > 0:
+                    reservation.status = 'confirmed'
+                    reservation.save()
+                    
+                    # Decrease available quantity
+                    book = reservation.book
+                    book.refresh_from_db()
+                    book.available_quantity -= 1
+                    book.save()
+                    
+                    confirmed_count += 1
+            
+            # Check if all reservations are now confirmed or cancelled
+            all_processed = not batch.reservations.filter(status='pending').exists()
+            has_confirmed = batch.reservations.filter(status='confirmed').exists()
+            
+            # Update batch status
+            if has_confirmed:
+                # If we have at least one confirmed item, mark batch as confirmed
+                batch.status = 'confirmed'
+                # Set expiry time for confirmed reservation (user must pick up books before this time)
+                expiry_days = getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)
+                batch.expires_at = timezone.now() + timedelta(days=expiry_days)
+                batch.save()
+            elif all_processed:
+                # If all items are cancelled and none confirmed, mark batch as cancelled
+                batch.status = 'cancelled'
+                batch.save()
             
             messages.success(
                 request,
-                f'ยืนยันการจอง #{batch.id} สำเร็จ (User: {batch.user.username}, {batch.reservations.count()} เล่ม)'
+                f'ยืนยันการจอง #{batch.id} สำเร็จ ({confirmed_count} เล่ม, User: {batch.user.username})'
             )
             
     except Exception as e:
