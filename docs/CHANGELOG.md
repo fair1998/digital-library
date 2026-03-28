@@ -1,5 +1,144 @@
 # Changelog - Digital Library System
 
+## [Enhancement] - 2026-03-26 - Admin Reservation Management with Auto-Rejection
+
+### 🎯 Selective Confirmation & Auto-Rejection
+
+**ปรับปรุงระบบยืนยันการจองให้ยืดหยุ่นและประหยัดเวลา**
+
+**New Features:**
+
+**1. Selective Confirmation with Stock Checking**
+
+- Admin dashboard ที่ `/dashboard/reservations` แสดงรายละเอียดการจองแต่ละ batch
+- แสดงสถานะสต็อกของหนังสือแต่ละเล่มแบบ real-time:
+  - 🟢 **Green badge**: มีสต็อกพร้อมยืนยัน (X/Y available)
+  - 🔴 **Red badge**: Out of Stock (0/Y)
+- Checkbox สำหรับเลือกหนังสือที่จะยืนยัน:
+  - เฉพาะหนังสือที่มีสต็อกสามารถเลือกได้
+  - หนังสือที่หมดสต็อก → checkbox disabled
+- "Select All" checkbox สำหรับเลือกทุกเล่มที่มีสต็อก
+
+**2. Auto-Rejection for Unselected Books**
+
+- **หนังสือที่ไม่ได้เลือก = ถูกยกเลิกอัตโนมัติ**
+- Admin ไม่ต้องกด "Reject" ทีละเล่ม
+- ลดขั้นตอนและป้องกันความผิดพลาด
+
+**Example Workflow:**
+
+```
+การจองมี 5 หนังสือ:
+- Book A (มีสต็อก) ✓ เลือก → Confirmed
+- Book B (มีสต็อก) ✓ เลือก → Confirmed
+- Book C (มีสต็อก) ✓ เลือก → Confirmed
+- Book D (หมดสต็อก) ✗ ไม่เลือก → Cancelled (auto)
+- Book E (หมดสต็อก) ✗ ไม่เลือก → Cancelled (auto)
+
+ผลลัพธ์: "ดำเนินการสำเร็จ: ยืนยัน 3 เล่ม, ยกเลิก 2 เล่ม"
+```
+
+**3. Automatic Expiry Date Setting**
+
+- เมื่อยืนยันการจอง → `expires_at` ถูก set อัตโนมัติ
+- Default: ปัจจุบัน + 3 วัน (configurable via `RESERVATION_EXPIRY_DAYS`)
+- User ต้องมารับหนังสือก่อนวันหมดอายุ
+- หลังหมดอายุ → admin ควรยกเลิกและคืนสต็อก
+
+**Changes:**
+
+**Removed Features:**
+
+- ❌ ลบปุ่ม "Reject" สำหรับหนังสือแต่ละเล่ม
+- ❌ ลบ `admin_reject_reservation_item_view` function
+- ❌ ลบ URL pattern สำหรับ reject action
+- ❌ ลบ JavaScript function `rejectReservation()`
+- ❌ ลบ hidden reject form
+
+**Model Changes** (`reservations/models.py`):
+
+```python
+# Updated help_text
+expires_at = models.DateTimeField(
+    null=True,
+    blank=True,
+    help_text='Expiry time for confirmed reservation - user must pick up books before this time'
+)
+```
+
+**View Changes** (`reservations/views.py`):
+
+1. **Modified: `admin_confirm_selected_reservations_view`**
+
+   ```python
+   # New logic:
+   - Get all pending reservations
+   - Split into selected vs unselected
+   - Confirm selected (if stock available)
+   - Auto-reject unselected
+   - Set expires_at = now() + timedelta(days=RESERVATION_EXPIRY_DAYS)
+   - Update batch status
+   ```
+
+2. **Modified: `admin_confirm_reservation_view`**
+
+   ```python
+   # Add expires_at setting
+   if has_confirmed:
+       batch.status = 'confirmed'
+       batch.expires_at = timezone.now() + timedelta(days=expiry_days)
+       batch.save()
+   ```
+
+3. **Removed: `admin_reject_reservation_item_view`**
+   - ไม่จำเป็นต้องใช้แล้วเพราะมี auto-rejection
+
+**Template Changes** (`templates/reservations/reservation_detail.html`):
+
+- ลบ Action column ออกจาก table
+- ลบปุ่ม "Reject" ทั้งหมด
+- ลบ hidden reject form
+- ลบ JavaScript function สำหรับ rejection
+- เน้นที่ checkbox selection เท่านั้น
+
+**URL Changes** (`reservations/urls.py`):
+
+```python
+# Removed
+- path('reservations/<int:batch_id>/reject/<int:reservation_id>/', ...)
+
+# Kept
+- path('reservations/<int:batch_id>/confirm-selected/', ...)
+- path('reservations/<int:batch_id>/cancel/', ...)
+```
+
+**Message Updates:**
+
+```python
+# Success with breakdown
+f'ดำเนินการสำเร็จ: ยืนยัน {confirmed_count} เล่ม, ยกเลิก {rejected_count} เล่ม'
+
+# Stock warning
+f'ไม่สามารถยืนยันหนังสือต่อไปนี้ได้ (สต็อคไม่พอ): {", ".join(insufficient_books)}'
+```
+
+**Benefits:**
+
+✅ **ลดขั้นตอน**: ไม่ต้องกด reject ทีละเล่ม  
+✅ **ป้องกันความผิดพลาด**: ไม่มีโอกาสลืม reject หนังสือที่หมดสต็อก  
+✅ **UI สะอาดขึ้น**: ไม่มีปุ่ม reject เยอะแยะ  
+✅ **ชัดเจนขึ้น**: เลือกเฉพาะที่ต้องการยืนยัน ที่เหลือยกเลิกอัตโนมัติ  
+✅ **Expiry ถูกต้อง**: set อัตโนมัติจากเวลาที่ยืนยัน ไม่ใช่ตอนสร้าง  
+✅ **User Experience**: แสดงวันหมดอายุที่ถูกต้อง (3 วันจากที่ยืนยัน)
+
+**Documentation:**
+
+- ✅ สร้าง `/docs/reservation-dashboard-guide.md` - คู่มือการใช้งาน admin dashboard
+- ✅ อัพเดท `/docs/data_dictionary.md` - business rules สำหรับ expires_at
+- ✅ อัพเดท `/docs/ai-context.md` - workflow การยืนยันการจอง
+
+---
+
 ## [Enhancement] - 2026-03-26 - User Can Cancel Reservations & Admin-Controlled Expiry
 
 ### 🔄 Reservation Cancellation & Expiry Management

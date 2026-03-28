@@ -759,12 +759,16 @@ Digital Library System
 
 ### Admin Can Do
 
-- ดูรายการจองทั้งหมด
+- ดูรายการจองทั้งหมดใน Admin Dashboard (`/dashboard/reservations`)
+- ดูรายละเอียดการจองแต่ละ batch
 - ดูว่าใครจองอะไร
-- ดูวันหมดอายุของการจอง
-- **สร้างการจองแทน user ได้** (เพิ่มใหม่)
-- ยืนยันการจอง
-- ยกเลิกการจอง
+- ดูสถานะสต็อคของหนังสือแต่ละเล่ม (available/out of stock)
+- **ยืนยันการจองแบบเลือกหนังสือเฉพาะที่มีสต็อค**
+  - เลือก checkbox หนังสือที่ต้องการยืนยัน
+  - หนังสือที่ไม่เลือก = ถูกยกเลิกอัตโนมัติ
+  - ระบบจะ set `expires_at` เป็น 3 วันจากเวลาที่ยืนยัน
+- ยกเลิกการจองทั้งหมด
+- **สร้างการจองแทน user ได้** (ผ่าน Django Admin)
 
 ### Related Data
 
@@ -775,27 +779,33 @@ Digital Library System
 
 ### Important Rules
 
-- การยืนยันควรเปลี่ยนสถานะทั้ง batch และ item
-- การยกเลิกควรเปลี่ยนสถานะทั้ง batch และ item
-- การยืนยัน/ยกเลิกต้องสอดคล้องกับจำนวน available_quantity
-- **Admin สามารถสร้าง reservation batch ใหม่และเลือก user ได้**
-- **ระบบจะตั้งค่า expires_at อัตโนมัติเป็น 3 วันจากวันที่สร้าง**
+- การยืนยันจะเปลี่ยนสถานะทั้ง batch และ item
+- หนังสือที่เลือกยืนยัน → status = 'confirmed' + ลด available_quantity
+- หนังสือที่ไม่เลือก → status = 'cancelled' อัตโนมัติ
+- ระบบจะ set `expires_at` อัตโนมัติเมื่อยืนยัน = ปัจจุบัน + 3 วัน
+- ถ้ามีหนังสือที่ยืนยันแล้ว → batch status = 'confirmed'
+- ถ้าทุกหนังสือถูกยกเลิก → batch status = 'cancelled'
+- การยกเลิกต้องสอดคล้องกับจำนวน available_quantity
+- User ต้องมารับหนังสือก่อน expires_at
 
-### Workflow สำหรับ Admin สร้างการจองแทน User
+### Workflow สำหรับ Admin ยืนยันการจอง
 
-1. Admin ไปที่ Django Admin → Reservation Batches → Add Reservation Batch
-2. เลือก User ที่ต้องการจองให้
-3. **เพิ่มหนังสือที่ต้องการจองได้ทันทีใน Inline table ข้างล่าง** (autocomplete search)
-4. กด Save (ระบบตั้ง expires_at อัตโนมัติ)
-5. ใช้ admin action "Confirm selected reservations" เพื่อยืนยันการจอง
-
-**ทางเลือก (ถ้าไม่อยากใช้ Inline):**
-
-- ไปที่ Reservations → Add Reservation → เลือก Batch และ Book
+1. Admin เข้า `/dashboard/reservations`
+2. เลือกดูรายละเอียด reservation batch ที่ต้องการ
+3. ดูสถานะสต็อคของหนังสือแต่ละเล่ม:
+   - 🟢 สีเขียว = มีสต็อค สามารถยืนยันได้
+   - 🔴 สีแดง = Out of Stock ยืนยันไม่ได้
+4. เลือก checkbox หนังสือที่ต้องการยืนยัน (เฉพาะที่มีสต็อค)
+5. คลิก "Confirm Selected Books"
+6. ระบบจะ:
+   - ยืนยันหนังสือที่เลือก (ลด stock)
+   - ยกเลิกหนังสือที่ไม่เลือกอัตโนมัติ
+   - Set expires_at เป็น 3 วันจากตอนนี้
+   - เปลี่ยน batch status เป็น 'confirmed'
 
 ### Configuration
 
-- `RESERVATION_EXPIRY_DAYS` (ใน settings.py) = จำนวนวันที่การจองจะหมดอายุ (default: 3 วัน)
+- `RESERVATION_EXPIRY_DAYS` (ใน settings.py) = จำนวนวันที่การจองจะหมดอายุหลังจากยืนยัน (default: 3 วัน)
 
 ---
 
