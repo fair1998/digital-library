@@ -87,7 +87,12 @@ def add_to_cart_view(request, book_id):
     """
     Add a book to the reservation cart.
     """
+    from django.http import JsonResponse
+    
     if request.method != 'POST':
+        # For AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
+            return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
         messages.error(request, 'Invalid request method.')
         return redirect('books:book_detail', book_id=book_id)
     
@@ -95,12 +100,27 @@ def add_to_cart_view(request, book_id):
     
     # Check if book is available
     if book.available_quantity <= 0:
+        # For AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'X-CSRFToken' in request.headers:
+            return JsonResponse({'success': False, 'message': f'ขออภัย หนังสือ "{book.title}" ไม่มีให้จองในขณะนี้'}, status=400)
         messages.error(request, f'ขออภัย หนังสือ "{book.title}" ไม่มีให้จองในขณะนี้')
         return redirect('books:book_detail', book_id=book_id)
     
     # Add to cart
     cart = Cart(request)
-    if cart.add(book_id):
+    was_added = cart.add(book_id)
+    
+    # For AJAX requests
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'X-CSRFToken' in request.headers:
+        return JsonResponse({
+            'success': True,
+            'added': was_added,
+            'cart_count': cart.count(),
+            'message': f'เพิ่ม "{book.title}" ไปยังตะกร้าแล้ว' if was_added else f'"{book.title}" อยู่ในตะกร้าอยู่แล้ว'
+        })
+    
+    # For regular form submissions
+    if was_added:
         messages.success(request, f'เพิ่ม "{book.title}" ไปยังตะกร้าแล้ว')
     else:
         messages.info(request, f'"{book.title}" อยู่ในตะกร้าอยู่แล้ว')
