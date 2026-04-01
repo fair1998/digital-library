@@ -245,7 +245,7 @@
                                                             {% endif %}
                                                         </td>
                                                         <td>
-                                                            <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% elif reservation.status == 'expired' %}danger{% else %}secondary{% endif %}">
+                                                            <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% else %}secondary{% endif %}">
                                                                 {{ reservation.get_status_display }}
                                                             </span>
                                                         </td>
