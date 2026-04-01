@@ -415,11 +415,6 @@ def admin_cancel_reservation_view(request, batch_id):
             
             batch.save()
             
-            # Update all reservation items
-            for reservation in batch.reservations.all():
-                reservation.status = batch.status
-                reservation.save()
-            
             messages.success(
                 request,
                 f'{new_status}การจอง #{batch.id} สำเร็จ (สถานะเดิม: {old_status}, User: {batch.user.username})'
