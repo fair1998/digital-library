@@ -79,6 +79,8 @@ def admin_dashboard_view(request):
     """
     # Get filter parameters
     status_filter = request.GET.get('status', 'all')
+    batch_id_filter = request.GET.get('batch_id', '').strip()
+    user_filter = request.GET.get('user', '').strip()
     
     # Base queryset
     reservation_batches = ReservationBatch.objects.select_related(
@@ -87,6 +89,19 @@ def admin_dashboard_view(request):
         'reservations__book__authors',
         'reservations__book__publisher'
     ).order_by('-created_at')
+    
+    # Apply batch ID filter
+    if batch_id_filter:
+        reservation_batches = reservation_batches.filter(id=batch_id_filter)
+    
+    # Apply user filter (search by username, first name, or last name)
+    if user_filter:
+        from django.db.models import Q
+        reservation_batches = reservation_batches.filter(
+            Q(user__username__icontains=user_filter) |
+            Q(user__first_name__icontains=user_filter) |
+            Q(user__last_name__icontains=user_filter)
+        )
     
     # Apply status filter
     if status_filter and status_filter != 'all':
@@ -108,6 +123,8 @@ def admin_dashboard_view(request):
     context = {
         'reservation_batches': reservation_batches,
         'status_filter': status_filter,
+        'batch_id_filter': batch_id_filter,
+        'user_filter': user_filter,
         'stats': stats,
     }
     

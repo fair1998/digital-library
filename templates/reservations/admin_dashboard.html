@@ -42,12 +42,27 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <label for="status" class="form-label">Filter by Status</label>
-                    <select name="status"
-                            id="status"
-                            class="form-select"
-                            onchange="this.form.submit()">
+                <div class="col-md-3">
+                    <label for="batch_id" class="form-label">Batch ID</label>
+                    <input type="text"
+                           name="batch_id"
+                           id="batch_id"
+                           class="form-control"
+                           placeholder="Search by Batch ID"
+                           value="{{ batch_id_filter }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="user" class="form-label">User</label>
+                    <input type="text"
+                           name="user"
+                           id="user"
+                           class="form-control"
+                           placeholder="Search by username or name"
+                           value="{{ user_filter }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
                         <option value="pending"
                                 {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
@@ -56,6 +71,14 @@
                         <option value="cancelled"
                                 {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
                     </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    <a href="{% url 'dashboard_reservations' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
                 </div>
             </form>
         </div>
