@@ -174,26 +174,6 @@
             <div class="alert alert-info">ยังไม่มีหนังสือในระบบ</div>
         {% endif %}
     </div>
-    <!-- Toast Container for Notifications -->
-    <div class="toast-container">
-        <div id="cartToast"
-             class="toast"
-             role="alert"
-             aria-live="assertive"
-             aria-atomic="true">
-            <div class="toast-header">
-                <i class="bi bi-cart-check-fill text-success me-2"></i>
-                <strong class="me-auto">ตะกร้าหนังสือ</strong>
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="toast"
-                        aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                <span id="toastMessage"></span>
-            </div>
-        </div>
-    </div>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Handle add to cart forms
@@ -227,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const data = await response.json();
                     
                     // Show success toast
-                    showToast(data.message);
+                    showToast(data.message  , 'ตะกร้าหนังสือ' , 'success' );
                     
                     // Update cart count only if book was newly added
                     if (data.added) {
@@ -235,11 +215,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } else {
                     const data = await response.json();
-                    showToast(data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
+                    showToast((data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง') , 'ตะกร้าหนังสือ', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ' , 'ตะกร้าหนังสือ', 'error');
             } finally {
                 // Re-enable button
                 submitBtn.disabled = false;
@@ -247,29 +227,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
-    function showToast(message, type = 'success') {
-        const toastEl = document.getElementById('cartToast');
-        const toastMessage = document.getElementById('toastMessage');
-        const toastHeader = toastEl.querySelector('.toast-header');
-        
-        // Update message
-        toastMessage.textContent = message;
-        
-        // Update style based on type
-        if (type === 'error') {
-            toastHeader.querySelector('i').className = 'bi bi-exclamation-triangle-fill text-danger me-2';
-        } else {
-            toastHeader.querySelector('i').className = 'bi bi-cart-check-fill text-success me-2';
-        }
-        
-        // Show toast
-        const toast = new bootstrap.Toast(toastEl, {
-            autohide: true,
-            delay: 3000
-        });
-        toast.show();
-    }
     
     function updateCartCount() {
         // Find the cart link in navbar

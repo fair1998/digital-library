@@ -1,0 +1,60 @@
+<!-- Toast Notification Component -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveToast"
+         class="toast"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true">
+        <div class="toast-header">
+            <i id="toastIcon" class="bi bi-info-circle-fill text-primary me-2"></i>
+            <strong class="me-auto" id="toastTitle"></strong>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+<script>
+// Global Toast Helper Function
+function showToast(message = 'ข้อความแจ้งเตือน', title = 'แจ้งเตือน', type = 'info') {
+    const toastElement = document.getElementById('liveToast');
+    const toastTitle = document.getElementById('toastTitle');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+    
+    if (toastElement) {
+        // Update content
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+        
+        // Update icon and color based on type
+        if (toastIcon) {
+            // Remove all existing color classes
+            toastIcon.classList.remove('text-primary', 'text-success', 'text-danger', 'text-warning');
+            toastIcon.classList.remove('bi-info-circle-fill', 'bi-check-circle-fill', 'bi-x-circle-fill', 'bi-exclamation-triangle-fill');
+            
+            switch(type) {
+                case 'success':
+                    toastIcon.classList.add('bi-check-circle-fill', 'text-success');
+                    break;
+                case 'error':
+                    toastIcon.classList.add('bi-x-circle-fill', 'text-danger');
+                    break;
+                case 'warning':
+                    toastIcon.classList.add('bi-exclamation-triangle-fill', 'text-warning');
+                    break;
+                default: // info
+                    toastIcon.classList.add('bi-info-circle-fill', 'text-primary');
+            }
+        }
+        
+        // Show toast
+         const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastElement, {
+            delay: 3000,
+         })
+            toastBootstrap.show();
+    }
+};
+</script>
