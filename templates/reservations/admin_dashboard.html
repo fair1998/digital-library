@@ -5,7 +5,7 @@
 {% block content %}
     <!-- Statistics Cards -->
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title text-muted">Total</h5>
@@ -13,7 +13,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center border-warning">
                 <div class="card-body">
                     <h5 class="card-title text-warning">Pending</h5>
@@ -21,7 +21,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card text-center border-success">
                 <div class="card-body">
                     <h5 class="card-title text-success">Confirmed</h5>
@@ -29,15 +29,105 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Need Action
+                    </h5>
+                    <h2 class="display-4">{{ stats.expired_pending }}</h2>
+                    <small class="text-muted">หมดอายุแล้ว</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-danger" style="opacity: 0.7;">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">Expired</h5>
+                    <h2 class="display-4">{{ stats.expired }}</h2>
+                    <small class="text-muted">ไม่มารับ</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
             <div class="card text-center border-secondary">
                 <div class="card-body">
                     <h5 class="card-title text-secondary">Cancelled</h5>
                     <h2 class="display-4">{{ stats.cancelled }}</h2>
+                    <small class="text-muted">ยกเลิก</small>
                 </div>
             </div>
         </div>
     </div>
+    <!-- Expired Reservations Alert -->
+    {% if expired_batches %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5 class="alert-heading">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>พบการจองที่หมดอายุ (Confirmed) {{ expired_batches|length }} รายการ
+            </h5>
+            <p class="mb-3">
+                การจองเหล่านี้ได้รับการยืนยันแล้ว แต่ลูกค้าไม่มารับหนังสือภายในเวลาที่กำหนด กรุณายกเลิกเพื่อปล่อยสต็อคหนังสือ:
+            </p>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered bg-white">
+                    <thead>
+                        <tr>
+                            <th>Batch ID</th>
+                            <th>User</th>
+                            <th>Books</th>
+                            <th>วันที่ยืนยัน</th>
+                            <th>หมดอายุเมื่อ</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for batch in expired_batches %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'dashboard_reservation_detail' batch.id %}"
+                                       class="btn btn-sm btn-outline-primary">#{{ batch.id }}</a>
+                                </td>
+                                <td>
+                                    <strong>{{ batch.user.username }}</strong>
+                                    {% if batch.user.get_full_name %}
+                                        <br>
+                                        <small>{{ batch.user.get_full_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ batch.reservations.count }} เล่ม</td>
+                                <td>
+                                    <small>{{ batch.created_at|date:"d M Y H:i" }}</small>
+                                </td>
+                                <td>
+                                    <small class="text-danger fw-bold">{{ batch.expires_at|date:"d M Y H:i" }}</small>
+                                </td>
+                                <td>
+                                    <form method="post"
+                                          action="{% url 'dashboard_reservations_cancel' batch.id %}"
+                                          class="d-inline"
+                                          onsubmit="return confirm('ยืนยันการยกเลิกการจอง #{{ batch.id }} ของ {{ batch.user.username }}?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-x-circle"></i> ยกเลิก
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <hr>
+            <p class="mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                <small>การจองที่หมดอายุควรถูกยกเลิกเพื่อปล่อยสต็อคหนังสือให้ผู้ใช้คนอื่น (เฉพาะการจองที่ยืนยันแล้วแต่ลูกค้าไม่มารับภายในเวลา)</small>
+            </p>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
+        </div>
+    {% endif %}
     <!-- Filter -->
     <div class="card mb-4">
         <div class="card-body">
@@ -68,6 +158,8 @@
                                 {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
                         <option value="confirmed"
                                 {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="expired"
+                                {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
                         <option value="cancelled"
                                 {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
                     </select>
@@ -153,7 +245,7 @@
                                                             {% endif %}
                                                         </td>
                                                         <td>
-                                                            <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% else %}secondary{% endif %}">
+                                                            <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% elif reservation.status == 'expired' %}danger{% else %}secondary{% endif %}">
                                                                 {{ reservation.get_status_display }}
                                                             </span>
                                                         </td>
@@ -186,6 +278,10 @@
                                     <span class="badge bg-success">
                                         <i class="bi bi-check-circle"></i> Confirmed
                                     </span>
+                                {% elif batch.status == 'expired' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Expired
+                                    </span>
                                 {% elif batch.status == 'cancelled' %}
                                     <span class="badge bg-secondary">
                                         <i class="bi bi-x-circle"></i> Cancelled
@@ -197,11 +293,11 @@
                             </td>
                             <td>
                                 {% if batch.expires_at %}
-                                    <small class="{% if batch.is_expired and batch.status == 'pending' %}text-danger fw-bold{% endif %}">
+                                    <small class="{% if batch.status == 'confirmed' and batch.is_expired %}text-danger fw-bold{% endif %}">
                                         {{ batch.expires_at|date:"d M Y H:i" }}
-                                        {% if batch.is_expired and batch.status == 'pending' %}
+                                        {% if batch.status == 'confirmed' and batch.is_expired %}
                                             <br>
-                                            <span class="badge bg-danger">Expired</span>
+                                            <span class="badge bg-danger">หมดเวลารับแล้ว!</span>
                                         {% endif %}
                                     </small>
                                 {% else %}

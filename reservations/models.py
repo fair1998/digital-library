@@ -10,6 +10,7 @@ class ReservationBatch(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
+        ('expired', 'Expired'),
         ('cancelled', 'Cancelled'),
     ]
     
@@ -63,6 +64,7 @@ class Reservation(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
+        ('expired', 'Expired'),
         ('cancelled', 'Cancelled'),
     ]
     

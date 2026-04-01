@@ -25,15 +25,17 @@
                                 </div>
                                 <div>
                                     {% if batch.status == 'pending' %}
-                                        {% if batch.is_expired %}
-                                            <span class="badge bg-warning text-dark fs-6">หมดอายุแล้ว</span>
-                                        {% else %}
-                                            <span class="badge bg-info fs-6">รอดำเนินการ</span>
-                                        {% endif %}
+                                        <span class="badge bg-info fs-6">รอดำเนินการ</span>
                                     {% elif batch.status == 'confirmed' %}
-                                        <span class="badge bg-success fs-6">ยืนยันแล้ว</span>
+                                        {% if batch.is_expired %}
+                                            <span class="badge bg-warning text-dark fs-6">กำลังจะหมดอายุ</span>
+                                        {% else %}
+                                            <span class="badge bg-success fs-6">ยืนยันแล้ว</span>
+                                        {% endif %}
+                                    {% elif batch.status == 'expired' %}
+                                        <span class="badge bg-danger fs-6">หมดอายุ (ไม่มารับ)</span>
                                     {% elif batch.status == 'cancelled' %}
-                                        <span class="badge bg-danger fs-6">ยกเลิกแล้ว</span>
+                                        <span class="badge bg-secondary fs-6">ยกเลิกแล้ว</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -41,9 +43,15 @@
                                 <!-- Expiry Information -->
                                 {% if batch.expires_at %}
                                     <div class="mb-3">
-                                        <strong>รับหนังสือได้ตั้งแต่วันที่ ถึง:</strong>
-                                        <span class="{% if batch.is_expired %}text-danger{% endif %}">{{ batch.expires_at|date:"d/m/Y H:i" }}</span>
-                                        {% if batch.is_expired %}<span class="badge bg-warning text-dark ms-2">หมดอายุการจอง</span>{% endif %}
+                                        <strong>รับหนังสือภายในวันที่:</strong>
+                                        <span class="{% if batch.status == 'confirmed' and batch.is_expired %}text-danger fw-bold{% endif %}">
+                                            {{ batch.expires_at|date:"d/m/Y H:i" }}
+                                        </span>
+                                        {% if batch.status == 'confirmed' and batch.is_expired %}
+                                            <span class="badge bg-danger ms-2">หมดเวลารับหนังสือแล้ว!</span>
+                                        {% elif batch.status == 'expired' %}
+                                            <span class="badge bg-secondary ms-2">หมดอายุ (ถูกยกเลิก)</span>
+                                        {% endif %}
                                     </div>
                                 {% endif %}
                                 <!-- Reserved Books -->
@@ -83,8 +91,10 @@
                                                             <span class="badge bg-info">รอดำเนินการ</span>
                                                         {% elif reservation.status == 'confirmed' %}
                                                             <span class="badge bg-success">ยืนยันแล้ว</span>
+                                                        {% elif reservation.status == 'expired' %}
+                                                            <span class="badge bg-danger">หมดอายุ</span>
                                                         {% elif reservation.status == 'cancelled' %}
-                                                            <span class="badge bg-danger">ยกเลิกแล้ว</span>
+                                                            <span class="badge bg-secondary">ยกเลิกแล้ว</span>
                                                         {% endif %}
                                                     </td>
                                                 </tr>

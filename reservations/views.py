@@ -107,16 +107,22 @@ def admin_dashboard_view(request):
     if status_filter and status_filter != 'all':
         reservation_batches = reservation_batches.filter(status=status_filter)
     
-    # Add expiry info to each batch
+    # Add expiry info to each batch and collect expired confirmed batches
     now = timezone.now()
+    expired_batches = []
     for batch in reservation_batches:
         batch.is_expired = batch.expires_at < now if batch.expires_at else False
+        # Collect only CONFIRMED batches that expired (customer didn't pick up)
+        if batch.is_expired and batch.status == 'confirmed':
+            expired_batches.append(batch)
     
     # Count stats for dashboard
     stats = {
         'total': ReservationBatch.objects.count(),
         'pending': ReservationBatch.objects.filter(status='pending').count(),
         'confirmed': ReservationBatch.objects.filter(status='confirmed').count(),
+        'expired_pending': len(expired_batches),  # Confirmed ที่หมดอายุแต่ยังไม่ได้จัดการ
+        'expired': ReservationBatch.objects.filter(status='expired').count(),  # ที่เปลี่ยน status เป็น expired แล้ว
         'cancelled': ReservationBatch.objects.filter(status='cancelled').count(),
     }
     
@@ -126,6 +132,7 @@ def admin_dashboard_view(request):
         'batch_id_filter': batch_id_filter,
         'user_filter': user_filter,
         'stats': stats,
+        'expired_batches': expired_batches,
     }
     
     return render(request, 'reservations/admin_dashboard.html', context)
@@ -370,7 +377,7 @@ def admin_confirm_reservation_view(request, batch_id):
 def admin_cancel_reservation_view(request, batch_id):
     """
     Admin action to cancel a reservation batch.
-    Can cancel any batch except those already cancelled.
+    If expired, mark as 'expired', otherwise 'cancelled'.
     """
     if request.method != 'POST':
         messages.error(request, 'Invalid request method.')
@@ -378,10 +385,13 @@ def admin_cancel_reservation_view(request, batch_id):
     
     batch = get_object_or_404(ReservationBatch, id=batch_id)
     
-    # Check if already cancelled
-    if batch.status == 'cancelled':
-        messages.warning(request, f'การจอง #{batch.id} ถูกยกเลิกไปแล้ว')
+    # Check if already cancelled or expired
+    if batch.status in ['cancelled', 'expired']:
+        messages.warning(request, f'การจอง #{batch.id} ถูกจัดการไปแล้ว (สถานะ: {batch.get_status_display()})')
         return redirect('dashboard_reservations')
+    
+    # Check if this is an expired cancellation
+    is_expired_cancellation = batch.is_expired() and batch.status == 'confirmed'
     
     try:
         with transaction.atomic():
@@ -395,18 +405,24 @@ def admin_cancel_reservation_view(request, batch_id):
                     book.available_quantity += 1
                     book.save()
             
-            # Update batch status
-            batch.status = 'cancelled'
+            # Update batch status based on reason
+            if is_expired_cancellation:
+                batch.status = 'expired'
+                new_status = 'หมดอายุ (ลูกค้าไม่มารับ)'
+            else:
+                batch.status = 'cancelled'
+                new_status = 'ยกเลิก'
+            
             batch.save()
             
             # Update all reservation items
             for reservation in batch.reservations.all():
-                reservation.status = 'cancelled'
+                reservation.status = batch.status
                 reservation.save()
             
             messages.success(
                 request,
-                f'ยกเลิกการจอง #{batch.id} สำเร็จ (สถานะเดิม: {old_status}, User: {batch.user.username})'
+                f'{new_status}การจอง #{batch.id} สำเร็จ (สถานะเดิม: {old_status}, User: {batch.user.username})'
             )
             
     except Exception as e:
