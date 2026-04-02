@@ -176,7 +176,7 @@ This document describes the database schema for a digital library management sys
 | `id`             | int         | PK, increment                                                        | Primary key - Individual loan item identifier                                         |
 | `book_id`        | int         | not null, FK -> `books.id`                                           | Foreign key to the book being borrowed                                                |
 | `loan_batch_id`  | int         | not null, FK -> `loan_batches.id`                                    | Foreign key to parent loan batch                                                      |
-| `reservation_id` | int         | nullable, FK -> `reservations.id`                                    | Foreign key to reservation (if this loan originated from a reservation)               |
+| `reservation_id` | int         | nullable, **unique**, FK -> `reservations.id`                        | Foreign key to reservation (if this loan originated from a reservation) — **one reservation item can only be loaned once** |
 | `status`         | varchar(20) | not null, default `borrowed`, check (`borrowed`, `returned`, `lost`) | Item status: `borrowed` = currently out, `returned` = returned, `lost` = lost/missing |
 | `returned_at`    | timestamp   | nullable                                                             | Actual return timestamp (null if not yet returned)                                    |
 | `updated_at`     | timestamp   | default `now()`                                                      | Timestamp of last update                                                              |
