@@ -136,6 +136,9 @@ AUTH_USER_MODEL = 'users.User'
 # Reservation Settings
 RESERVATION_EXPIRY_DAYS = 3  # จำนวนวันที่การจองจะหมดอายุ
 
+# Loan Settings
+LOAN_PERIOD_DAYS = 14  # จำนวนวันที่สามารถยืมหนังสือได้
+
 # Login/Logout URLs
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'

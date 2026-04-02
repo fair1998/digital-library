@@ -1,0 +1,126 @@
+{% extends 'base_admin.html' %}
+{% block title %}Pending Loans - รายการรอยืม{% endblock %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2>
+                    <i class="bi bi-clock-history me-2"></i>Pending Loans - รายการรอยืม
+                </h2>
+                <p class="text-muted">การจองที่ยืนยันแล้วและรอให้ผู้ใช้มารับหนังสือ</p>
+            </div>
+        </div>
+        {% if messages %}
+            <div class="row mb-3">
+                <div class="col">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show"
+                             role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        {% if reservation_batches %}
+            <div class="row">
+                <div class="col">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Batch ID</th>
+                                            <th>ผู้จอง</th>
+                                            <th>จำนวนหนังสือ</th>
+                                            <th>วันที่ยืนยัน</th>
+                                            <th>หมดอายุ</th>
+                                            <th>สถานะ</th>
+                                            <th>การดำเนินการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for batch in reservation_batches %}
+                                            <tr class="{% if batch.is_expired_now %}table-warning{% endif %}">
+                                                <td>
+                                                    <strong>#{{ batch.id }}</strong>
+                                                </td>
+                                                <td>
+                                                    <div>{{ batch.user.get_full_name|default:batch.user.username }}</div>
+                                                    <small class="text-muted">{{ batch.user.email }}</small>
+                                                </td>
+                                                <td>
+                                                    {% with confirmed_count=batch.reservations.filter.count %}
+                                                        <span class="badge bg-info">{{ batch.reservations.filter.count }} เล่ม</span>
+                                                    {% endwith %}
+                                                </td>
+                                                <td>{{ batch.updated_at|date:"d/m/Y H:i" }}</td>
+                                                <td>
+                                                    {% if batch.expires_at %}
+                                                        <div>{{ batch.expires_at|date:"d/m/Y H:i" }}</div>
+                                                        {% if batch.is_expired_now %}
+                                                            <small class="text-danger fw-bold">
+                                                                <i class="bi bi-exclamation-triangle-fill"></i> หมดอายุแล้ว
+                                                            </small>
+                                                        {% else %}
+                                                            <small class="text-success">
+                                                                <i class="bi bi-check-circle-fill"></i> ยังไม่หมดอายุ
+                                                            </small>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary">{{ batch.get_status_display }}</span>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'loans:create_loan' batch.id %}"
+                                                       class="btn btn-sm btn-success"
+                                                       {% if batch.is_expired_now %}disabled{% endif %}>
+                                                        <i class="bi bi-check-circle me-1"></i>
+                                                        บันทึกการยืม
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            <!-- Show books in this batch -->
+                                            <tr class="table-light">
+                                                <td colspan="7">
+                                                    <div class="ms-4">
+                                                        <strong class="text-muted">หนังสือในการจอง:</strong>
+                                                        <ul class="mb-0 mt-2">
+                                                            {% for reservation in batch.reservations.all %}
+                                                                {% if reservation.status == 'confirmed' %}
+                                                                    <li>
+                                                                        <strong>{{ reservation.book.title }}</strong>
+                                                                        {% if reservation.book.authors.exists %}โดย {{ reservation.book.authors.all|join:", " }}{% endif %}
+                                                                        <span class="badge bg-success ms-2">{{ reservation.get_status_display }}</span>
+                                                                    </li>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        ไม่มีการจองที่รอการยืมในขณะนี้
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

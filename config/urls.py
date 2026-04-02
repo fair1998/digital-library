@@ -29,7 +29,7 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('books/', include('books.urls')),
     path('reservations/', include('reservations.urls')),
-    path('', include('loans.urls')),
+    path('loans/', include('loans.urls')),
     path('', include('fines.urls')),
     
     # Admin Dashboard
