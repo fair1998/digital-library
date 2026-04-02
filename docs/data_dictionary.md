@@ -119,14 +119,14 @@ This document describes the database schema for a digital library management sys
 
 ## Table: `reservation_batches` (Reservation Transactions)
 
-| Field        | Type        | Constraints                                                              | Description                                                                                                                                                                     |
-| ------------ | ----------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | int         | PK, increment                                                            | Primary key - Reservation batch identifier                                                                                                                                      |
-| `user_id`    | int         | not null, FK -> `users.id`                                               | Foreign key to user who made the reservation                                                                                                                                    |
-| `status`     | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | Batch status: `pending` = awaiting approval, `confirmed` = approved, `cancelled` = cancelled                                                                                    |
-| `expires_at` | timestamp   | **nullable**                                                             | Expiry time for confirmed reservation - **Automatically set to 3 days from confirmation when admin confirms reservation** (null for pending reservations awaiting confirmation) |
-| `updated_at` | timestamp   | default `now()`                                                          | Timestamp of last update                                                                                                                                                        |
-| `created_at` | timestamp   | default `now()`                                                          | Timestamp when reservation batch was created                                                                                                                                    |
+| Field        | Type        | Constraints                                                                                      | Description                                                                                                                                                                        |
+| ------------ | ----------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | int         | PK, increment                                                                                    | Primary key - Reservation batch identifier                                                                                                                                         |
+| `user_id`    | int         | not null, FK -> `users.id`                                                                       | Foreign key to user who made the reservation                                                                                                                                       |
+| `status`     | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `completed`, `expired`, `cancelled`) | Batch status: `pending` = awaiting approval, `confirmed` = approved/pending pickup, `completed` = user picked up books, `expired` = pickup window expired, `cancelled` = cancelled |
+| `expires_at` | timestamp   | **nullable**                                                                                     | Expiry time for confirmed reservation - **Automatically set to 3 days from confirmation when admin confirms reservation** (null for pending reservations awaiting confirmation)    |
+| `updated_at` | timestamp   | default `now()`                                                                                  | Timestamp of last update                                                                                                                                                           |
+| `created_at` | timestamp   | default `now()`                                                                                  | Timestamp when reservation batch was created                                                                                                                                       |
 
 **Purpose:** Header/parent record for a single reservation transaction. One reservation batch can contain multiple books (stored in `reservations` table).
 
@@ -134,6 +134,7 @@ This document describes the database schema for a digital library management sys
 
 - `expires_at` is **null** when user creates reservation (status = `pending`)
 - Admin confirms reservation → `expires_at` is **automatically set** to 3 days from confirmation time (configurable via `RESERVATION_EXPIRY_DAYS` setting)
+- เมื่อผู้ใช้มารับหนังสือแล้ว ให้เปลี่ยน `status` เป็น `completed`
 - User must pick up books before `expires_at` or the reservation will be cancelled
 - User can cancel reservation while status is `pending`
 - Once confirmed, only admin can cancel
@@ -171,16 +172,16 @@ This document describes the database schema for a digital library management sys
 
 ## Table: `loan_items` (Individual Borrowed Books)
 
-| Field            | Type        | Constraints                                                          | Description                                                                           |
-| ---------------- | ----------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `id`             | int         | PK, increment                                                        | Primary key - Individual loan item identifier                                         |
-| `book_id`        | int         | not null, FK -> `books.id`                                           | Foreign key to the book being borrowed                                                |
-| `loan_batch_id`  | int         | not null, FK -> `loan_batches.id`                                    | Foreign key to parent loan batch                                                      |
+| Field            | Type        | Constraints                                                          | Description                                                                                                                |
+| ---------------- | ----------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | int         | PK, increment                                                        | Primary key - Individual loan item identifier                                                                              |
+| `book_id`        | int         | not null, FK -> `books.id`                                           | Foreign key to the book being borrowed                                                                                     |
+| `loan_batch_id`  | int         | not null, FK -> `loan_batches.id`                                    | Foreign key to parent loan batch                                                                                           |
 | `reservation_id` | int         | nullable, **unique**, FK -> `reservations.id`                        | Foreign key to reservation (if this loan originated from a reservation) — **one reservation item can only be loaned once** |
-| `status`         | varchar(20) | not null, default `borrowed`, check (`borrowed`, `returned`, `lost`) | Item status: `borrowed` = currently out, `returned` = returned, `lost` = lost/missing |
-| `returned_at`    | timestamp   | nullable                                                             | Actual return timestamp (null if not yet returned)                                    |
-| `updated_at`     | timestamp   | default `now()`                                                      | Timestamp of last update                                                              |
-| `created_at`     | timestamp   | default `now()`                                                      | Timestamp when loan item was created                                                  |
+| `status`         | varchar(20) | not null, default `borrowed`, check (`borrowed`, `returned`, `lost`) | Item status: `borrowed` = currently out, `returned` = returned, `lost` = lost/missing                                      |
+| `returned_at`    | timestamp   | nullable                                                             | Actual return timestamp (null if not yet returned)                                                                         |
+| `updated_at`     | timestamp   | default `now()`                                                      | Timestamp of last update                                                                                                   |
+| `created_at`     | timestamp   | default `now()`                                                      | Timestamp when loan item was created                                                                                       |
 
 **Purpose:** Child/detail records for individual books within a loan batch. Each record represents one book borrowed in a transaction. Links to `reservations` if the loan was made from a prior reservation.
 

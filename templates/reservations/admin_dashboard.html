@@ -30,6 +30,15 @@
             </div>
         </div>
         <div class="col-md-2">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Completed</h5>
+                    <h2 class="display-4">{{ stats.completed }}</h2>
+                    <small class="text-muted">รับหนังสือแล้ว</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
             <div class="card text-center border-danger">
                 <div class="card-body">
                     <h5 class="card-title text-danger">
@@ -158,6 +167,8 @@
                                 {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
                         <option value="confirmed"
                                 {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="completed"
+                                {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
                         <option value="expired"
                                 {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
                         <option value="cancelled"
@@ -277,6 +288,21 @@
                                 {% elif batch.status == 'confirmed' %}
                                     <span class="badge bg-success">
                                         <i class="bi bi-check-circle"></i> Confirmed
+                                    </span>
+                                    {% if not batch.is_expired %}
+                                        <form method="post"
+                                              action="{% url 'dashboard_reservations_complete' batch.id %}"
+                                              class="mt-2"
+                                              onsubmit="return confirm('ยืนยันว่าผู้ใช้รับหนังสือแล้วสำหรับการจอง #{{ batch.id }}?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-box-seam"></i> Mark Picked Up
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% elif batch.status == 'completed' %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-box-seam"></i> Completed
                                     </span>
                                 {% elif batch.status == 'expired' %}
                                     <span class="badge bg-danger">

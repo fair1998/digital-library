@@ -32,6 +32,8 @@
                                         {% else %}
                                             <span class="badge bg-success fs-6">ยืนยันแล้ว</span>
                                         {% endif %}
+                                    {% elif batch.status == 'completed' %}
+                                        <span class="badge bg-primary fs-6">รับหนังสือแล้ว</span>
                                     {% elif batch.status == 'expired' %}
                                         <span class="badge bg-danger fs-6">หมดอายุ (ไม่มารับ)</span>
                                     {% elif batch.status == 'cancelled' %}
@@ -49,6 +51,8 @@
                                         </span>
                                         {% if batch.status == 'confirmed' and batch.is_expired %}
                                             <span class="badge bg-danger ms-2">หมดเวลารับหนังสือแล้ว!</span>
+                                        {% elif batch.status == 'completed' %}
+                                            <span class="badge bg-primary ms-2">รับหนังสือเรียบร้อยแล้ว</span>
                                         {% elif batch.status == 'expired' %}
                                             <span class="badge bg-secondary ms-2">หมดอายุ (ถูกยกเลิก)</span>
                                         {% endif %}

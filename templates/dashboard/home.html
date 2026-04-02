@@ -133,7 +133,7 @@
                                             </h6>
                                             <small class="text-muted">Batch #{{ batch.id }} - {{ batch.reservations.count }} books</small>
                                         </div>
-                                        <span class="badge bg-{% if batch.status == 'pending' %}warning{% elif batch.status == 'confirmed' %}success{% else %}secondary{% endif %}">
+                                        <span class="badge bg-{% if batch.status == 'pending' %}warning{% elif batch.status == 'confirmed' %}success{% elif batch.status == 'completed' %}primary{% elif batch.status == 'expired' %}danger{% else %}secondary{% endif %}">
                                             {{ batch.get_status_display }}
                                         </span>
                                     </div>

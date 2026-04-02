@@ -11,7 +11,7 @@
             </a>
         </div>
         <div>
-            <span class="badge bg-{% if batch.status == 'pending' %}warning{% elif batch.status == 'confirmed' %}success{% elif batch.status == 'expired' %}danger{% else %}secondary{% endif %} fs-6">
+            <span class="badge bg-{% if batch.status == 'pending' %}warning{% elif batch.status == 'confirmed' %}success{% elif batch.status == 'completed' %}primary{% elif batch.status == 'expired' %}danger{% else %}secondary{% endif %} fs-6">
                 {{ batch.get_status_display }}
             </span>
         </div>
@@ -166,11 +166,22 @@
                     </div>
                 {% elif batch.status == 'confirmed' %}
                     <div class="mt-4">
-                        <button type="button"
-                                class="btn btn-outline-danger"
-                                onclick="if(confirm('ยกเลิกการจองที่ยืนยันแล้ว?\n(จะคืนจำนวนหนังสือกลับ)')) { document.getElementById('cancelForm').submit(); }">
-                            <i class="bi bi-x-circle"></i> Cancel This Reservation
-                        </button>
+                        <div class="btn-group">
+                            <form method="post"
+                                  action="{% url 'dashboard_reservations_complete' batch.id %}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('ยืนยันว่าผู้ใช้รับหนังสือแล้วสำหรับการจอง #{{ batch.id }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-box-seam"></i> Mark as Picked Up
+                                </button>
+                            </form>
+                            <button type="button"
+                                    class="btn btn-outline-danger"
+                                    onclick="if(confirm('ยกเลิกการจองที่ยืนยันแล้ว?\n(จะคืนจำนวนหนังสือกลับ)')) { document.getElementById('cancelForm').submit(); }">
+                                <i class="bi bi-x-circle"></i> Cancel This Reservation
+                            </button>
+                        </div>
                     </div>
                 {% endif %}
             </form>

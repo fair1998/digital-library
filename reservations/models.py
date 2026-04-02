@@ -10,6 +10,7 @@ class ReservationBatch(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
+        ('completed', 'Completed'),
         ('expired', 'Expired'),
         ('cancelled', 'Cancelled'),
     ]

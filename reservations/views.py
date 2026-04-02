@@ -75,7 +75,7 @@ def cancel_reservation_view(request, batch_id):
 def admin_dashboard_view(request):
     """
     Admin dashboard to manage all reservation batches.
-    Shows pending, confirmed, cancelled, and expired reservations.
+    Shows pending, confirmed, completed, cancelled, and expired reservations.
     """
     # Get filter parameters
     status_filter = request.GET.get('status', 'all')
@@ -121,6 +121,7 @@ def admin_dashboard_view(request):
         'total': ReservationBatch.objects.count(),
         'pending': ReservationBatch.objects.filter(status='pending').count(),
         'confirmed': ReservationBatch.objects.filter(status='confirmed').count(),
+        'completed': ReservationBatch.objects.filter(status='completed').count(),
         'expired_pending': len(expired_batches),  # Confirmed ที่หมดอายุแต่ยังไม่ได้จัดการ
         'expired': ReservationBatch.objects.filter(status='expired').count(),  # ที่เปลี่ยน status เป็น expired แล้ว
         'cancelled': ReservationBatch.objects.filter(status='cancelled').count(),
@@ -374,6 +375,48 @@ def admin_confirm_reservation_view(request, batch_id):
 
 
 @staff_member_required
+def admin_complete_reservation_view(request, batch_id):
+    """
+    Mark a confirmed reservation batch as completed when user picks up books.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('dashboard_reservations')
+
+    batch = get_object_or_404(ReservationBatch, id=batch_id)
+
+    if batch.status == 'completed':
+        messages.info(request, f'การจอง #{batch.id} ถูกทำรายการรับหนังสือแล้ว')
+        return redirect('dashboard_reservations')
+
+    if batch.status != 'confirmed':
+        messages.error(
+            request,
+            f'ไม่สามารถเปลี่ยนเป็นรับหนังสือแล้วได้ (สถานะปัจจุบัน: {batch.get_status_display()})'
+        )
+        return redirect('dashboard_reservations')
+
+    if batch.is_expired():
+        messages.error(
+            request,
+            f'การจอง #{batch.id} หมดอายุแล้ว กรุณายกเลิกการจองแทน'
+        )
+        return redirect('dashboard_reservations')
+
+    try:
+        batch.status = 'completed'
+        batch.save()
+        messages.success(
+            request,
+            f'บันทึกการรับหนังสือสำเร็จ: การจอง #{batch.id} (User: {batch.user.username})'
+        )
+    except Exception as e:
+        messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
+
+    return redirect('dashboard_reservations')
+
+
+@staff_member_required
 def admin_cancel_reservation_view(request, batch_id):
     """
     Admin action to cancel a reservation batch.
@@ -385,8 +428,8 @@ def admin_cancel_reservation_view(request, batch_id):
     
     batch = get_object_or_404(ReservationBatch, id=batch_id)
     
-    # Check if already cancelled or expired
-    if batch.status in ['cancelled', 'expired']:
+    # Check if already finalized
+    if batch.status in ['cancelled', 'expired', 'completed']:
         messages.warning(request, f'การจอง #{batch.id} ถูกจัดการไปแล้ว (สถานะ: {batch.get_status_display()})')
         return redirect('dashboard_reservations')
     
