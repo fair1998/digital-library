@@ -43,7 +43,7 @@
                                 <!-- Expiry Information -->
                                 {% if batch.expires_at %}
                                     <div class="mb-3">
-                                        <strong>รับหนังสือภายในวันที่:</strong>
+                                        <strong>รับหนังสือภายในวันที่ถีง:</strong>
                                         <span class="{% if batch.status == 'confirmed' and batch.is_expired %}text-danger fw-bold{% endif %}">
                                             {{ batch.expires_at|date:"d/m/Y H:i" }}
                                         </span>
