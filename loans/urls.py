@@ -8,7 +8,6 @@ urlpatterns = [
     path('my-loans/', views.my_loans_view, name='my_loans'),
     
     # Admin views
-    path('admin/pending/', views.pending_loans_view, name='pending_loans'),
     path('admin/create/<int:batch_id>/', views.create_loan_view, name='create_loan'),
     path('admin/active/', views.active_loans_view, name='active_loans'),
     path('admin/detail/<int:batch_id>/', views.loan_detail_view, name='loan_detail'),

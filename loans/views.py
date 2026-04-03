@@ -45,32 +45,6 @@ def is_staff(user):
 
 @login_required
 @user_passes_test(is_staff)
-def pending_loans_view(request):
-    """
-    Display confirmed reservations that are ready to be converted to loans.
-    Admin can see which reservations are waiting for pickup.
-    """
-    confirmed_batches = ReservationBatch.objects.filter(
-        status='confirmed'
-    ).select_related('user').prefetch_related(
-        'reservations__book__authors',
-        'reservations__book__publisher'
-    ).order_by('expires_at')
-    
-    # Check which batches are expired
-    now = timezone.now()
-    for batch in confirmed_batches:
-        batch.is_expired_now = batch.is_expired()
-    
-    context = {
-        'reservation_batches': confirmed_batches,
-    }
-    
-    return render(request, 'loans/pending_loans.html', context)
-
-
-@login_required
-@user_passes_test(is_staff)
 def create_loan_view(request, batch_id):
     """
     Create a loan from a confirmed reservation batch.
@@ -87,12 +61,12 @@ def create_loan_view(request, batch_id):
     # Validate that batch is confirmed
     if reservation_batch.status != 'confirmed':
         messages.error(request, 'การจองนี้ยังไม่ได้รับการยืนยันหรือถูกยกเลิกแล้ว')
-        return redirect('loans:pending_loans')
+        return redirect('dashboard_reservations')
     
     # Check if expired
     if reservation_batch.is_expired():
         messages.error(request, 'การจองนี้หมดอายุแล้ว กรุณายกเลิกการจองและให้ user จองใหม่')
-        return redirect('loans:pending_loans')
+        return redirect('dashboard_reservations')
     
     if request.method == 'POST':
         # Get loan period from settings or default 14 days
@@ -131,7 +105,7 @@ def create_loan_view(request, batch_id):
                 
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
-            return redirect('loans:pending_loans')
+            return redirect('dashboard_reservations')
     
     # GET request - show confirmation page
     confirmed_reservations = reservation_batch.reservations.filter(
