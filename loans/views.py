@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
 from django.conf import settings
+from django.http import JsonResponse
 from datetime import timedelta
 from .models import LoanBatch, LoanItem
 from reservations.models import ReservationBatch, Reservation
@@ -72,6 +73,9 @@ def create_loan_view(request, batch_id):
         # Get loan period from settings or default 14 days
         loan_days = getattr(settings, 'LOAN_PERIOD_DAYS', 14)
         
+        # Get additional books from POST data
+        additional_book_ids = request.POST.getlist('additional_books')
+        
         try:
             with transaction.atomic():
                 # Create loan batch
@@ -93,13 +97,38 @@ def create_loan_view(request, batch_id):
                         status='borrowed'
                     )
                 
+                # Create loan items for additional books
+                if additional_book_ids:
+                    for book_id in additional_book_ids:
+                        try:
+                            book = Book.objects.get(id=book_id)
+                            
+                            # Check if book is available
+                            if book.available_quantity <= 0:
+                                raise ValueError(f'หนังสือ "{book.title}" ไม่มีในคลัง')
+                            
+                            # Decrease available quantity
+                            book.available_quantity -= 1
+                            book.save()
+                            
+                            # Create loan item (no reservation link for additional books)
+                            LoanItem.objects.create(
+                                book=book,
+                                loan_batch=loan_batch,
+                                reservation=None,
+                                status='borrowed'
+                            )
+                        except Book.DoesNotExist:
+                            raise ValueError(f'ไม่พบหนังสือ ID: {book_id}')
+                
                 # Update reservation batch status to completed
                 reservation_batch.status = 'completed'
                 reservation_batch.save()
                 
+                total_books = confirmed_reservations.count() + len(additional_book_ids)
                 messages.success(
                     request,
-                    f'สร้างรายการยืมสำเร็จ! กำหนดคืนวันที่ {loan_batch.due_date.strftime("%d/%m/%Y")}'
+                    f'สร้างรายการยืมสำเร็จ! ยืมทั้งหมด {total_books} เล่ม กำหนดคืนวันที่ {loan_batch.due_date.strftime("%d/%m/%Y")}'
                 )
                 return redirect('loans:active_loans')
                 
@@ -256,3 +285,35 @@ def mark_lost_view(request, item_id):
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
     return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+
+
+@login_required
+@user_passes_test(is_staff)
+def search_books_api(request):
+    """
+    API endpoint for searching books (for adding additional books to loan).
+    Returns JSON with book data.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'books': []})
+    
+    # Search books by title or authors
+    books = Book.objects.filter(
+        Q(title__icontains=query) |
+        Q(authors__name__icontains=query)
+    ).select_related('publisher').prefetch_related('authors').distinct()[:10]
+    
+    books_data = []
+    for book in books:
+        authors_str = ', '.join([author.name for author in book.authors.all()])
+        books_data.append({
+            'id': book.id,
+            'title': book.title,
+            'authors': authors_str,
+            'publisher': book.publisher.name if book.publisher else '',
+            'available_quantity': book.available_quantity,
+        })
+    
+    return JsonResponse({'books': books_data})

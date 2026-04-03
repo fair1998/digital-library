@@ -1,6 +1,30 @@
 {% extends 'base_admin.html' %}
 {% block title %}Create Loan - สร้างรายการยืม{% endblock %}
 {% block content %}
+    <style>
+.book-search-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.book-search-item:hover {
+    background-color: #f8f9fa;
+}
+.selected-book-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.remove-book-btn {
+    cursor: pointer;
+    color: #dc3545;
+}
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+    </style>
     <div class="container py-4">
         <div class="row mb-4">
             <div class="col">
@@ -104,7 +128,38 @@
                         </div>
                     </div>
                 </div>
-                <form method="post">
+                <!-- Additional Books Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-plus-square me-2"></i>เพิ่มหนังสือเพิ่มเติม
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="bookSearch" class="form-label">ค้นหาหนังสือ</label>
+                            <div class="input-group">
+                                <input type="text"
+                                       class="form-control"
+                                       id="bookSearch"
+                                       placeholder="พิมพ์ชื่อหนังสือเพื่อค้นหา...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <div id="searchResults"
+                                 class="list-group mt-2"
+                                 style="max-height: 300px;
+                                        overflow-y: auto"></div>
+                        </div>
+                        <div id="selectedBooksContainer" class="mt-3">
+                            <h6 class="text-muted">หนังสือที่เลือกเพิ่ม:</h6>
+                            <div id="selectedBooksList"></div>
+                            <p id="noSelectedBooks" class="text-muted small">ยังไม่ได้เลือกหนังสือเพิ่มเติม</p>
+                        </div>
+                    </div>
+                </div>
+                <form method="post" id="loanForm">
                     {% csrf_token %}
                     <div class="card shadow-sm">
                         <div class="card-body">
@@ -158,4 +213,161 @@
             </div>
         </div>
     </div>
+    <script>
+    // Additional books management
+    let selectedBooks = [];
+    let searchTimeout = null;
+    
+    const bookSearchInput = document.getElementById('bookSearch');
+    const searchResults = document.getElementById('searchResults');
+    const selectedBooksList = document.getElementById('selectedBooksList');
+    const noSelectedBooks = document.getElementById('noSelectedBooks');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const loanForm = document.getElementById('loanForm');
+    
+    // Search books
+    bookSearchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            searchResults.innerHTML = '';
+            return;
+        }
+        
+        searchResults.innerHTML = '<div class="list-group-item text-muted"><span class="spinner-border spinner-border-sm me-2"></span>กำลังค้นหา...</div>';
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`/loans/api/search-books/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displaySearchResults(data.books);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    searchResults.innerHTML = '<div class="list-group-item text-danger">เกิดข้อผิดพลาดในการค้นหา</div>';
+                });
+        }, 300);
+    });
+    
+    // Clear search
+    clearSearchBtn.addEventListener('click', function() {
+        bookSearchInput.value = '';
+        searchResults.innerHTML = '';
+    });
+    
+    // Display search results
+    function displaySearchResults(books) {
+        if (books.length === 0) {
+            searchResults.innerHTML = '<div class="list-group-item text-muted">ไม่พบหนังสือที่ค้นหา</div>';
+            return;
+        }
+        
+        searchResults.innerHTML = books.map(book => {
+            const isSelected = selectedBooks.some(b => b.id === book.id);
+            const isAvailable = book.available_quantity > 0;
+            
+            return `
+                <div class="list-group-item list-group-item-action book-search-item ${
+                    isSelected ? 'disabled' : ''
+                }" 
+                     data-book-id="${book.id}"
+                     ${isSelected ? '' : 'onclick="selectBook(' + book.id + ', \'' + escapeHtml(book.title) + '\', \'' + escapeHtml(book.authors) + '\', ' + isAvailable + ')"'}>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${book.title}</strong>
+                            <br>
+                            <small class="text-muted">${book.authors || 'ไม่ระบุผู้แต่ง'}</small>
+                        </div>
+                        <div class="text-end">
+                            ${isAvailable ? 
+                                '<span class="badge bg-success">มี ' + book.available_quantity + ' เล่ม</span>' : 
+                                '<span class="badge bg-danger">ไม่มีในคลัง</span>'
+                            }
+                            ${isSelected ? '<br><span class="badge bg-secondary mt-1">เลือกแล้ว</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // Select book
+    function selectBook(id, title, authors, isAvailable) {
+        if (!isAvailable) {
+            alert('หนังสือเล่มนี้ไม่มีในคลังขณะนี้');
+            return;
+        }
+        
+        if (selectedBooks.some(b => b.id === id)) {
+            return; // Already selected
+        }
+        
+        selectedBooks.push({ id, title, authors });
+        updateSelectedBooksList();
+        
+        // Refresh search results to show "เลือกแล้ว"
+        const query = bookSearchInput.value.trim();
+        if (query.length >= 2) {
+            bookSearchInput.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    // Remove book
+    function removeBook(id) {
+        selectedBooks = selectedBooks.filter(b => b.id !== id);
+        updateSelectedBooksList();
+        
+        // Refresh search results
+        const query = bookSearchInput.value.trim();
+        if (query.length >= 2) {
+            bookSearchInput.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    // Update selected books list
+    function updateSelectedBooksList() {
+        if (selectedBooks.length === 0) {
+            selectedBooksList.innerHTML = '';
+            noSelectedBooks.style.display = 'block';
+            return;
+        }
+        
+        noSelectedBooks.style.display = 'none';
+        selectedBooksList.innerHTML = selectedBooks.map(book => `
+            <div class="selected-book-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>${book.title}</strong>
+                    <br>
+                    <small class="text-muted">${book.authors || 'ไม่ระบุผู้แต่ง'}</small>
+                </div>
+                <span class="remove-book-btn" onclick="removeBook(${book.id})" title="ลบออก">
+                    <i class="bi bi-x-circle-fill"></i>
+                </span>
+            </div>
+        `).join('');
+    }
+    
+    // Add selected books to form before submit
+    loanForm.addEventListener('submit', function(e) {
+        // Remove any existing additional_books inputs
+        document.querySelectorAll('input[name="additional_books"]').forEach(el => el.remove());
+        
+        // Add selected books as hidden inputs
+        selectedBooks.forEach(book => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'additional_books';
+            input.value = book.id;
+            loanForm.appendChild(input);
+        });
+    });
+    
+    // Utility function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    </script>
 {% endblock %}

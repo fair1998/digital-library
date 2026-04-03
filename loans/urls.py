@@ -7,6 +7,9 @@ urlpatterns = [
     # Member views
     path('my-loans/', views.my_loans_view, name='my_loans'),
     
+    # API endpoints
+    path('api/search-books/', views.search_books_api, name='search_books_api'),
+    
     # Admin views
     path('admin/create/<int:batch_id>/', views.create_loan_view, name='create_loan'),
     path('admin/active/', views.active_loans_view, name='active_loans'),
