@@ -375,48 +375,6 @@ def admin_confirm_reservation_view(request, batch_id):
 
 
 @staff_member_required
-def admin_complete_reservation_view(request, batch_id):
-    """
-    Mark a confirmed reservation batch as completed when user picks up books.
-    """
-    if request.method != 'POST':
-        messages.error(request, 'Invalid request method.')
-        return redirect('dashboard_reservations')
-
-    batch = get_object_or_404(ReservationBatch, id=batch_id)
-
-    if batch.status == 'completed':
-        messages.info(request, f'การจอง #{batch.id} ถูกทำรายการรับหนังสือแล้ว')
-        return redirect('dashboard_reservations')
-
-    if batch.status != 'confirmed':
-        messages.error(
-            request,
-            f'ไม่สามารถเปลี่ยนเป็นรับหนังสือแล้วได้ (สถานะปัจจุบัน: {batch.get_status_display()})'
-        )
-        return redirect('dashboard_reservations')
-
-    if batch.is_expired():
-        messages.error(
-            request,
-            f'การจอง #{batch.id} หมดอายุแล้ว กรุณายกเลิกการจองแทน'
-        )
-        return redirect('dashboard_reservations')
-
-    try:
-        batch.status = 'completed'
-        batch.save()
-        messages.success(
-            request,
-            f'บันทึกการรับหนังสือสำเร็จ: การจอง #{batch.id} (User: {batch.user.username})'
-        )
-    except Exception as e:
-        messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
-
-    return redirect('dashboard_reservations')
-
-
-@staff_member_required
 def admin_cancel_reservation_view(request, batch_id):
     """
     Admin action to cancel a reservation batch.

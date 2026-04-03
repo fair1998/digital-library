@@ -167,15 +167,9 @@
                 {% elif batch.status == 'confirmed' %}
                     <div class="mt-4">
                         <div class="btn-group">
-                            <form method="post"
-                                  action="{% url 'dashboard_reservations_complete' batch.id %}"
-                                  class="d-inline"
-                                  onsubmit="return confirm('ยืนยันว่าผู้ใช้รับหนังสือแล้วสำหรับการจอง #{{ batch.id }}?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-box-seam"></i> Mark as Picked Up
-                                </button>
-                            </form>
+                            <a href="{% url 'loans:create_loan' batch.id %}" class="btn btn-primary">
+                                <i class="bi bi-box-seam"></i> Mark as Picked Up
+                            </a>
                             <button type="button"
                                     class="btn btn-outline-danger"
                                     onclick="if(confirm('ยกเลิกการจองที่ยืนยันแล้ว?\n(จะคืนจำนวนหนังสือกลับ)')) { document.getElementById('cancelForm').submit(); }">
