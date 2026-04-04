@@ -156,7 +156,7 @@ def active_loans_view(request):
     Display all active loans (borrowed status).
     """
     # Get filter parameters
-    status_filter = request.GET.get('status', 'borrowed')
+    status_filter = request.GET.get('status', 'all')
     search_query = request.GET.get('search', '')
     
     # Base query
@@ -164,17 +164,17 @@ def active_loans_view(request):
         'loan_items__book__authors',
         'loan_items__book__publisher'
     )
-    
+
     # Apply filters
     if status_filter and status_filter != 'all':
         loan_batches = loan_batches.filter(loan_items__status=status_filter).distinct()
     
     if search_query:
-        loan_batches = loan_batches.filter(
-            Q(user__username__icontains=search_query) |
-            Q(user__email__icontains=search_query) |
-            Q(loan_items__book__title__icontains=search_query)
-        ).distinct()
+        q_filter = Q(user__username__icontains=search_query)
+        # If search query is a number, also search by batch ID
+        if search_query.isdigit():
+            q_filter |= Q(id=int(search_query))
+        loan_batches = loan_batches.filter(q_filter).distinct()
     
     loan_batches = loan_batches.order_by('-created_at')
     
