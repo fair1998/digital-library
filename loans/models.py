@@ -6,10 +6,20 @@ from reservations.models import Reservation
 
 class LoanBatch(models.Model):
     """Header/parent record for a single borrowing transaction."""
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+    ]
+    
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='loan_batches'
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='active'
     )
     due_date = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)

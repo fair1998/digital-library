@@ -167,7 +167,7 @@ def active_loans_view(request):
 
     # Apply filters
     if status_filter and status_filter != 'all':
-        loan_batches = loan_batches.filter(loan_items__status=status_filter).distinct()
+        loan_batches = loan_batches.filter(status=status_filter)
     
     if search_query:
         q_filter = Q(user__username__icontains=search_query)
@@ -246,6 +246,13 @@ def mark_returned_view(request, item_id):
                 book.available_quantity += 1
                 book.save()
                 
+                # Check if all items in the batch are completed
+                loan_batch = loan_item.loan_batch
+                all_completed = not loan_batch.loan_items.filter(status='borrowed').exists()
+                if all_completed:
+                    loan_batch.status = 'completed'
+                    loan_batch.save()
+                
                 messages.success(request, f'บันทึกการคืนหนังสือ "{book.title}" สำเร็จ')
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
@@ -276,6 +283,13 @@ def mark_lost_view(request, item_id):
                 book = loan_item.book
                 book.total_quantity -= 1
                 book.save()
+                
+                # Check if all items in the batch are completed
+                loan_batch = loan_item.loan_batch
+                all_completed = not loan_batch.loan_items.filter(status='borrowed').exists()
+                if all_completed:
+                    loan_batch.status = 'completed'
+                    loan_batch.save()
                 
                 messages.warning(
                     request,

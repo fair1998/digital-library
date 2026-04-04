@@ -159,6 +159,14 @@
                             <strong>Batch ID:</strong> #{{ loan_batch.id }}
                         </p>
                         <p>
+                            <strong>สถานะ:</strong>
+                            {% if loan_batch.status == 'active' %}
+                                <span class="badge bg-primary">Active - กำลังดำเนินการ</span>
+                            {% elif loan_batch.status == 'completed' %}
+                                <span class="badge bg-success">Completed - เสร็จสิ้นแล้ว</span>
+                            {% endif %}
+                        </p>
+                        <p>
                             <strong>จำนวนหนังสือ:</strong> {{ loan_batch.loan_items.count }} เล่ม
                         </p>
                         <p>
