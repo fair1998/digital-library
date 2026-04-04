@@ -114,16 +114,18 @@
                                             <td>
                                                 {% if item.status == 'borrowed' %}
                                                     <div class="btn-group btn-group-sm" role="group">
-                                                        <a href="{% url 'loans:mark_returned' item.id %}"
-                                                           class="btn btn-success"
-                                                           onclick="return confirm('ยืนยันการคืนหนังสือเล่มนี้?')">
+                                                        <button type="button"
+                                                                class="btn btn-success"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#returnModal{{ item.id }}">
                                                             <i class="bi bi-check-circle me-1"></i>คืนแล้ว
-                                                        </a>
-                                                        <a href="{% url 'loans:mark_lost' item.id %}"
-                                                           class="btn btn-danger"
-                                                           onclick="return confirm('ยืนยันว่าหนังสือเล่มนี้หาย? จำนวนทั้งหมดจะถูกลดลง!')">
+                                                        </button>
+                                                        <button type="button"
+                                                                class="btn btn-danger"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#lostModal{{ item.id }}">
                                                             <i class="bi bi-x-circle me-1"></i>หาย
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 {% else %}
                                                     <span class="text-muted">-</span>
@@ -211,4 +213,154 @@
             </div>
         </div>
     </div>
+    <!-- Modal Dialogs for Return and Lost -->
+    {% for item in loan_batch.loan_items.all %}
+        {% if item.status == 'borrowed' %}
+            <!-- Return Modal -->
+            <div class="modal fade"
+                 id="returnModal{{ item.id }}"
+                 tabindex="-1"
+                 aria-labelledby="returnModalLabel{{ item.id }}"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="returnModalLabel{{ item.id }}">
+                                <i class="bi bi-check-circle me-2"></i>ยืนยันการคืนหนังสือ
+                            </h5>
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{% url 'loans:mark_returned' item.id %}">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <p>
+                                    <strong>หนังสือ:</strong> {{ item.book.title }}
+                                </p>
+                                <hr>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="isDamaged{{ item.id }}"
+                                           name="is_damaged"
+                                           value="true"
+                                           onchange="toggleDamageFields({{ item.id }})">
+                                    <label class="form-check-label" for="isDamaged{{ item.id }}">
+                                        <strong>หนังสือมีความเสียหาย</strong>
+                                    </label>
+                                </div>
+                                <div id="damageFields{{ item.id }}" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="damageAmount{{ item.id }}" class="form-label">
+                                            จำนวนค่าปรับ (บาท) <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number"
+                                               class="form-control"
+                                               id="damageAmount{{ item.id }}"
+                                               name="damage_amount"
+                                               min="1"
+                                               step="0.01">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="damageReason{{ item.id }}" class="form-label">
+                                            เหตุผล/รายละเอียดความเสียหาย <span class="text-danger">*</span>
+                                        </label>
+                                        <textarea class="form-control"
+                                                  id="damageReason{{ item.id }}"
+                                                  name="damage_reason"
+                                                  rows="3"></textarea>
+                                    </div>
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        ระบบจะสร้างค่าปรับความเสียหายตามจำนวนที่กรอก
+                                    </div>
+                                </div>
+                                {% if item.is_overdue %}
+                                    <div class="alert alert-danger">
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                        <strong>หนังสือเล่มนี้เกินกำหนดคืน!</strong>
+                                        <br>
+                                        ระบบจะคำนวณค่าปรับคืนช้าอัตโนมัติ
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-1"></i>ยืนยันการคืน
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Lost Modal -->
+            <div class="modal fade"
+                 id="lostModal{{ item.id }}"
+                 tabindex="-1"
+                 aria-labelledby="lostModalLabel{{ item.id }}"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="lostModalLabel{{ item.id }}">
+                                <i class="bi bi-exclamation-triangle me-2"></i>ยืนยันหนังสือหาย
+                            </h5>
+                            <button type="button"
+                                    class="btn-close btn-close-white"
+                                    data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{% url 'loans:mark_lost' item.id %}">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <p>
+                                    <strong>หนังสือ:</strong> {{ item.book.title }}
+                                </p>
+                                <hr>
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <strong>คำเตือน:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>จำนวนหนังสือทั้งหมดจะถูกลดลง 1 เล่ม</li>
+                                        <li>ระบบจะสร้างค่าปรับหนังสือหาย ({{ settings.FINE_LOST_BOOK|default:500 }} บาท) อัตโนมัติ</li>
+                                        <li>การดำเนินการนี้ไม่สามารถยกเลิกได้</li>
+                                    </ul>
+                                </div>
+                                <p class="text-muted">กรุณายืนยันว่าหนังสือเล่มนี้หายจริง</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x-circle me-1"></i>ยืนยันหนังสือหาย
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+    <script>
+        function toggleDamageFields(itemId) {
+            const checkbox = document.getElementById('isDamaged' + itemId);
+            const fields = document.getElementById('damageFields' + itemId);
+            const amountInput = document.getElementById('damageAmount' + itemId);
+            const reasonInput = document.getElementById('damageReason' + itemId);
+            
+            if (checkbox.checked) {
+                fields.style.display = 'block';
+                amountInput.required = true;
+                reasonInput.required = true;
+            } else {
+                fields.style.display = 'none';
+                amountInput.required = false;
+                reasonInput.required = false;
+                amountInput.value = '';
+                reasonInput.value = '';
+            }
+        }
+    </script>
 {% endblock %}

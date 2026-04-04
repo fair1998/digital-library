@@ -7,9 +7,11 @@ from django.db.models import Q
 from django.conf import settings
 from django.http import JsonResponse
 from datetime import timedelta
+from decimal import Decimal
 from .models import LoanBatch, LoanItem
 from reservations.models import ReservationBatch, Reservation
 from books.models import Book
+from fines.models import Fine
 
 
 @login_required
@@ -228,12 +230,36 @@ def loan_detail_view(request, batch_id):
 def mark_returned_view(request, item_id):
     """
     Mark a loan item as returned.
+    Handles both regular returns and returns with damage.
+    If POST with is_damaged=true, creates a damage fine.
     """
     loan_item = get_object_or_404(LoanItem, id=item_id)
     
     if loan_item.status != 'borrowed':
         messages.error(request, 'หนังสือเล่มนี้ไม่ได้อยู่ในสถานะยืมแล้ว')
-    else:
+        return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+    
+    # Check if this is a damage report
+    if request.method == 'POST':
+        is_damaged = request.POST.get('is_damaged') == 'true'
+        damage_amount = request.POST.get('damage_amount', '').strip()
+        damage_reason = request.POST.get('damage_reason', '').strip()
+        
+        # Validate damage data if damaged
+        if is_damaged:
+            if not damage_amount or not damage_reason:
+                messages.error(request, 'กรุณากรอกจำนวนเงินและเหตุผลสำหรับความเสียหาย')
+                return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+            
+            try:
+                damage_amount = Decimal(damage_amount)
+                if damage_amount <= 0:
+                    messages.error(request, 'จำนวนเงินต้องมากกว่า 0')
+                    return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+            except (ValueError, TypeError):
+                messages.error(request, 'จำนวนเงินไม่ถูกต้อง')
+                return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+        
         try:
             with transaction.atomic():
                 # Update loan item
@@ -246,8 +272,40 @@ def mark_returned_view(request, item_id):
                 book.available_quantity += 1
                 book.save()
                 
-                # Check if all items in the batch are completed
+                # Create late return fine if overdue
                 loan_batch = loan_item.loan_batch
+                if loan_batch.due_date and loan_item.returned_at.date() > loan_batch.due_date.date():
+                    days_late = (loan_item.returned_at.date() - loan_batch.due_date.date()).days
+                    fine_per_day = Decimal(getattr(settings, 'FINE_LATE_RETURN_PER_DAY', 10))
+                    late_fine_amount = fine_per_day * days_late
+                    
+                    Fine.objects.create(
+                        loan_item=loan_item,
+                        type='late_return',
+                        amount=late_fine_amount,
+                        reason=f'คืนช้า {days_late} วัน (กำหนดคืน: {loan_batch.due_date.strftime("%d/%m/%Y")})',
+                        status='unpaid'
+                    )
+                    messages.warning(
+                        request,
+                        f'สร้างค่าปรับคืนช้า {days_late} วัน จำนวน {late_fine_amount} บาท'
+                    )
+                
+                # Create damage fine if damaged
+                if is_damaged:
+                    Fine.objects.create(
+                        loan_item=loan_item,
+                        type='damaged',
+                        amount=damage_amount,
+                        reason=damage_reason,
+                        status='unpaid'
+                    )
+                    messages.warning(
+                        request,
+                        f'สร้างค่าปรับหนังสือเสียหาย จำนวน {damage_amount} บาท'
+                    )
+                
+                # Check if all items in the batch are completed
                 all_completed = not loan_batch.loan_items.filter(status='borrowed').exists()
                 if all_completed:
                     loan_batch.status = 'completed'
@@ -266,12 +324,15 @@ def mark_lost_view(request, item_id):
     """
     Mark a loan item as lost.
     Note: Lost items do NOT increase available_quantity.
+    Automatically creates a lost fine.
     """
     loan_item = get_object_or_404(LoanItem, id=item_id)
     
     if loan_item.status != 'borrowed':
         messages.error(request, 'หนังสือเล่มนี้ไม่ได้อยู่ในสถานะยืมแล้ว')
-    else:
+        return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+    
+    if request.method == 'POST':
         try:
             with transaction.atomic():
                 # Update loan item
@@ -284,8 +345,19 @@ def mark_lost_view(request, item_id):
                 book.total_quantity -= 1
                 book.save()
                 
-                # Check if all items in the batch are completed
+                # Create lost fine
                 loan_batch = loan_item.loan_batch
+                lost_fine_amount = Decimal(getattr(settings, 'FINE_LOST_BOOK', 500))
+                
+                Fine.objects.create(
+                    loan_item=loan_item,
+                    type='lost',
+                    amount=lost_fine_amount,
+                    reason=f'ทำหนังสือหาย: {book.title}',
+                    status='unpaid'
+                )
+                
+                # Check if all items in the batch are completed
                 all_completed = not loan_batch.loan_items.filter(status='borrowed').exists()
                 if all_completed:
                     loan_batch.status = 'completed'
@@ -293,7 +365,7 @@ def mark_lost_view(request, item_id):
                 
                 messages.warning(
                     request,
-                    f'บันทึกหนังสือหาย "{book.title}" สำเร็จ - จำนวนทั้งหมดถูกลดลง 1 เล่ม'
+                    f'บันทึกหนังสือหาย "{book.title}" สำเร็จ - สร้างค่าปรับ {lost_fine_amount} บาท'
                 )
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')

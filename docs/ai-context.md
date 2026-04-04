@@ -225,6 +225,49 @@ Digital Library System
   - paid
 - เมื่อจ่ายแล้ว ต้องบันทึก `paid_at`
 
+### Automatic Fine Creation
+
+ระบบสร้างค่าปรับอัตโนมัติในกรณีดังนี้:
+
+1. **Late Return Fine (คืนช้า)**:
+   - เกิดขึ้นเมื่อ admin mark loan item เป็น returned และวันที่คืนเกินกว่า due_date
+   - Amount = `FINE_LATE_RETURN_PER_DAY` × จำนวนวันที่เกิน (default: 10 บาท/วัน)
+   - Reason: สร้างอัตโนมัติพร้อมระบุจำนวนวันและวันครบกำหนด
+   - Status: unpaid
+
+2. **Lost Fine (หนังสือหาย)**:
+   - เกิดขึ้นเมื่อ admin mark loan item เป็น lost
+   - Amount = `FINE_LOST_BOOK` (default: 500 บาท)
+   - Reason: สร้างอัตโนมัติพร้อมระบุชื่อหนังสือ
+   - Status: unpaid
+
+3. **Damaged Fine (หนังสือเสียหาย)**:
+   - เกิดขึ้นเมื่อ admin mark loan item เป็น returned และเลือกว่าหนังสือเสียหาย
+   - Amount: Admin ต้องกรอกจำนวนเงินเอง (ขึ้นกับระดับความเสียหาย)
+   - Reason: Admin ต้องกรอกรายละเอียดความเสียหายเอง
+   - Status: unpaid
+
+### Fine Settings
+
+ค่าปรับตั้งค่าได้ใน `config/settings.py`:
+
+- `FINE_LATE_RETURN_PER_DAY = 10` # ค่าปรับคืนช้าต่อวัน (บาท)
+- `FINE_LOST_BOOK = 500` # ค่าปรับหนังสือหาย (บาท)
+
+### Return Process with Fine Check
+
+เมื่อ admin คืนหนังสือ:
+
+1. ระบบแสดง modal dialog ถามว่าหนังสือมีความเสียหายหรือไม่
+2. ถ้ามีความเสียหาย:
+   - Admin กรอกจำนวนเงินค่าปรับ
+   - Admin กรอกเหตุผล/รายละเอียดความเสียหาย
+3. ระบบตรวจสอบการคืนช้าอัตโนมัติ:
+   - ถ้า returned_at > due_date → สร้าง late_return fine
+4. ถ้ามีความเสียหาย → สร้าง damaged fine ตามที่ admin กรอก
+5. Update loan item status เป็น returned
+6. เพิ่ม available_quantity กลับ
+
 ## 6.5 Permission Rules
 
 - member ห้ามเข้าหน้า admin

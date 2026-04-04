@@ -211,6 +211,28 @@ This document describes the database schema for a digital library management sys
 
 **Purpose:** Stores fines/penalties associated with loan items. Fines are created for late returns, lost books, or damaged books. Each fine is linked to a specific loan item.
 
+**Automatic Fine Creation Rules:**
+
+1. **Late Return (`late_return`)**:
+   - Created automatically when a book is returned after the due date
+   - Amount = `FINE_LATE_RETURN_PER_DAY` × number of days late (default: 10 บาท/วัน)
+   - Reason: Auto-generated with number of days late and due date
+
+2. **Lost Book (`lost`)**:
+   - Created automatically when admin marks a loan item as lost
+   - Amount = `FINE_LOST_BOOK` (default: 500 บาท)
+   - Reason: Auto-generated with book title
+
+3. **Damaged Book (`damaged`)**:
+   - Created when admin marks book as returned with damage
+   - Amount: Admin must specify the amount manually
+   - Reason: Admin must provide details of the damage
+
+**Settings Configuration:**
+
+- `FINE_LATE_RETURN_PER_DAY`: Fine amount per day for late returns (default: 10)
+- `FINE_LOST_BOOK`: Fine amount for lost books (default: 500)
+
 ---
 
 ## Database Relationships Summary
@@ -239,6 +261,7 @@ This document describes the database schema for a digital library management sys
 ### Fines:
 
 - `fines.loan_item_id` → `loan_items.id` (Each fine is associated with a specific loan item)
+- User is accessed via: `fines` → `loan_items` → `loan_batches` → `users` (normalized relationship)
 
 ---
 
