@@ -9,4 +9,5 @@ urlpatterns = [
     
     # Admin views
     path('fines/', views.admin_fines_report_view, name='admin_report'),
+    path('fines/batch/<int:batch_id>/', views.loan_batch_fines_detail_view, name='batch_detail'),
 ]

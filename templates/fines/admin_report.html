@@ -46,31 +46,21 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <form method="get" class="row g-3">
-                    <div class="col-md-3">
-                        <label for="status" class="form-label">สถานะ</label>
+                    <div class="col-md-4">
+                        <label for="status" class="form-label">สถานะการชำระ</label>
                         <select name="status" id="status" class="form-select">
                             <option value="all" {% if status_filter == 'all' %}selected{% endif %}>ทั้งหมด</option>
-                            <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>ค้างชำระ</option>
-                            <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>ชำระแล้ว</option>
+                            <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>มีค้างชำระ</option>
+                            <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>ชำระครบแล้ว</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="type" class="form-label">ประเภท</label>
-                        <select name="type" id="type" class="form-select">
-                            <option value="all" {% if type_filter == 'all' %}selected{% endif %}>ทั้งหมด</option>
-                            <option value="late_return"
-                                    {% if type_filter == 'late_return' %}selected{% endif %}>คืนช้า</option>
-                            <option value="lost" {% if type_filter == 'lost' %}selected{% endif %}>ทำหาย</option>
-                            <option value="damaged" {% if type_filter == 'damaged' %}selected{% endif %}>ชำรุด</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="search" class="form-label">ค้นหา</label>
                         <input type="text"
                                name="search"
                                id="search"
                                class="form-control"
-                               placeholder="ชื่อผู้ใช้, อีเมล, หนังสือ, หรือ ID"
+                               placeholder="ชื่อผู้ใช้, อีเมล, หรือ Loan Batch ID"
                                value="{{ search_query }}">
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
@@ -81,11 +71,11 @@
                 </form>
             </div>
         </div>
-        <!-- Fines Table -->
+        <!-- Loan Batches with Fines Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-light">
                 <h5 class="mb-0">
-                    <i class="bi bi-list-ul me-2"></i>รายการค่าปรับ ({{ fines.count }} รายการ)
+                    <i class="bi bi-list-ul me-2"></i>รายการชุดการยืมที่มีค่าปรับ ({{ loan_batches.count }} ชุด)
                 </h5>
             </div>
             <div class="card-body p-0">
@@ -93,79 +83,59 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
+                                <th>Loan Batch ID</th>
                                 <th>ผู้ใช้</th>
-                                <th>หนังสือ</th>
-                                <th>ประเภท</th>
-                                <th>จำนวนเงิน</th>
+                                <th>จำนวนหนังสือที่โดนปรับ</th>
+                                <th>จำนวนเงินรวม</th>
                                 <th>สถานะ</th>
-                                <th>วันที่สร้าง</th>
-                                <th>วันที่ชำระ</th>
+                                <th>วันที่ยืม</th>
+                                <th>การกระทำ</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for fine in fines %}
+                            {% for batch in loan_batches %}
                                 <tr>
                                     <td>
-                                        <strong>#{{ fine.id }}</strong>
+                                        <strong>#{{ batch.id }}</strong>
                                     </td>
                                     <td>
                                         <div>
-                                            <strong>{{ fine.loan_item.loan_batch.user.get_full_name|default:fine.loan_item.loan_batch.user.username }}</strong>
+                                            <strong>{{ batch.user.get_full_name|default:batch.user.username }}</strong>
                                         </div>
-                                        <small class="text-muted">{{ fine.loan_item.loan_batch.user.email }}</small>
+                                        <small class="text-muted">{{ batch.user.email }}</small>
                                     </td>
                                     <td>
-                                        <div>{{ fine.loan_item.book.title }}</div>
-                                        <small class="text-muted">Loan Item #{{ fine.loan_item.id }}</small>
+                                        <span class="badge bg-secondary">{{ batch.fine_count }} เล่ม</span>
                                     </td>
                                     <td>
-                                        {% if fine.type == 'late_return' %}
-                                            <span class="badge bg-warning text-dark">
-                                                <i class="bi bi-clock me-1"></i>คืนช้า
-                                            </span>
-                                        {% elif fine.type == 'lost' %}
-                                            <span class="badge bg-danger">
-                                                <i class="bi bi-x-circle me-1"></i>ทำหาย
-                                            </span>
-                                        {% elif fine.type == 'damaged' %}
-                                            <span class="badge bg-secondary">
-                                                <i class="bi bi-exclamation-triangle me-1"></i>ชำรุด
-                                            </span>
-                                        {% endif %}
+                                        <strong class="text-danger">{{ batch.total_fine_amount|floatformat:2 }} บาท</strong>
+                                        <div>
+                                            {% if batch.unpaid_fine_amount %}
+                                                <small class="text-danger">ค้างชำระ: {{ batch.unpaid_fine_amount|floatformat:2 }} บาท</small>
+                                            {% endif %}
+                                            {% if batch.paid_fine_amount %}
+                                                <small class="text-success d-block">ชำระแล้ว: {{ batch.paid_fine_amount|floatformat:2 }} บาท</small>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td>
-                                        <strong>{{ fine.amount|floatformat:2 }} บาท</strong>
-                                    </td>
-                                    <td>
-                                        {% if fine.status == 'unpaid' %}
-                                            <span class="badge bg-danger">ค้างชำระ</span>
+                                        {% if batch.has_unpaid %}
+                                            <span class="badge bg-danger">มีค้างชำระ</span>
                                         {% else %}
-                                            <span class="badge bg-success">ชำระแล้ว</span>
+                                            <span class="badge bg-success">ชำระครบแล้ว</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ fine.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ batch.created_at|date:"d/m/Y H:i" }}</td>
                                     <td>
-                                        {% if fine.paid_at %}
-                                            {{ fine.paid_at|date:"d/m/Y H:i" }}
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
+                                        <a href="{% url 'fines:batch_detail' batch.id %}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i>ดูรายละเอียด
+                                        </a>
                                     </td>
                                 </tr>
-                                {% if fine.reason %}
-                                    <tr class="table-light">
-                                        <td></td>
-                                        <td colspan="7">
-                                            <small>
-                                                <strong>เหตุผล:</strong> {{ fine.reason }}
-                                            </small>
-                                        </td>
-                                    </tr>
-                                {% endif %}
                             {% empty %}
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">ไม่พบรายการค่าปรับ</td>
+                                    <td colspan="7" class="text-center text-muted py-4">ไม่พบรายการชุดการยืมที่มีค่าปรับ</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

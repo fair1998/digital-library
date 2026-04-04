@@ -1,0 +1,193 @@
+{% extends 'base_admin.html' %}
+{% block title %}รายละเอียดค่าปรับ - Loan Batch #{{ loan_batch.id }}{% endblock %}
+{% block content %}
+    <div class="container py-4">
+        <!-- Header with Back Button -->
+        <div class="row mb-4">
+            <div class="col">
+                <a href="{% url 'fines:admin_report' %}"
+                   class="btn btn-outline-secondary mb-3">
+                    <i class="bi bi-arrow-left me-1"></i>กลับไปรายงานค่าปรับ
+                </a>
+                <h2>
+                    <i class="bi bi-currency-dollar me-2"></i>รายละเอียดค่าปรับ - Loan Batch #{{ loan_batch.id }}
+                </h2>
+            </div>
+        </div>
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-danger">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-exclamation-circle me-2"></i>ค่าปรับค้างชำระ
+                        </h5>
+                        <h2 class="mb-0">{{ total_unpaid|floatformat:2 }} บาท</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-check-circle me-2"></i>ค่าปรับที่ชำระแล้ว
+                        </h5>
+                        <h2 class="mb-0">{{ total_paid|floatformat:2 }} บาท</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-cash-stack me-2"></i>ค่าปรับทั้งหมด
+                        </h5>
+                        <h2 class="mb-0">{{ total_amount|floatformat:2 }} บาท</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Loan Batch Info -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>ข้อมูลการยืม
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>
+                            <strong>Loan Batch ID:</strong> #{{ loan_batch.id }}
+                        </p>
+                        <p>
+                            <strong>ผู้ใช้:</strong> {{ loan_batch.user.get_full_name|default:loan_batch.user.username }}
+                        </p>
+                        <p>
+                            <strong>อีเมล:</strong> {{ loan_batch.user.email }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p>
+                            <strong>วันที่ยืม:</strong> {{ loan_batch.created_at|date:"d/m/Y H:i" }}
+                        </p>
+                        <p>
+                            <strong>กำหนดคืน:</strong>
+                            {% if loan_batch.due_date %}
+                                {{ loan_batch.due_date|date:"d/m/Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </p>
+                        <p>
+                            <strong>สถานะการยืม:</strong>
+                            {% if loan_batch.status == 'active' %}
+                                <span class="badge bg-warning text-dark">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Completed</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Fines Detail Table -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul me-2"></i>รายการค่าปรับแยกตามหนังสือ
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>หนังสือ</th>
+                                <th>Loan Item ID</th>
+                                <th>Fine ID</th>
+                                <th>ประเภท</th>
+                                <th>จำนวนเงิน</th>
+                                <th>สถานะ</th>
+                                <th>วันที่สร้าง</th>
+                                <th>วันที่ชำระ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in loan_items_with_fines %}
+                                {% for fine in item.fines.all %}
+                                    <tr>
+                                        <td>
+                                            <div>
+                                                <strong>{{ item.book.title }}</strong>
+                                            </div>
+                                            <small class="text-muted">
+                                                {% for author in item.book.authors.all %}
+                                                    {{ author.name }}
+                                                    {% if not forloop.last %},{% endif %}
+                                                {% endfor %}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">#{{ item.id }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>#{{ fine.id }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if fine.type == 'late_return' %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-clock me-1"></i>คืนช้า
+                                                </span>
+                                            {% elif fine.type == 'lost' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle me-1"></i>ทำหาย
+                                                </span>
+                                            {% elif fine.type == 'damaged' %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>ชำรุด
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong class="text-danger">{{ fine.amount|floatformat:2 }} บาท</strong>
+                                        </td>
+                                        <td>
+                                            {% if fine.status == 'unpaid' %}
+                                                <span class="badge bg-danger">ค้างชำระ</span>
+                                            {% else %}
+                                                <span class="badge bg-success">ชำระแล้ว</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ fine.created_at|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if fine.paid_at %}
+                                                {{ fine.paid_at|date:"d/m/Y H:i" }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% if fine.reason %}
+                                        <tr class="table-light">
+                                            <td colspan="8">
+                                                <small>
+                                                    <i class="bi bi-chat-left-text me-1"></i>
+                                                    <strong>เหตุผล:</strong> {{ fine.reason }}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">ไม่พบรายการค่าปรับ</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
