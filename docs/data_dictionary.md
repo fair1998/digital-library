@@ -158,15 +158,23 @@ This document describes the database schema for a digital library management sys
 
 ## Table: `loan_batches` (Loan Transactions)
 
-| Field        | Type      | Constraints                | Description                                              |
-| ------------ | --------- | -------------------------- | -------------------------------------------------------- |
-| `id`         | int       | PK, increment              | Primary key - Loan batch identifier                      |
-| `user_id`    | int       | not null, FK -> `users.id` | Foreign key to user who borrowed the books               |
-| `due_date`   | timestamp | nullable                   | Due date - when all books in this batch must be returned |
-| `updated_at` | timestamp | default `now()`            | Timestamp of last update                                 |
-| `created_at` | timestamp | default `now()`            | Timestamp when loan batch was created                    |
+| Field        | Type        | Constraints                                               | Description                                                                                                      |
+| ------------ | ----------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `id`         | int         | PK, increment                                             | Primary key - Loan batch identifier                                                                              |
+| `user_id`    | int         | not null, FK -> `users.id`                                | Foreign key to user who borrowed the books                                                                       |
+| `status`     | varchar(20) | not null, default `active`, check (`active`, `completed`) | Batch status: `active` = ยังมีหนังสือที่ยังไม่คืน, `completed` = คืนครบหรือสถานะทุกรายการเป็น returned/lost แล้ว |
+| `due_date`   | timestamp   | nullable                                                  | Due date - when all books in this batch must be returned                                                         |
+| `updated_at` | timestamp   | default `now()`                                           | Timestamp of last update                                                                                         |
+| `created_at` | timestamp   | default `now()`                                           | Timestamp when loan batch was created                                                                            |
 
 **Purpose:** Header/parent record for a single borrowing transaction. One loan batch can contain multiple books (stored in `loan_items` table).
+
+**Business Rules:**
+
+- `status` เริ่มต้นเป็น `active` เสมอเมื่อสร้างรายการยืมใหม่
+- เมื่อ admin บันทึก returned หรือ lost ให้ loan item ใดก็ตาม ระบบจะตรวจสอบว่ายังมี item ที่สถานะเป็น `borrowed` เหลืออยู่หรือไม่
+- ถ้าไม่มี `borrowed` item เหลือแล้ว → `status` ของ batch จะเปลี่ยนเป็น `completed` อัตโนมัติ
+- หน้า Active Loans สามารถ filter ได้ด้วย status ของ batch (`active` / `completed`)
 
 ---
 

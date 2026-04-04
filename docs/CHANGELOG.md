@@ -1,5 +1,95 @@
 # Changelog - Digital Library System
 
+## [Enhancement] - 2026-04-04 - Loan Batch Status Field
+
+### 📦 LoanBatch `status` Field
+
+**เพิ่ม field `status` ในตาราง `loan_batches` เพื่อติดตามสถานะภาพรวมของการยืมแต่ละ batch**
+
+**New Features:**
+
+**1. `status` field บน `LoanBatch`**
+
+- เพิ่ม 2 สถานะ:
+  - `active` = ยังมีหนังสือที่ยังไม่คืน (default)
+  - `completed` = คืนครบแล้ว หรือทุก item เป็น returned/lost
+- สร้าง loan batch ใหม่จะมี `status = active` เสมอ (เป็น default)
+
+**2. Auto-complete Batch**
+
+- เมื่อ admin บันทึกการคืน (`mark_returned_view`) หรือบันทึกหนังสือหาย (`mark_lost_view`)
+- ระบบตรวจสอบว่ายังมี loan item ที่สถานะ `borrowed` เหลือใน batch หรือไม่
+- ถ้าไม่มีเหลือ → batch `status` เปลี่ยนเป็น `completed` อัตโนมัติ
+- ใช้ `transaction.atomic()` เพื่อความปลอดภัยของข้อมูล
+
+**3. Filter ใหม่หน้า Active Loans**
+
+- เปลี่ยน filter จากสถานะของ `loan_items` มาเป็นสถานะของ `loan_batches`
+- ตัวเลือก: **ทั้งหมด** / **Active** / **Completed**
+
+**4. UI Updates**
+
+- หน้า Active Loans: แสดง badge สถานะ (`Active` / `Completed`) ข้างชื่อ Loan Batch
+- หน้า Loan Detail: แสดง badge สถานะของ batch ในส่วน "ข้อมูลการยืม"
+
+**Changes:**
+
+**Model Changes** (`loans/models.py`):
+
+```python
+class LoanBatch(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='active'
+    )
+```
+
+**Migration:** `loans/migrations/0005_loanbatch_status.py`
+
+**View Changes** (`loans/views.py`):
+
+1. **Modified: `mark_returned_view`**
+
+   ```python
+   # After saving returned item:
+   all_completed = not loan_batch.loan_items.filter(status='borrowed').exists()
+   if all_completed:
+       loan_batch.status = 'completed'
+       loan_batch.save()
+   ```
+
+2. **Modified: `mark_lost_view`** (เช่นเดียวกับ mark_returned_view)
+
+3. **Modified: `active_loans_view`**
+
+   ```python
+   # Before (filtered by loan_items.status)
+   loan_batches.filter(loan_items__status=status_filter).distinct()
+
+   # After (filtered by loan_batches.status)
+   loan_batches.filter(status=status_filter)
+   ```
+
+**Template Changes:**
+
+- `templates/loans/active_loans.html`:
+  - เปลี่ยน dropdown ตัวเลือก filter เป็น `active` / `completed`
+  - แสดง badge สถานะข้างชื่อ batch
+- `templates/loans/loan_detail.html`:
+  - เพิ่มแสดงสถานะ batch พร้อม badge ในการ์ด "ข้อมูลการยืม"
+
+**Documentation:**
+
+- ✅ อัพเดท `docs/data_dictionary.md` - เพิ่ม field `status` ในตาราง `loan_batches` พร้อม business rules
+- ✅ อัพเดท `docs/ai-context.md` - อัพเดท section 6.3 (Loan Rules) และ 8.7 (Loan Management)
+
+---
+
 ## [Enhancement] - 2026-03-26 - Admin Reservation Management with Auto-Rejection
 
 ### 🎯 Selective Confirmation & Auto-Rejection

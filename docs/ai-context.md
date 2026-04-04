@@ -5,7 +5,7 @@
 
 ---
 
-## 📊 Project Status (Updated: March 26, 2026)
+## 📊 Project Status (Updated: April 4, 2026)
 
 ### ✅ Completed Phases
 
@@ -201,6 +201,9 @@ Digital Library System
 ## 6.3 Loan Rules
 
 - การยืม 1 ครั้งสามารถมีหลายเล่มได้
+- loan batch มีสถานะ (status):
+  - `active` = ยังมีหนังสือที่ยังไม่คืน (default)
+  - `completed` = คืนครบหรือสถานะทุกรายการเป็น returned/lost แล้ว
 - loan item แต่ละรายการมีสถานะ:
   - borrowed
   - returned
@@ -208,6 +211,7 @@ Digital Library System
 - loan item อาจอ้างอิง reservation เดิมได้ หากยืมมาจากการจอง
 - เมื่อคืนหนังสือ ต้องบันทึก `returned_at`
 - หนังสือที่หายจะไม่ถูกเพิ่มกลับเข้า available_quantity
+- เมื่อ loan item ถูก mark เป็น `returned` หรือ `lost` ระบบตรวจสอบว่าทุก item ใน batch เสร็จสิ้นแล้วหรือไม่ ถ้าไม่มี `borrowed` เหลือ → batch status เปลี่ยนเป็น `completed` อัตโนมัติ
 
 ## 6.4 Fine Rules
 
@@ -824,6 +828,7 @@ Digital Library System
 - กำหนด due_date
 - เปลี่ยนสถานะเป็น returned
 - เปลี่ยนสถานะเป็น lost
+- filter รายการยืมตาม batch status (`active` / `completed`)
 
 ### Related Data
 
@@ -835,9 +840,12 @@ Digital Library System
 
 ### Important Rules
 
+- loan_batch สร้างใหม่จะมี `status = active` เสมอ
 - ห้ามคืนซ้ำ
 - ห้ามเปลี่ยนจาก returned กลับเป็น borrowed แบบไม่มีเหตุผล
 - ถ้า lost ไม่ควรคืน stock กลับ
+- เมื่อ loan item ทุกรายการใน batch เป็น `returned` หรือ `lost` ทั้งหมด → batch `status` เปลี่ยนเป็น `completed` อัตโนมัติ
+- หน้า Active Loans (`/loans/active`) แสดง batch status badge และรองรับ filter ตาม `active` / `completed`
 
 ---
 
