@@ -97,8 +97,9 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-cash-coin"></i> Fines
+                        <a class="nav-link {% if 'dashboard/fines' in request.path %}active{% endif %}"
+                           href="{% url 'fines:admin_report' %}">
+                            <i class="bi bi-cash-coin"></i> Fines Report
                         </a>
                     </li>
                     <li class="nav-item">

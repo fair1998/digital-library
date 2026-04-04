@@ -30,11 +30,14 @@ urlpatterns = [
     path('books/', include('books.urls')),
     path('reservations/', include('reservations.urls')),
     path('loans/', include('loans.urls')),
-    path('', include('fines.urls')),
+    
+    # Member fines view
+    path('my-fines/', include('fines.urls')),
     
     # Admin Dashboard
     path('dashboard/', dashboard_home_view, name='dashboard_home'),
     path('dashboard/', include(reservations_dashboard_urls)),
+    path('dashboard/', include('fines.urls')),
 ]
 
 if settings.DEBUG:

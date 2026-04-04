@@ -272,6 +272,9 @@ def mark_returned_view(request, item_id):
                 book.available_quantity += 1
                 book.save()
                 
+                # Track if any fine was created
+                fine_created = False
+                
                 # Create late return fine if overdue
                 loan_batch = loan_item.loan_batch
                 if loan_batch.due_date and loan_item.returned_at.date() > loan_batch.due_date.date():
@@ -290,6 +293,7 @@ def mark_returned_view(request, item_id):
                         request,
                         f'สร้างค่าปรับคืนช้า {days_late} วัน จำนวน {late_fine_amount} บาท'
                     )
+                    fine_created = True
                 
                 # Create damage fine if damaged
                 if is_damaged:
@@ -304,6 +308,7 @@ def mark_returned_view(request, item_id):
                         request,
                         f'สร้างค่าปรับหนังสือเสียหาย จำนวน {damage_amount} บาท'
                     )
+                    fine_created = True
                 
                 # Check if all items in the batch are completed
                 all_completed = not loan_batch.loan_items.filter(status='borrowed').exists()
@@ -312,6 +317,11 @@ def mark_returned_view(request, item_id):
                     loan_batch.save()
                 
                 messages.success(request, f'บันทึกการคืนหนังสือ "{book.title}" สำเร็จ')
+                
+                # Redirect to fines report if fine was created
+                if fine_created:
+                    return redirect('fines:admin_report')
+                    
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
@@ -367,6 +377,10 @@ def mark_lost_view(request, item_id):
                     request,
                     f'บันทึกหนังสือหาย "{book.title}" สำเร็จ - สร้างค่าปรับ {lost_fine_amount} บาท'
                 )
+                
+                # Redirect to fines report
+                return redirect('fines:admin_report')
+                
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
