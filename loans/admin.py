@@ -15,8 +15,8 @@ class LoanItemInline(admin.TabularInline):
 
 @admin.register(LoanBatch)
 class LoanBatchAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'due_date', 'items_count', 'borrowed_count', 'returned_count', 'lost_count', 'created_at', 'updated_at')
-    list_filter = ('created_at', 'due_date', 'updated_at')
+    list_display = ('id', 'user', 'status', 'due_date', 'items_count', 'borrowed_count', 'returned_count', 'lost_count', 'created_at', 'updated_at')
+    list_filter = ('status', 'created_at', 'due_date', 'updated_at')
     search_fields = ('id', 'user__username', 'user__email', 'user__first_name', 'user__last_name')
     date_hierarchy = 'created_at'
     autocomplete_fields = ['user']
@@ -26,7 +26,7 @@ class LoanBatchAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Loan Information', {
-            'fields': ('user', 'due_date')
+            'fields': ('user', 'status', 'due_date')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
