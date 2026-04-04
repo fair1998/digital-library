@@ -496,18 +496,18 @@ Digital Library System
 - ดูประวัติการยืมเก่า
 - ดู due_date
 - ดูสถานะ borrowed / returned / lost
-- เห็นสถานะเกินกำหนด (overdue)
+- เห็นสถานะเกินกำหนด (overdue) สำหรับ loan batches ที่มี status = active เท่านั้น
 
 ### Features Implemented
 
 - @login_required decorator
 - List all loan batches for current user
-- Calculate overdue status dynamically
+- Calculate overdue status dynamically (เฉพาะ batch ที่ status = active)
 - Show due date with warning for overdue
 - Show all books in each batch
 - Book details with links
 - Status badges for each loan item
-- Overdue warnings with color coding
+- Overdue warnings with color coding (แสดงเฉพาะ active batches)
 - Returned date display
 - Query optimization (prefetch_related)
 
@@ -846,6 +846,7 @@ Digital Library System
 - ถ้า lost ไม่ควรคืน stock กลับ
 - เมื่อ loan item ทุกรายการใน batch เป็น `returned` หรือ `lost` ทั้งหมด → batch `status` เปลี่ยนเป็น `completed` อัตโนมัติ
 - หน้า Active Loans (`/loans/active`) แสดง batch status badge และรองรับ filter ตาม `active` / `completed`
+- สถานะ "เกินกำหนด" (overdue) แสดงเฉพาะ loan batches ที่มี status = `active` เท่านั้น (batch ที่ completed แล้วไม่แสดง overdue badge)
 
 ---
 

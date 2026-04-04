@@ -24,10 +24,10 @@ def my_loans_view(request):
         'loan_items__book__publisher'
     ).order_by('-created_at')
     
-    # Calculate if loans are overdue
+    # Calculate if loans are overdue (only for active batches)
     now = timezone.now()
     for batch in loan_batches:
-        batch.is_overdue = batch.due_date and batch.due_date < now if batch.due_date else False
+        batch.is_overdue = batch.status == 'active' and batch.due_date and batch.due_date < now
         for item in batch.loan_items.all():
             item.is_overdue = batch.is_overdue and item.status == 'borrowed'
     
@@ -178,10 +178,10 @@ def active_loans_view(request):
     
     loan_batches = loan_batches.order_by('-created_at')
     
-    # Calculate overdue status
+    # Calculate overdue status (only for active batches)
     now = timezone.now()
     for batch in loan_batches:
-        batch.is_overdue = batch.due_date and batch.due_date < now
+        batch.is_overdue = batch.status == 'active' and batch.due_date and batch.due_date < now
         for item in batch.loan_items.all():
             item.is_overdue = batch.is_overdue and item.status == 'borrowed'
     
@@ -209,9 +209,9 @@ def loan_detail_view(request, batch_id):
         id=batch_id
     )
     
-    # Calculate overdue
+    # Calculate overdue (only for active batches)
     now = timezone.now()
-    loan_batch.is_overdue = loan_batch.due_date and loan_batch.due_date < now
+    loan_batch.is_overdue = loan_batch.status == 'active' and loan_batch.due_date and loan_batch.due_date < now
     
     for item in loan_batch.loan_items.all():
         item.is_overdue = loan_batch.is_overdue and item.status == 'borrowed'

@@ -1,5 +1,43 @@
 # Changelog - Digital Library System
 
+## [Bug Fix] - 2026-04-05 - Overdue Badge Only for Active Loans
+
+### 🐛 Fix Overdue Badge Display Logic
+
+**แก้ไข logic การแสดง badge "เกินกำหนด" ให้แสดงเฉพาะ loan batches ที่มี status เป็น `active` เท่านั้น**
+
+**Issue:**
+
+- ก่อนหน้านี้ระบบแสดง "เกินกำหนด" badge สำหรับทุก batch ที่เกินกำหนดคืน รวมถึง batch ที่มี status เป็น `completed` แล้ว
+- การแสดงผลนี้ทำให้เกิดความสับสน เพราะ batch ที่คืนครบแล้วไม่ควรแสดงว่า "เกินกำหนด" อีก
+
+**Changes:**
+
+**Updated Views** (`loans/views.py`):
+
+แก้ไข logic การคำนวณ `is_overdue` ใน 3 views:
+
+- `my_loans_view()` - บรรทัด 28
+- `active_loans_view()` - บรรทัด 184
+- `loan_detail_view()` - บรรทัด 218
+
+```python
+# เดิม
+batch.is_overdue = batch.due_date and batch.due_date < now
+
+# แก้เป็น
+batch.is_overdue = batch.status == 'active' and batch.due_date and batch.due_date < now
+```
+
+**Impact:**
+
+- หน้า My Loans: แสดง "เกินกำหนด" เฉพาะ batch ที่ status = active และเลยกำหนดคืนแล้ว
+- หน้า Active Loans (Admin): แสดง "เกินกำหนด" เฉพาะ batch ที่ status = active และเลยกำหนดคืนแล้ว
+- หน้า Loan Detail (Admin): แสดง "เกินกำหนด" เฉพาะ batch ที่ status = active และเลยกำหนดคืนแล้ว
+- Batch ที่เป็น `completed` แล้วจะไม่แสดง "เกินกำหนด" badge อีก
+
+---
+
 ## [Enhancement] - 2026-04-04 - Loan Batch Status Field
 
 ### 📦 LoanBatch `status` Field
