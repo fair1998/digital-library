@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from books.models import Book
 from reservations.models import ReservationBatch
@@ -35,12 +35,9 @@ def dashboard_home_view(request):
     returned_loans = LoanItem.objects.filter(status='returned').count()
     lost_books = LoanItem.objects.filter(status='lost').count()
     
-    # Fines statistics
-    unpaid_fines = Fine.objects.filter(status='unpaid').count()
-    unpaid_fines_amount = Fine.objects.filter(status='unpaid').aggregate(
-        total=Count('id')
-    )
-    total_fines_amount = Fine.objects.aggregate(total=Count('id'))
+    # Fines statistics (all fines are paid immediately)
+    total_fines = Fine.objects.count()
+    total_fines_amount = Fine.objects.aggregate(total=Sum('amount'))['total'] or 0
     
     # Recent activities
     recent_reservations = ReservationBatch.objects.select_related('user').order_by('-created_at')[:5]
@@ -62,10 +59,9 @@ def dashboard_home_view(request):
         'returned_loans': returned_loans,
         'lost_books': lost_books,
         
-        # Fines
-        'unpaid_fines': unpaid_fines,
-        'unpaid_fines_amount': unpaid_fines_amount.get('total', 0),
-        'total_fines_amount': total_fines_amount.get('total', 0),
+        # Fines (all paid)
+        'total_fines': total_fines,
+        'total_fines_amount': total_fines_amount,
         
         # Recent activities
         'recent_reservations': recent_reservations,

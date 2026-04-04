@@ -16,4 +16,5 @@ urlpatterns = [
     path('admin/detail/<int:batch_id>/', views.loan_detail_view, name='loan_detail'),
     path('admin/mark-returned/<int:item_id>/', views.mark_returned_view, name='mark_returned'),
     path('admin/mark-lost/<int:item_id>/', views.mark_lost_view, name='mark_lost'),
+    path('admin/process-batch-return/<int:batch_id>/', views.process_batch_return_view, name='process_batch_return'),
 ]

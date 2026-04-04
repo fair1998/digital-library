@@ -5,39 +5,20 @@
         <div class="row mb-4">
             <div class="col">
                 <h2>
-                    <i class="bi bi-currency-dollar me-2"></i>รายงานค่าปรับทั้งหมด
+                    <i class="bi bi-currency-dollar me-2"></i>รายงานค่าปรับทั้งหมด (ชำระแล้วทั้งหมด)
                 </h2>
             </div>
         </div>
         <!-- Summary Cards -->
         <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card text-white bg-danger">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-exclamation-circle me-2"></i>ค่าปรับค้างชำระ
-                        </h5>
-                        <h2 class="mb-0">{{ total_unpaid|floatformat:2 }} บาท</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-success">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-check-circle me-2"></i>ค่าปรับที่ชำระแล้ว
-                        </h5>
-                        <h2 class="mb-0">{{ total_paid|floatformat:2 }} บาท</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-12">
                 <div class="card text-white bg-primary">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <i class="bi bi-cash-stack me-2"></i>ค่าปรับทั้งหมด
+                            <i class="bi bi-cash-stack me-2"></i>ค่าปรับทั้งหมด (ชำระแล้ว)
                         </h5>
                         <h2 class="mb-0">{{ total_all|floatformat:2 }} บาท</h2>
+                        <small>ค่าปรับทุกรายการถูกชำระทันทีหลังคืนหนังสือ</small>
                     </div>
                 </div>
             </div>
@@ -46,15 +27,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <form method="get" class="row g-3">
-                    <div class="col-md-4">
-                        <label for="status" class="form-label">สถานะการชำระ</label>
-                        <select name="status" id="status" class="form-select">
-                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>ทั้งหมด</option>
-                            <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>มีค้างชำระ</option>
-                            <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>ชำระครบแล้ว</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
+                    <div class="col-md-10">
                         <label for="search" class="form-label">ค้นหา</label>
                         <input type="text"
                                name="search"
@@ -86,8 +59,7 @@
                                 <th>Loan Batch ID</th>
                                 <th>ผู้ใช้</th>
                                 <th>จำนวนหนังสือที่โดนปรับ</th>
-                                <th>จำนวนเงินรวม</th>
-                                <th>สถานะ</th>
+                                <th>จำนวนเงินรวม (ชำระแล้ว)</th>
                                 <th>วันที่ยืม</th>
                                 <th>การกระทำ</th>
                             </tr>
@@ -108,22 +80,10 @@
                                         <span class="badge bg-secondary">{{ batch.fine_count }} เล่ม</span>
                                     </td>
                                     <td>
-                                        <strong class="text-danger">{{ batch.total_fine_amount|floatformat:2 }} บาท</strong>
+                                        <strong class="text-success">{{ batch.total_fine_amount|floatformat:2 }} บาท</strong>
                                         <div>
-                                            {% if batch.unpaid_fine_amount %}
-                                                <small class="text-danger">ค้างชำระ: {{ batch.unpaid_fine_amount|floatformat:2 }} บาท</small>
-                                            {% endif %}
-                                            {% if batch.paid_fine_amount %}
-                                                <small class="text-success d-block">ชำระแล้ว: {{ batch.paid_fine_amount|floatformat:2 }} บาท</small>
-                                            {% endif %}
+                                            <small class="text-muted">ชำระแล้วทั้งหมด</small>
                                         </div>
-                                    </td>
-                                    <td>
-                                        {% if batch.has_unpaid %}
-                                            <span class="badge bg-danger">มีค้างชำระ</span>
-                                        {% else %}
-                                            <span class="badge bg-success">ชำระครบแล้ว</span>
-                                        {% endif %}
                                     </td>
                                     <td>{{ batch.created_at|date:"d/m/Y H:i" }}</td>
                                     <td>
@@ -135,7 +95,7 @@
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">ไม่พบรายการชุดการยืมที่มีค่าปรับ</td>
+                                    <td colspan="6" class="text-center text-muted py-4">ไม่พบรายการชุดการยืมที่มีค่าปรับ</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

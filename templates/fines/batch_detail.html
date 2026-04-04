@@ -16,33 +16,14 @@
         </div>
         <!-- Summary Cards -->
         <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card text-white bg-danger">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-exclamation-circle me-2"></i>ค่าปรับค้างชำระ
-                        </h5>
-                        <h2 class="mb-0">{{ total_unpaid|floatformat:2 }} บาท</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-12">
                 <div class="card text-white bg-success">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <i class="bi bi-check-circle me-2"></i>ค่าปรับที่ชำระแล้ว
-                        </h5>
-                        <h2 class="mb-0">{{ total_paid|floatformat:2 }} บาท</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-primary">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-cash-stack me-2"></i>ค่าปรับทั้งหมด
+                            <i class="bi bi-check-circle me-2"></i>ค่าปรับทั้งหมด (ชำระแล้ว)
                         </h5>
                         <h2 class="mb-0">{{ total_amount|floatformat:2 }} บาท</h2>
+                        <small>ค่าปรับทุกรายการถูกชำระทันทีหลังคืนหนังสือ</small>
                     </div>
                 </div>
             </div>
@@ -108,8 +89,6 @@
                                 <th>Fine ID</th>
                                 <th>ประเภท</th>
                                 <th>จำนวนเงิน</th>
-                                <th>สถานะ</th>
-                                <th>วันที่สร้าง</th>
                                 <th>วันที่ชำระ</th>
                             </tr>
                         </thead>
@@ -150,27 +129,13 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <strong class="text-danger">{{ fine.amount|floatformat:2 }} บาท</strong>
+                                            <strong class="text-success">{{ fine.amount|floatformat:2 }} บาท</strong>
                                         </td>
-                                        <td>
-                                            {% if fine.status == 'unpaid' %}
-                                                <span class="badge bg-danger">ค้างชำระ</span>
-                                            {% else %}
-                                                <span class="badge bg-success">ชำระแล้ว</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ fine.created_at|date:"d/m/Y H:i" }}</td>
-                                        <td>
-                                            {% if fine.paid_at %}
-                                                {{ fine.paid_at|date:"d/m/Y H:i" }}
-                                            {% else %}
-                                                <span class="text-muted">-</span>
-                                            {% endif %}
-                                        </td>
+                                        <td>{{ fine.paid_at|date:"d/m/Y H:i" }}</td>
                                     </tr>
                                     {% if fine.reason %}
                                         <tr class="table-light">
-                                            <td colspan="8">
+                                            <td colspan="6">
                                                 <small>
                                                     <i class="bi bi-chat-left-text me-1"></i>
                                                     <strong>เหตุผล:</strong> {{ fine.reason }}
@@ -181,7 +146,7 @@
                                 {% endfor %}
                             {% empty %}
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">ไม่พบรายการค่าปรับ</td>
+                                    <td colspan="6" class="text-center text-muted py-4">ไม่พบรายการค่าปรับ</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

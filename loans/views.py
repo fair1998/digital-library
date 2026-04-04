@@ -417,3 +417,119 @@ def search_books_api(request):
         })
     
     return JsonResponse({'books': books_data})
+
+
+@login_required
+@user_passes_test(is_staff)
+def process_batch_return_view(request, batch_id):
+    """
+    Process batch return/lost with immediate fine payment.
+    Handles multiple books at once with damage/lost information.
+    """
+    loan_batch = get_object_or_404(
+        LoanBatch.objects.select_related('user').prefetch_related(
+            'loan_items__book'
+        ),
+        id=batch_id
+    )
+    
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                now = timezone.now()
+                total_fine_amount = Decimal('0.00')
+                returned_count = 0
+                lost_count = 0
+                
+                # Get all loan items that are still borrowed
+                borrowed_items = loan_batch.loan_items.filter(status='borrowed')
+                
+                for item in borrowed_items:
+                    action = request.POST.get(f'action_{item.id}')
+                    
+                    if action == 'return':
+                        # Process return
+                        item.status = 'returned'
+                        item.returned_at = now
+                        item.save()
+                        
+                        # Increase available quantity
+                        item.book.available_quantity += 1
+                        item.book.save()
+                        
+                        returned_count += 1
+                        
+                        # Check for late return fine
+                        if loan_batch.due_date and now.date() > loan_batch.due_date.date():
+                            days_late = (now.date() - loan_batch.due_date.date()).days
+                            late_fine_per_day = Decimal(getattr(settings, 'FINE_LATE_RETURN_PER_DAY', 10))
+                            late_fine_amount = late_fine_per_day * days_late
+                            
+                            Fine.objects.create(
+                                loan_item=item,
+                                type='late_return',
+                                amount=late_fine_amount,
+                                reason=f'คืนช้า {days_late} วัน',
+                                paid_at=now
+                            )
+                            total_fine_amount += late_fine_amount
+                        
+                        # Check for damage fine
+                        is_damaged = request.POST.get(f'damaged_{item.id}') == 'true'
+                        if is_damaged:
+                            damage_amount = Decimal(request.POST.get(f'damage_amount_{item.id}', 0))
+                            damage_reason = request.POST.get(f'damage_reason_{item.id}', '')
+                            
+                            if damage_amount > 0:
+                                Fine.objects.create(
+                                    loan_item=item,
+                                    type='damaged',
+                                    amount=damage_amount,
+                                    reason=damage_reason,
+                                    paid_at=now
+                                )
+                                total_fine_amount += damage_amount
+                    
+                    elif action == 'lost':
+                        # Process lost
+                        item.status = 'lost'
+                        item.save()
+                        
+                        lost_count += 1
+                        
+                        # Create lost fine
+                        lost_fine_amount = Decimal(getattr(settings, 'FINE_LOST_BOOK', 500))
+                        Fine.objects.create(
+                            loan_item=item,
+                            type='lost',
+                            amount=lost_fine_amount,
+                            reason=f'ทำหนังสือหาย: {item.book.title}',
+                            paid_at=now
+                        )
+                        total_fine_amount += lost_fine_amount
+                
+                # Check if all items in batch are completed
+                all_completed = not loan_batch.loan_items.filter(status='borrowed').exists()
+                if all_completed:
+                    loan_batch.status = 'completed'
+                    loan_batch.save()
+                
+                # Create success message
+                msg_parts = []
+                if returned_count > 0:
+                    msg_parts.append(f'คืนแล้ว {returned_count} เล่ม')
+                if lost_count > 0:
+                    msg_parts.append(f'หาย {lost_count} เล่ม')
+                if total_fine_amount > 0:
+                    msg_parts.append(f'ค่าปรับรวม {total_fine_amount} บาท (ชำระแล้ว)')
+                
+                messages.success(request, 'ดำเนินการสำเร็จ: ' + ', '.join(msg_parts))
+                
+                return redirect('loans:loan_detail', batch_id=loan_batch.id)
+                
+        except Exception as e:
+            messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
+            return redirect('loans:loan_detail', batch_id=loan_batch.id)
+    
+    # GET request - should not reach here (handled in template)
+    return redirect('loans:loan_detail', batch_id=loan_batch.id)
