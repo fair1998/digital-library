@@ -6,8 +6,8 @@ __pycache__/
 .venv/
 
 # Django
-db.sqlite3
-media/
+# db.sqlite3
+# media/
 
 # Environment
 .env
