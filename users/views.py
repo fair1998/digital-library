@@ -15,7 +15,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             messages.success(request, 'ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบ')
-            return redirect('login')
+            return redirect('users:login')
         else:
             messages.error(request, 'กรุณาตรวจสอบข้อมูลที่กรอกและลองใหม่อีกครั้ง')
     else:

@@ -1,98 +1,94 @@
 {% extends 'base.html' %}
-
 {% block title %}หน้าแรก - Digital Library{% endblock %}
-
 {% block content %}
-<div class="container">
-    <!-- Hero Section -->
-    <div class="row mb-5">
-        <div class="col-lg-12">
-            <div class="card bg-primary text-white">
-                <div class="card-body text-center py-5">
-                    <h1 class="display-4 mb-3">
-                        <i class="bi bi-book-fill"></i> ยินดีต้อนรับสู่ห้องสมุดดิจิทัล
-                    </h1>
-                    <p class="lead mb-4">ระบบจัดการห้องสมุดออนไลน์ที่ทันสมัย สะดวก และง่ายต่อการใช้งาน</p>
-                    {% if not user.is_authenticated %}
-                    <div>
-                        <a href="{% url 'register' %}" class="btn btn-light btn-lg me-2">
-                            <i class="bi bi-person-plus"></i> ลงทะเบียนเลย
-                        </a>
-                        <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">
-                            <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
-                        </a>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="row mb-5">
+            <div class="col-lg-12">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center py-5">
+                        <h1 class="display-4 mb-3">
+                            <i class="bi bi-book-fill"></i> ยินดีต้อนรับสู่ห้องสมุดดิจิทัล
+                        </h1>
+                        <p class="lead mb-4">ระบบจัดการห้องสมุดออนไลน์ที่ทันสมัย สะดวก และง่ายต่อการใช้งาน</p>
+                        {% if not user.is_authenticated %}
+                            <div>
+                                <a href="{% url 'users:register' %}" class="btn btn-light btn-lg me-2">
+                                    <i class="bi bi-person-plus"></i> ลงทะเบียนเลย
+                                </a>
+                                <a href="{% url 'users:login' %}" class="btn btn-outline-light btn-lg">
+                                    <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
+                                </a>
+                            </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Features Section -->
-    <div class="row mb-5">
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="bi bi-search display-3 text-primary"></i>
+        <!-- Features Section -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-search display-3 text-primary"></i>
+                        </div>
+                        <h5 class="card-title">ค้นหาหนังสือ</h5>
+                        <p class="card-text">ค้นหาหนังสือที่คุณสนใจได้ง่ายดาย ด้วยระบบค้นหาที่ทรงพลัง</p>
                     </div>
-                    <h5 class="card-title">ค้นหาหนังสือ</h5>
-                    <p class="card-text">ค้นหาหนังสือที่คุณสนใจได้ง่ายดาย ด้วยระบบค้นหาที่ทรงพลัง</p>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="bi bi-bookmark-check display-3 text-success"></i>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-bookmark-check display-3 text-success"></i>
+                        </div>
+                        <h5 class="card-title">จองหนังสือ</h5>
+                        <p class="card-text">จองหนังสือที่ต้องการได้ทันที และรอการอนุมัติจากระบบ</p>
                     </div>
-                    <h5 class="card-title">จองหนังสือ</h5>
-                    <p class="card-text">จองหนังสือที่ต้องการได้ทันที และรอการอนุมัติจากระบบ</p>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="bi bi-clock-history display-3 text-info"></i>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-clock-history display-3 text-info"></i>
+                        </div>
+                        <h5 class="card-title">ติดตามสถานะ</h5>
+                        <p class="card-text">ตรวจสอบสถานะการจอง การยืม และค่าปรับได้อย่างสะดวก</p>
                     </div>
-                    <h5 class="card-title">ติดตามสถานะ</h5>
-                    <p class="card-text">ตรวจสอบสถานะการจอง การยืม และค่าปรับได้อย่างสะดวก</p>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Quick Stats (if user is logged in) -->
-    {% if user.is_authenticated %}
-    <div class="row">
-        <div class="col-lg-12">
-            <h3 class="mb-4">สวัสดี, {{ user.get_full_name|default:user.username }}!</h3>
-            <div class="card">
-                <div class="card-body">
-                    <p class="mb-0">ยินดีต้อนรับกลับสู่ระบบห้องสมุดดิจิทัล</p>
-                    <p class="text-muted mb-0">เริ่มต้นค้นหาหนังสือที่คุณสนใจได้เลย</p>
+        <!-- Quick Stats (if user is logged in) -->
+        {% if user.is_authenticated %}
+            <div class="row">
+                <div class="col-lg-12">
+                    <h3 class="mb-4">สวัสดี, {{ user.get_full_name|default:user.username }}!</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="mb-0">ยินดีต้อนรับกลับสู่ระบบห้องสมุดดิจิทัล</p>
+                            <p class="text-muted mb-0">เริ่มต้นค้นหาหนังสือที่คุณสนใจได้เลย</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    {% else %}
-    <!-- Call to Action for Guests -->
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card bg-light">
-                <div class="card-body text-center py-4">
-                    <h4>พร้อมเริ่มต้นแล้วหรือยัง?</h4>
-                    <p class="text-muted mb-3">ลงทะเบียนวันนี้เพื่อเริ่มใช้งานระบบห้องสมุดดิจิทัล</p>
-                    <a href="{% url 'register' %}" class="btn btn-primary">
-                        <i class="bi bi-person-plus"></i> สมัครสมาชิกฟรี
-                    </a>
+        {% else %}
+            <!-- Call to Action for Guests -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card bg-light">
+                        <div class="card-body text-center py-4">
+                            <h4>พร้อมเริ่มต้นแล้วหรือยัง?</h4>
+                            <p class="text-muted mb-3">ลงทะเบียนวันนี้เพื่อเริ่มใช้งานระบบห้องสมุดดิจิทัล</p>
+                            <a href="{% url 'users:register' %}" class="btn btn-primary">
+                                <i class="bi bi-person-plus"></i> สมัครสมาชิกฟรี
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
     </div>
-    {% endif %}
-</div>
 {% endblock %}
