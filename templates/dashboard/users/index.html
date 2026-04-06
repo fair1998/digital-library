@@ -1,0 +1,18 @@
+{% extends "base_admin.html" %}
+{% block title %}
+    หน้าจัดการสมาชิก
+{% endblock title %}
+{% block page_title %}
+    หน้าจัดการสมาชิก
+{% endblock page_title %}
+{% block content %}
+    {% for user in users %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ user.username }}</h5>
+                <p class="card-text">อีเมล: {{ user.email }}</p>
+                <p class="card-text">วันที่เข้าร่วม: {{ user.date_joined }}</p>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock content %}

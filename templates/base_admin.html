@@ -103,8 +103,9 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-people"></i> Users
+                        <a class="nav-link {% if 'dashboard/users' in request.path %}active{% endif %}"
+                           href="{% url 'dashboard_users' %}">
+                            <i class="bi bi-people"></i> สมาชิก
                         </a>
                     </li>
                     <li class="nav-item">

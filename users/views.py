@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from .forms import UserRegistrationForm, UserLoginForm
 
@@ -61,3 +62,16 @@ def logout_view(request):
 def home_view(request):
     """Home page view"""
     return render(request, 'home.html')
+
+@staff_member_required
+def admin_users_view(request):
+    """Admin view to list all users"""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    users = User.objects.all().order_by('-date_joined')
+    
+    context = {
+        'users': users,
+    }
+    
+    return render(request, 'dashboard/users/index.html', context)
