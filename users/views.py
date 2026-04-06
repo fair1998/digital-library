@@ -85,11 +85,17 @@ def admin_users_view(request):
     
     # Apply search
     if search_query:
-        users = users.filter(
+        from django.db.models import Value, CharField
+        from django.db.models.functions import Concat
+        
+        users = users.annotate(
+            full_name=Concat('first_name', Value(' '), 'last_name', output_field=CharField())
+        ).filter(
             Q(username__icontains=search_query) |
             Q(email__icontains=search_query) |
             Q(first_name__icontains=search_query) |
             Q(last_name__icontains=search_query) |
+            Q(full_name__icontains=search_query) |
             Q(phone_number__icontains=search_query)
         )
     
