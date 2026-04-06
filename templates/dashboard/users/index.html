@@ -171,15 +171,17 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        {% if user.is_active %}
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-circle"></i> ใช้งานอยู่
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">
-                                                <i class="bi bi-x-circle"></i> ปิดใช้งาน
-                                            </span>
-                                        {% endif %}
+                                        <div class="d-flex justify-content-center">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input user-status-toggle"
+                                                       type="checkbox"
+                                                       role="switch"
+                                                       id="status-toggle-{{ user.id }}"
+                                                       data-user-id="{{ user.id }}"
+                                                       data-username="{{ user.username }}"
+                                                       {% if user.is_active %}checked{% endif %}>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm" role="group">
@@ -283,5 +285,97 @@
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+    
+    // Handle user status toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusToggles = document.querySelectorAll('.user-status-toggle');
+        
+        statusToggles.forEach(toggle => {
+            toggle.addEventListener('change', function(e) {
+                const userId = this.dataset.userId;
+                const username = this.dataset.username;
+                const isActive = this.checked;
+                const toggleElement = this;
+                
+                // Confirm action
+                const action = isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+                if (!confirm(`ต้องการ${action}ผู้ใช้ ${username} หรือไม่?`)) {
+                    // Revert toggle if cancelled
+                    this.checked = !isActive;
+                    return;
+                }
+                
+                // Disable toggle during request
+                toggleElement.disabled = true;
+                
+                // Send AJAX request
+                fetch(`/users/api/${userId}/status/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showToast(data.message, 'success');
+                        // Update toggle state to match server response
+                        toggleElement.checked = data.is_active;
+                    } else {
+                        // Show error and revert toggle
+                        showToast(data.error || 'เกิดข้อผิดพลาด', 'error');
+                        toggleElement.checked = !isActive;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                    // Revert toggle on error
+                    toggleElement.checked = !isActive;
+                })
+                .finally(() => {
+                    // Re-enable toggle
+                    toggleElement.disabled = false;
+                });
+            });
+        });
+        
+        // Get CSRF token from cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            toast.innerHTML = `
+                ${message}
+                <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\"></button>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    });
     </script>
 {% endblock extra_js %}

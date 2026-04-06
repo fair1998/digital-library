@@ -5,7 +5,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from .forms import UserRegistrationForm, UserLoginForm
 
-
 def register_view(request):
     """View for user registration"""
     if request.user.is_authenticated:
@@ -159,3 +158,37 @@ def admin_users_view(request):
     }
     
     return render(request, 'dashboard/users/index.html', context)
+
+@staff_member_required
+def toggle_user_status_api(request, user_id):
+    """Toggle user active status"""
+    from django.contrib.auth import get_user_model
+    from django.http import JsonResponse
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    User = get_user_model()
+    
+    try:
+        user = User.objects.get(pk=user_id)
+        
+        # Prevent deactivating yourself
+        if user == request.user:
+            return JsonResponse({
+                'error': 'คุณไม่สามารถเปลี่ยนสถานะของตัวเองได้'
+            }, status=400)
+        
+        # Toggle status
+        user.is_active = not user.is_active
+        user.save()
+        
+        return JsonResponse({
+            'success': True,
+            'is_active': user.is_active,
+            'message': f'อัพเดทสถานะของ {user.username} เป็น {"เปิดใช้งาน" if user.is_active else "ปิดใช้งาน"}'
+        })
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'ไม่พบผู้ใช้'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
