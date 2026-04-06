@@ -65,13 +65,97 @@ def home_view(request):
 
 @staff_member_required
 def admin_users_view(request):
-    """Admin view to list all users"""
+    """Admin view to list all users with search, filter, and statistics"""
     from django.contrib.auth import get_user_model
+    from django.core.paginator import Paginator
+    from django.db.models import Count, Q, Sum
+    from django.utils import timezone
+    from loans.models import  LoanItem
+    from fines.models import Fine
+    
     User = get_user_model()
-    users = User.objects.all().order_by('-date_joined')
+    
+    # Get query parameters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    role_filter = request.GET.get('role', '')
+    sort_by = request.GET.get('sort', '-date_joined')
+    
+    # Base queryset
+    users = User.objects.all()
+    
+    # Apply search
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(phone_number__icontains=search_query)
+        )
+    
+    # Apply role filter
+    if role_filter == 'staff':
+        users = users.filter(is_staff=True)
+    elif role_filter == 'member':
+        users = users.filter(is_staff=False)
+    
+    # Apply status filter
+    if status_filter == 'active':
+        users = users.filter(is_active=True)
+    elif status_filter == 'inactive':
+        users = users.filter(is_active=False)
+    
+    # Apply sorting
+    users = users.order_by(sort_by)
+    
+    # Annotate with statistics
+    users = users.annotate(
+        total_reservations=Count('reservation_batches', distinct=True),
+        total_loans=Count('loan_batches', distinct=True),
+        active_loans=Count(
+            'loan_batches__loan_items',
+            filter=Q(loan_batches__loan_items__status='borrowed'),
+            distinct=True
+        )
+    )
+    
+    # Pagination
+    paginator = Paginator(users, 15)  # 15 users per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get additional data for each user in current page
+    for user in page_obj:
+        # Get total fines (all fines are already paid in this system)
+        user.unpaid_fines = 0  # System auto-pays fines, so always 0
+        user.total_fines = Fine.objects.filter(
+            loan_item__loan_batch__user=user
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        # Get overdue loans
+        user.overdue_loans = LoanItem.objects.filter(
+            loan_batch__user=user,
+            status='borrowed',
+            loan_batch__due_date__lt=timezone.now()
+        ).count()
+    
+    # Overall statistics
+    total_users = User.objects.count()
+    total_members = User.objects.filter(is_staff=False).count()
+    total_staff = User.objects.filter(is_staff=True).count()
+    active_users = User.objects.filter(is_active=True).count()
     
     context = {
-        'users': users,
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'role_filter': role_filter,
+        'sort_by': sort_by,
+        'total_users': total_users,
+        'total_members': total_members,
+        'total_staff': total_staff,
+        'active_users': active_users,
     }
     
     return render(request, 'dashboard/users/index.html', context)
