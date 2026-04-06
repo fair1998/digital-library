@@ -78,7 +78,7 @@ def admin_users_view(request):
     search_query = request.GET.get('search', '')
     status_filter = request.GET.get('status', '')
     role_filter = request.GET.get('role', '')
-    sort_by = request.GET.get('sort', '-date_joined')
+    sort_by = request.GET.get('sort', '-last_login')
     
     # Base queryset
     users = User.objects.all()
@@ -133,7 +133,6 @@ def admin_users_view(request):
     # Get additional data for each user in current page
     for user in page_obj:
         # Get total fines (all fines are already paid in this system)
-        user.unpaid_fines = 0  # System auto-pays fines, so always 0
         user.total_fines = Fine.objects.filter(
             loan_item__loan_batch__user=user
         ).aggregate(total=Sum('amount'))['total'] or 0
@@ -149,7 +148,7 @@ def admin_users_view(request):
     total_users = User.objects.count()
     total_members = User.objects.filter(is_staff=False).count()
     total_staff = User.objects.filter(is_staff=True).count()
-    active_users = User.objects.filter(is_active=True).count()
+    inactive_users = User.objects.filter(is_active=False).count()
     
     context = {
         'page_obj': page_obj,
@@ -160,7 +159,7 @@ def admin_users_view(request):
         'total_users': total_users,
         'total_members': total_members,
         'total_staff': total_staff,
-        'active_users': active_users,
+        'inactive_users': inactive_users,
     }
     
     return render(request, 'dashboard/users/index.html', context)

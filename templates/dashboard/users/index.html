@@ -37,12 +37,12 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-center border-info">
+            <div class="card text-center border-danger">
                 <div class="card-body">
-                    <h5 class="card-title text-info">
-                        <i class="bi bi-check-circle-fill"></i> ใช้งานอยู่
+                    <h5 class="card-title text-danger">
+                        <i class="bi bi-x-circle-fill"></i> สมาชิกที่ถูกระงับ
                     </h5>
-                    <h2 class="display-4">{{ active_users }}</h2>
+                    <h2 class="display-4">{{ inactive_users }}</h2>
                 </div>
             </div>
         </div>
@@ -77,9 +77,9 @@
                     </label>
                     <select name="status" class="form-select">
                         <option value="" {% if not status_filter %}selected{% endif %}>ทั้งหมด</option>
-                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>ใช้งานอยู่</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>ใช้งาน</option>
                         <option value="inactive"
-                                {% if status_filter == 'inactive' %}selected{% endif %}>ปิดการใช้งาน</option>
+                                {% if status_filter == 'inactive' %}selected{% endif %}>ถูกระงับ</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -87,13 +87,10 @@
                         <i class="bi bi-sort-down"></i> เรียงตาม
                     </label>
                     <select name="sort" class="form-select">
-                        <option value="-date_joined"
-                                {% if sort_by == '-date_joined' %}selected{% endif %}>วันที่เข้าร่วม (ล่าสุด)</option>
-                        <option value="date_joined"
-                                {% if sort_by == 'date_joined' %}selected{% endif %}>วันที่เข้าร่วม (เก่าสุด)</option>
-                        <option value="username" {% if sort_by == 'username' %}selected{% endif %}>ชื่อผู้ใช้ (A-Z)</option>
-                        <option value="-username" {% if sort_by == '-username' %}selected{% endif %}>ชื่อผู้ใช้ (Z-A)</option>
-                        <option value="email" {% if sort_by == 'email' %}selected{% endif %}>อีเมล (A-Z)</option>
+                        <option value="-last_login"
+                                {% if sort_by == '-last_login' %}selected{% endif %}>วันที่เข้าใช้งาน (ล่าสุด)</option>
+                        <option value="last_login"
+                                {% if sort_by == 'last_login' %}selected{% endif %}>วันที่เข้าใช้งาน (เก่าสุด)</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -117,14 +114,14 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 15%">username</th>
+                                <th style="width: 15%">ชื่อผู้ใช้</th>
                                 <th style="width: 15%">ชื่อ-นามสกุล</th>
                                 <th style="width: 15%">อีเมล</th>
                                 <th style="width: 10%">เบอร์โทร</th>
                                 <th style="width: 8%" class="text-center">บทบาท</th>
                                 <th style="width: 8%" class="text-center">สถานะ</th>
                                 <th style="width: 12%" class="text-center">สถิติ</th>
-                                <th style="width: 12%">วันที่เข้าร่วม</th>
+                                <th style="width: 12%">วันที่เข้าใช้งาน</th>
                             </tr>
                         </thead>
                         <tbody>
