@@ -1,8 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
+from django.db.models import Sum
 from .forms import UserRegistrationForm, UserLoginForm
 
 def register_view(request):
@@ -114,35 +115,10 @@ def dashboard_users_view(request):
     # Apply sorting
     users = users.order_by(sort_by)
     
-    # Annotate with statistics
-    users = users.annotate(
-        total_reservations=Count('reservation_batches', distinct=True),
-        total_loans=Count('loan_batches', distinct=True),
-        active_loans=Count(
-            'loan_batches__loan_items',
-            filter=Q(loan_batches__loan_items__status='borrowed'),
-            distinct=True
-        )
-    )
-    
     # Pagination
     paginator = Paginator(users, 15)  # 15 users per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
-    # Get additional data for each user in current page
-    for user in page_obj:
-        # Get total fines (all fines are already paid in this system)
-        user.total_fines = Fine.objects.filter(
-            loan_item__loan_batch__user=user
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        
-        # Get overdue loans
-        user.overdue_loans = LoanItem.objects.filter(
-            loan_batch__user=user,
-            status='borrowed',
-            loan_batch__due_date__lt=timezone.now()
-        ).count()
     
     # Overall statistics
     total_users = User.objects.count()
@@ -163,6 +139,70 @@ def dashboard_users_view(request):
     }
     
     return render(request, 'dashboard/users/index.html', context)
+
+@staff_member_required
+def dashboard_users_detail_view(request, user_id):
+    from django.contrib.auth import get_user_model
+    from django.utils import timezone
+    from django.db.models import Count
+    from reservations.models import ReservationBatch, Reservation
+    from loans.models import LoanBatch, LoanItem
+    from fines.models import Fine
+    from books.models import Category
+
+    User = get_user_model()
+    member = get_object_or_404(User, pk=user_id)
+
+    reservations_qs = ReservationBatch.objects.filter(user=member)
+    reservation_items_qs = Reservation.objects.filter(reservation_batch__user=member)
+    loan_batches_qs = LoanBatch.objects.filter(user=member)
+    loan_items_qs = LoanItem.objects.filter(loan_batch__user=member)
+    fines_qs = Fine.objects.filter(loan_item__loan_batch__user=member)
+
+    total_fines_amount = fines_qs.aggregate(total=Sum('amount'))['total'] or 0
+    late_return_fines_amount = fines_qs.filter(type='late_return').aggregate(total=Sum('amount'))['total'] or 0
+    lost_fines_amount = fines_qs.filter(type='lost').aggregate(total=Sum('amount'))['total'] or 0
+    damaged_fines_amount = fines_qs.filter(type='damaged').aggregate(total=Sum('amount'))['total'] or 0
+
+    # Get top 5 categories by loan count
+    top_categories = Category.objects.filter(
+        books__loan_items__loan_batch__user=member
+    ).annotate(
+        loan_count=Count('books__loan_items', distinct=True)
+    ).order_by('-loan_count')[:5]
+
+    context = {
+        'member': member,
+        'stats': {
+            'total_reservations': reservations_qs.count(),
+            'total_reserved_books': reservation_items_qs.count(),
+            'pending_reservations': reservations_qs.filter(status='pending').count(),
+            'confirmed_reservations': reservations_qs.filter(status='confirmed').count(),
+            'completed_reservations': reservations_qs.filter(status='completed').count(),
+            'expired_reservations': reservations_qs.filter(status='expired').count(),
+            'cancelled_reservations': reservations_qs.filter(status='cancelled').count(),
+            'total_loan_batches': loan_batches_qs.count(),
+            'total_loan_books': loan_items_qs.count(),
+            'returned_loan_books': loan_items_qs.filter(status='returned').count(),
+            'lost_loan_books': loan_items_qs.filter(status='lost').count(),
+            'active_loans': loan_items_qs.filter(status='borrowed').count(),
+            'active_loan_batches': loan_batches_qs.filter(status='active').count(),
+            'overdue_loans': loan_items_qs.filter(
+                status='borrowed',
+                loan_batch__due_date__lt=timezone.now(),
+            ).count(),
+            'completed_loans': loan_batches_qs.filter(status='completed').count(),
+            'total_fines_amount': total_fines_amount,
+            'total_fines_count': fines_qs.count(),
+            'late_return_fines_amount': late_return_fines_amount,
+            'lost_fines_amount': lost_fines_amount,
+            'damaged_fines_amount': damaged_fines_amount,
+        },
+        'can_toggle_status': member != request.user,
+        'top_categories': top_categories,
+    }
+
+    return render(request, 'dashboard/users/id.html', context)
 
 @staff_member_required
 def toggle_user_status_api(request, user_id):

@@ -1,0 +1,337 @@
+{% extends "base_admin.html" %}
+{% block title %}
+    รายละเอียดสมาชิก
+{% endblock title %}
+{% block page_title %}
+    <i class="bi bi-people-fill"></i> รายละเอียดสมาชิก
+{% endblock page_title %}
+{% block content %}
+    <div class="mb-3">
+        <a href="{% url 'users:dashboard_users' %}"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> กลับหน้ารายชื่อสมาชิก
+        </a>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge"></i> ข้อมูลสมาชิก
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-1">{{ member.username }}</h4>
+                    <p class="text-muted mb-3">{{ member.get_full_name|default:'-' }}</p>
+                    <div class="mb-2">
+                        {% if member.is_superuser %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-star-fill"></i> Superuser
+                            </span>
+                        {% elif member.is_staff %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-shield-check"></i> Admin
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-person"></i> Member
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {% if member.is_active %}
+                            <span class="badge bg-primary">สถานะ: ใช้งาน</span>
+                        {% else %}
+                            <span class="badge bg-secondary">สถานะ: ถูกระงับ</span>
+                        {% endif %}
+                    </div>
+                    <hr>
+                    <p class="mb-2">
+                        <i class="bi bi-envelope"></i>
+                        {{ member.email|default:'-' }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-telephone"></i>
+                        {{ member.phone_number|default:'-' }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-calendar-plus"></i>
+                        สมัครเมื่อ: {{ member.date_joined|date:"d/m/Y H:i" }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="bi bi-clock-history"></i>
+                        เข้าใช้งานล่าสุด:
+                        {% if member.last_login %}
+                            {{ member.last_login|date:"d/m/Y H:i" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+                    {% if can_toggle_status %}
+                        <hr>
+                        <label class="form-label mb-2 fw-semibold">จัดการสถานะสมาชิก</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   role="switch"
+                                   id="member-status-toggle"
+                                   data-username="{{ member.username }}"
+                                   data-url="{% url 'users:toggle_user_status' member.id %}"
+                                   {% if member.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="member-status-toggle">เปิดใช้งานบัญชี</label>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart-line"></i> สถิติการใช้งาน
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 class="text-primary mb-0">
+                                        <i class="bi bi-calendar-check"></i> การจองทั้งหมด
+                                    </h6>
+                                    <span class="badge bg-primary fs-6">{{ stats.total_reservations }}</span>
+                                </div>
+                                <div class="small text-muted mb-2">รวมหนังสือที่เคยจอง {{ stats.total_reserved_books }} เล่ม</div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>รอดำเนินการ</span>
+                                        <strong>{{ stats.pending_reservations }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>ยืนยันแล้ว</span>
+                                        <strong>{{ stats.confirmed_reservations }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>เสร็จสิ้น</span>
+                                        <strong>{{ stats.completed_reservations }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>หมดอายุ</span>
+                                        <strong>{{ stats.expired_reservations }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0 pb-0">
+                                        <span>ยกเลิก</span>
+                                        <strong>{{ stats.cancelled_reservations }}</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 class="text-success mb-0">
+                                        <i class="bi bi-book"></i> การยืมทั้งหมด
+                                    </h6>
+                                    <span class="badge bg-success fs-6">{{ stats.total_loan_batches }}</span>
+                                </div>
+                                <div class="small text-muted mb-2">จำนวนครั้งของการยืมทั้งหมด</div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>ยืมหนังสือทั้งหมด</span>
+                                        <strong>{{ stats.total_loan_books }} เล่ม</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>คืนแล้ว</span>
+                                        <strong>{{ stats.returned_loan_books }} เล่ม</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>หนังสือหาย</span>
+                                        <strong>{{ stats.lost_loan_books }} เล่ม</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0 pb-0">
+                                        <span>ชุดยืมที่เสร็จสิ้น</span>
+                                        <strong>{{ stats.completed_loans }}</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 class="text-warning mb-0">
+                                        <i class="bi bi-hourglass-split"></i> การยืมที่กำลังดำเนินการ
+                                    </h6>
+                                    <span class="badge bg-warning text-dark fs-6">{{ stats.active_loan_batches }}</span>
+                                </div>
+                                <div class="small text-muted mb-2">จำนวนชุดยืมที่ยังไม่ปิดรายการ</div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>กำลังยืมอยู่</span>
+                                        <strong>{{ stats.active_loans }} เล่ม</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0 pb-0">
+                                        <span>เกินกำหนดส่งคืน</span>
+                                        <strong>{{ stats.overdue_loans }} เล่ม</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 class="text-danger mb-0">
+                                        <i class="bi bi-cash-coin"></i> ค่าปรับสะสม
+                                    </h6>
+                                    <span class="badge bg-danger fs-6">{{ stats.total_fines_amount|floatformat:2 }} ฿</span>
+                                </div>
+                                <div class="small text-muted mb-2">จำนวนค่าปรับทั้งหมด {{ stats.total_fines_count }} รายการ</div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>ค่าปรับคืนเกินกำหนด</span>
+                                        <strong>{{ stats.late_return_fines_amount|floatformat:2 }} ฿</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>ค่าปรับหนังสือหาย</span>
+                                        <strong>{{ stats.lost_fines_amount|floatformat:2 }} ฿</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0 pb-0">
+                                        <span>ค่าปรับหนังสือเสียหาย</span>
+                                        <strong>{{ stats.damaged_fines_amount|floatformat:2 }} ฿</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm mt-4 category-card">
+                <div class="card-header category-card-header">
+                    <h5 class="mb-0 text-white">
+                        <i class="bi bi-star-fill"></i> ประเภทหนังสือที่ชอบยืมมากที่สุด
+                    </h5>
+                </div>
+                <div class="card-body pt-4">
+                    {% if top_categories %}
+                        <div class="row g-4">
+                            {% for category in top_categories %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card border-0 h-100 shadow-sm category-item">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-start justify-content-between mb-3">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                                        <span class="badge category-rank category-rank-{{ forloop.counter }}">#{{ forloop.counter }}</span>
+                                                        <h6 class="mb-0 text-truncate" title="{{ category.name }}">{{ category.name }}</h6>
+                                                    </div>
+                                                </div>
+                                                <span class="badge bg-light text-dark fw-bold ms-2 category-count-badge">{{ category.loan_count }} เล่ม</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-inbox display-4 mb-3 d-block category-empty-icon"></i>
+                            <p class="fs-5">ยังไม่มีประวัติการยืมหนังสือ</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <style>
+    .category-card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .category-item {
+        transition: all 0.3s ease;
+    }
+    .category-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+    .category-rank-badge {
+        font-size: 0.9rem;
+        min-width: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .category-count-badge {
+        font-size: 0.85rem;
+    }
+    .category-empty-icon {
+        opacity: 0.5;
+    }
+    /* Rank badge colors */
+    .category-rank { font-size: 0.9rem; min-width: 32px; }
+    .category-rank-1 { background-color: var(--bs-danger) !important; }
+    .category-rank-2 { background-color: var(--bs-warning) !important; color: #000 !important; }
+    .category-rank-3 { background-color: var(--bs-info) !important; }
+    .category-rank-4,
+    .category-rank-5 { background-color: var(--bs-secondary) !important; }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('member-status-toggle');
+            if (!toggle) return;
+
+            toggle.addEventListener('change', function() {
+                const isActive = this.checked;
+                const username = this.dataset.username;
+                const url = this.dataset.url;
+                const action = isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+
+                if (!confirm(`ต้องการ${action}ผู้ใช้ ${username} หรือไม่?`)) {
+                    this.checked = !isActive;
+                    return;
+                }
+
+                this.disabled = true;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.error || 'เกิดข้อผิดพลาด');
+                            toggle.checked = !isActive;
+                        }
+                    })
+                    .catch(() => {
+                        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+                        toggle.checked = !isActive;
+                    })
+                    .finally(() => {
+                        toggle.disabled = false;
+                    });
+            });
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        });
+    </script>
+{% endblock extra_js %}

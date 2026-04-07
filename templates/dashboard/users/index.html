@@ -120,7 +120,6 @@
                                 <th style="width: 10%">เบอร์โทร</th>
                                 <th style="width: 8%" class="text-center">บทบาท</th>
                                 <th style="width: 8%" class="text-center">สถานะ</th>
-                                <th style="width: 12%" class="text-center">สถิติ</th>
                                 <th style="width: 12%">วันที่เข้าใช้งาน</th>
                             </tr>
                         </thead>
@@ -128,7 +127,10 @@
                             {% for user in page_obj %}
                                 <tr>
                                     <td>
-                                        <strong>{{ user.username }}</strong>
+                                        <a href="{% url 'users:dashboard_users_detail' user.id %}"
+                                           class="text-decoration-none">
+                                            <strong>{{ user.username }}</strong>
+                                        </a>
                                     </td>
                                     <td>
                                         {% if user.first_name or user.last_name %}
@@ -178,46 +180,6 @@
                                                        data-url="{% url 'users:toggle_user_status' user.id %}"
                                                        {% if user.is_active %}checked{% endif %}>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button"
-                                                    class="btn btn-outline-primary"
-                                                    data-bs-toggle="tooltip"
-                                                    title="{{ user.total_reservations }} การจอง">
-                                                <i class="bi bi-calendar-check"></i> {{ user.total_reservations }}
-                                            </button>
-                                            <button type="button"
-                                                    class="btn btn-outline-info"
-                                                    data-bs-toggle="tooltip"
-                                                    title="{{ user.total_loans }} การยืม">
-                                                <i class="bi bi-book"></i> {{ user.total_loans }}
-                                            </button>
-                                            {% if user.active_loans > 0 %}
-                                                <button type="button"
-                                                        class="btn btn-outline-warning"
-                                                        data-bs-toggle="tooltip"
-                                                        title="{{ user.active_loans }} ยืมอยู่">
-                                                    <i class="bi bi-hourglass-split"></i> {{ user.active_loans }}
-                                                </button>
-                                            {% endif %}
-                                            {% if user.overdue_loans > 0 %}
-                                                <button type="button"
-                                                        class="btn btn-outline-danger"
-                                                        data-bs-toggle="tooltip"
-                                                        title="{{ user.overdue_loans }} เกินกำหนด">
-                                                    <i class="bi bi-exclamation-triangle"></i> {{ user.overdue_loans }}
-                                                </button>
-                                            {% endif %}
-                                            {% if user.unpaid_fines > 0 %}
-                                                <button type="button"
-                                                        class="btn btn-outline-danger"
-                                                        data-bs-toggle="tooltip"
-                                                        title="ค่าปรับ {{ user.unpaid_fines }} บาท">
-                                                    <i class="bi bi-cash-coin"></i> {{ user.unpaid_fines }}฿
-                                                </button>
-                                            {% endif %}
                                         </div>
                                     </td>
                                     <td>
