@@ -63,7 +63,7 @@ def home_view(request):
     return render(request, 'home.html')
 
 @staff_member_required
-def admin_users_view(request):
+def dashboard_users_view(request):
     """Admin view to list all users with search, filter, and statistics"""
     from django.contrib.auth import get_user_model
     from django.core.paginator import Paginator

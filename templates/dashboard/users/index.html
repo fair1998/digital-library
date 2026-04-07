@@ -175,6 +175,7 @@
                                                        id="status-toggle-{{ user.id }}"
                                                        data-user-id="{{ user.id }}"
                                                        data-username="{{ user.username }}"
+                                                       data-url="{% url 'users:toggle_user_status' user.id %}"
                                                        {% if user.is_active %}checked{% endif %}>
                                             </div>
                                         </div>
@@ -290,6 +291,7 @@
             toggle.addEventListener('change', function(e) {
                 const userId = this.dataset.userId;
                 const username = this.dataset.username;
+                const url = this.dataset.url;
                 const isActive = this.checked;
                 const toggleElement = this;
                 
@@ -305,7 +307,7 @@
                 toggleElement.disabled = true;
                 
                 // Send AJAX request
-                fetch(`/users/api/${userId}/status/`, {
+                fetch(url, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCookie('csrftoken'),
