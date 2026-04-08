@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db import transaction
-from .models import Book, Category, Publisher
+from .models import Book, Category, Publisher , Author
 from reservations.models import ReservationBatch, Reservation
 from .cart import Cart
 from .forms import DashboardBookForm
@@ -260,6 +260,10 @@ def dashboard_books_view(request):
             Q(isbn__icontains=search_query)
         )
 
+    author_id = request.GET.get('author', '').strip()
+    if author_id:
+        books = books.filter(authors__id=author_id)
+
     category_id = request.GET.get('category', '').strip()
     if category_id:
         books = books.filter(categories__id=category_id)
@@ -289,14 +293,17 @@ def dashboard_books_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    authors = Author.objects.all().order_by('name')
     categories = Category.objects.all().order_by('name')
     publishers = Publisher.objects.all().order_by('name')
     
     context = {
         'page_obj': page_obj,
+        'authors': authors,
         'categories': categories,
         'publishers': publishers,
         'search_query': search_query,
+        'selected_author': author_id,
         'selected_category': category_id,
         'selected_publisher': publisher_id,
         'sort_by': sort_by,

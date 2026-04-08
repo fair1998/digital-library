@@ -26,7 +26,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <label class="form-label">
                         <i class="bi bi-search"></i> ค้นหา
                     </label>
@@ -35,6 +35,20 @@
                            class="form-control"
                            placeholder="ชื่อหนังสือ... , ISBN..."
                            value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-person"></i> ผู้แต่ง
+                    </label>
+                    <select name="author" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        {% for author in authors %}
+                            <option value="{{ author.id }}"
+                                    {% if author.id|stringformat:'s' == selected_author %}selected{% endif %}>
+                                {{ author.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">
@@ -112,7 +126,6 @@
                                 <th>ผู้แต่ง</th>
                                 <th>หมวดหมู่</th>
                                 <th>สำนักพิมพ์</th>
-                                <th class="text-center">ปี</th>
                                 <th class="text-center">จำนวนทั้งหมด</th>
                                 <th class="text-center">พร้อมให้ยืม</th>
                                 <th class="text-center">จัดการ</th>
@@ -149,7 +162,6 @@
                                         {% endfor %}
                                     </td>
                                     <td>{{ book.publisher.name|default:'-' }}</td>
-                                    <td class="text-center">{{ book.publish_year|default:'-' }}</td>
                                     <td class="text-center">{{ book.total_quantity }}</td>
                                     <td class="text-center">
                                         {% if book.available_quantity > 0 %}
