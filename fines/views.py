@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum, Q, Count
 from .models import Fine
-from loans.models import LoanBatch
+from loans.models import Loan
 
 
 def is_staff(user):
@@ -17,10 +17,10 @@ def my_fines_view(request):
     All fines are paid immediately, so no unpaid/paid distinction.
     """
     fines = Fine.objects.filter(
-        loan_item__loan_batch__user=request.user
+        loan_item__loan__user=request.user
     ).select_related(
         'loan_item__book__publisher',
-        'loan_item__loan_batch'
+        'loan_item__loan'
     ).prefetch_related(
         'loan_item__book__authors'
     ).order_by('-paid_at')
@@ -48,7 +48,7 @@ def admin_fines_report_view(request):
     search_query = request.GET.get('search', '')
     
     # Query loan batches that have fines
-    loan_batches = LoanBatch.objects.filter(
+    loan_batches = Loan.objects.filter(
         loan_items__fines__isnull=False
     ).select_related(
         'user'
@@ -90,7 +90,7 @@ def loan_batch_fines_detail_view(request, batch_id):
     All fines are paid immediately upon creation.
     """
     loan_batch = get_object_or_404(
-        LoanBatch.objects.select_related('user').prefetch_related(
+        Loan.objects.select_related('user').prefetch_related(
             'loan_items__book__publisher',
             'loan_items__book__authors',
             'loan_items__fines'

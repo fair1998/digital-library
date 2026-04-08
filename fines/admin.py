@@ -18,14 +18,14 @@ class FineAdmin(admin.ModelAdmin):
     search_fields = [
         'id',
         'loan_item__book__title',
-        'loan_item__loan_batch__user__username',
-        'loan_item__loan_batch__user__email',
-        'loan_item__loan_batch__user__first_name',
-        'loan_item__loan_batch__user__last_name',
+        'loan_item__loan__user__username',
+        'loan_item__loan__user__email',
+        'loan_item__loan__user__first_name',
+        'loan_item__loan__user__last_name',
         'reason'
     ]
     readonly_fields = ['paid_at']
-    list_select_related = ['loan_item', 'loan_item__book', 'loan_item__loan_batch', 'loan_item__loan_batch__user']
+    list_select_related = ['loan_item', 'loan_item__book', 'loan_item__loan_batch', 'loan_item__loan__user']
     autocomplete_fields = ['loan_item']
     
     fieldsets = (
@@ -53,10 +53,10 @@ class FineAdmin(admin.ModelAdmin):
     
     def borrower_name(self, obj):
         """Display borrower's name."""
-        user = obj.loan_item.loan_batch.user
+        user = obj.loan_item.loan.user
         return f"{user.get_full_name() or user.username}"
     borrower_name.short_description = 'Borrower'
-    borrower_name.admin_order_field = 'loan_item__loan_batch__user__username'
+    borrower_name.admin_order_field = 'loan_item__loan__user__username'
     
     def amount_display(self, obj):
         """Display amount with currency symbol."""

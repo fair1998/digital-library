@@ -147,7 +147,7 @@ def dashboard_users_detail_view(request, user_id):
     from django.utils import timezone
     from django.db.models import Count
     from reservations.models import ReservationBatch, Reservation
-    from loans.models import LoanBatch, LoanItem
+    from loans.models import Loan, LoanItem
     from fines.models import Fine
     from books.models import Category
 
@@ -156,9 +156,9 @@ def dashboard_users_detail_view(request, user_id):
 
     reservations_qs = ReservationBatch.objects.filter(user=member)
     reservation_items_qs = Reservation.objects.filter(reservation_batch__user=member)
-    loan_batches_qs = LoanBatch.objects.filter(user=member)
-    loan_items_qs = LoanItem.objects.filter(loan_batch__user=member)
-    fines_qs = Fine.objects.filter(loan_item__loan_batch__user=member)
+    loan_batches_qs = Loan.objects.filter(user=member)
+    loan_items_qs = LoanItem.objects.filter(loan__user=member)
+    fines_qs = Fine.objects.filter(loan_item__loan__user=member)
 
     total_fines_amount = fines_qs.aggregate(total=Sum('amount'))['total'] or 0
     late_return_fines_amount = fines_qs.filter(type='late_return').aggregate(total=Sum('amount'))['total'] or 0
@@ -167,7 +167,7 @@ def dashboard_users_detail_view(request, user_id):
 
     # Get top 5 categories by loan count
     top_categories = Category.objects.filter(
-        books__loan_items__loan_batch__user=member
+        books__loan_items__loan__user=member
     ).annotate(
         loan_count=Count('books__loan_items', distinct=True)
     ).order_by('-loan_count')[:5]
@@ -190,7 +190,7 @@ def dashboard_users_detail_view(request, user_id):
             'active_loan_batches': loan_batches_qs.filter(status='active').count(),
             'overdue_loans': loan_items_qs.filter(
                 status='borrowed',
-                loan_batch__due_date__lt=timezone.now(),
+                loan__due_date__lt=timezone.now(),
             ).count(),
             'completed_loans': loan_batches_qs.filter(status='completed').count(),
             'total_fines_amount': total_fines_amount,

@@ -4,7 +4,7 @@ from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from books.models import Book
 from reservations.models import ReservationBatch
-from loans.models import LoanBatch, LoanItem
+from loans.models import Loan, LoanItem
 from fines.models import Fine
 
 
@@ -30,7 +30,7 @@ def dashboard_home_view(request):
     active_loans = LoanItem.objects.filter(status='borrowed').count()
     overdue_loans = LoanItem.objects.filter(
         status='borrowed',
-        loan_batch__due_date__lt=timezone.now()
+        loan__due_date__lt=timezone.now()
     ).count()
     returned_loans = LoanItem.objects.filter(status='returned').count()
     lost_books = LoanItem.objects.filter(status='lost').count()
@@ -41,7 +41,7 @@ def dashboard_home_view(request):
     
     # Recent activities
     recent_reservations = ReservationBatch.objects.select_related('user').order_by('-created_at')[:5]
-    recent_loans = LoanBatch.objects.select_related('user').order_by('-created_at')[:5]
+    recent_loans = Loan.objects.select_related('user').order_by('-created_at')[:5]
     
     context = {
         # Books

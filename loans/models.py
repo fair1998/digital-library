@@ -4,7 +4,7 @@ from books.models import Book
 from reservations.models import Reservation
 
 
-class LoanBatch(models.Model):
+class Loan(models.Model):
     """Header/parent record for a single borrowing transaction."""
     STATUS_CHOICES = [
         ('active', 'Active'),
@@ -14,7 +14,7 @@ class LoanBatch(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='loan_batches'
+        related_name='loans'
     )
     status = models.CharField(
         max_length=20,
@@ -25,17 +25,16 @@ class LoanBatch(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'loan_batches'
-        verbose_name = 'Loan Batch'
-        verbose_name_plural = 'Loan Batches'
+        db_table = 'loans'
+        verbose_name = 'Loan'
+        verbose_name_plural = 'Loans'
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Loan Batch #{self.id} - {self.user.username}"
-
+        return f"Loan #{self.id} - {self.user.username}"
 
 class LoanItem(models.Model):
-    """Individual borrowed books within a loan batch."""
+    """Individual borrowed books within a loan."""
     STATUS_CHOICES = [
         ('borrowed', 'Borrowed'),
         ('returned', 'Returned'),
@@ -47,8 +46,8 @@ class LoanItem(models.Model):
         on_delete=models.CASCADE,
         related_name='loan_items'
     )
-    loan_batch = models.ForeignKey(
-        LoanBatch,
+    loan = models.ForeignKey(
+        Loan,
         on_delete=models.CASCADE,
         related_name='loan_items'
     )

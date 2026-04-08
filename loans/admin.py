@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils import timezone
 from django.db import transaction
 from django.contrib import messages
-from .models import LoanBatch, LoanItem
+from .models import Loan, LoanItem
 
 
 class LoanItemInline(admin.TabularInline):
@@ -13,7 +13,7 @@ class LoanItemInline(admin.TabularInline):
     readonly_fields = ('returned_at',)
 
 
-@admin.register(LoanBatch)
+@admin.register(Loan)
 class LoanBatchAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'status', 'due_date', 'items_count', 'borrowed_count', 'returned_count', 'lost_count', 'created_at')
     list_filter = ('status', 'created_at', 'due_date')
@@ -54,25 +54,25 @@ class LoanBatchAdmin(admin.ModelAdmin):
 @admin.register(LoanItem)
 class LoanItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'book', 'batch_user', 'batch_due_date', 'reservation', 'status', 'returned_at', 'created_at')
-    list_filter = ('status', 'created_at', 'returned_at', 'loan_batch__due_date')
+    list_filter = ('status', 'created_at', 'returned_at', 'loan__due_date')
     search_fields = (
         'id',
         'book__title',
-        'loan_batch__user__username',
-        'loan_batch__user__email',
-        'loan_batch__user__first_name',
-        'loan_batch__user__last_name'
+        'loan__user__username',
+        'loan__user__email',
+        'loan__user__first_name',
+        'loan__user__last_name'
     )
     date_hierarchy = 'created_at'
-    autocomplete_fields = ['book', 'loan_batch', 'reservation']
+    autocomplete_fields = ['book', 'loan', 'reservation']
     readonly_fields = ('created_at',)
     actions = ['mark_as_returned', 'mark_as_lost']
-    list_select_related = ['book', 'loan_batch', 'loan_batch__user', 'reservation']
+    list_select_related = ['book', 'loan', 'loan__user', 'reservation']
     list_per_page = 20
     
     fieldsets = (
         ('Loan Item Information', {
-            'fields': ('book', 'loan_batch', 'reservation', 'status', 'returned_at')
+            'fields': ('book', 'loan', 'reservation', 'status', 'returned_at')
         }),
         ('Timestamps', {
             'fields': ('created_at',),
@@ -81,14 +81,14 @@ class LoanItemAdmin(admin.ModelAdmin):
     )
 
     def batch_user(self, obj):
-        return obj.loan_batch.user.username
+        return obj.loan.user.username
     batch_user.short_description = 'User'
-    batch_user.admin_order_field = 'loan_batch__user__username'
+    batch_user.admin_order_field = 'loan__user__username'
 
     def batch_due_date(self, obj):
-        return obj.loan_batch.due_date
+        return obj.loan.due_date
     batch_due_date.short_description = 'Due Date'
-    batch_due_date.admin_order_field = 'loan_batch__due_date'
+    batch_due_date.admin_order_field = 'loan__due_date'
 
     @admin.action(description='Mark selected items as Returned')
     def mark_as_returned(self, request, queryset):

@@ -8,7 +8,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from datetime import timedelta
 from decimal import Decimal
-from .models import LoanBatch, LoanItem
+from .models import Loan, LoanItem
 from reservations.models import ReservationBatch, Reservation
 from books.models import Book
 from fines.models import Fine
@@ -19,7 +19,7 @@ def my_loans_view(request):
     """
     Display user's loan history.
     """
-    loan_batches = LoanBatch.objects.filter(
+    loan_batches = Loan.objects.filter(
         user=request.user
     ).prefetch_related(
         'loan_items__book__authors',
@@ -81,7 +81,7 @@ def create_loan_view(request, batch_id):
         try:
             with transaction.atomic():
                 # Create loan batch
-                loan_batch = LoanBatch.objects.create(
+                loan_batch = Loan.objects.create(
                     user=reservation_batch.user,
                     due_date=timezone.now() + timedelta(days=loan_days)
                 )
@@ -94,7 +94,7 @@ def create_loan_view(request, batch_id):
                 for reservation in confirmed_reservations:
                     LoanItem.objects.create(
                         book=reservation.book,
-                        loan_batch=loan_batch,
+                        loan=loan_batch,
                         reservation=reservation,
                         status='borrowed'
                     )
@@ -116,7 +116,7 @@ def create_loan_view(request, batch_id):
                             # Create loan item (no reservation link for additional books)
                             LoanItem.objects.create(
                                 book=book,
-                                loan_batch=loan_batch,
+                                loan=loan_batch,
                                 reservation=None,
                                 status='borrowed'
                             )
@@ -162,7 +162,7 @@ def active_loans_view(request):
     search_query = request.GET.get('search', '')
     
     # Base query
-    loan_batches = LoanBatch.objects.select_related('user').prefetch_related(
+    loan_batches = Loan.objects.select_related('user').prefetch_related(
         'loan_items__book__authors',
         'loan_items__book__publisher'
     )
@@ -203,7 +203,7 @@ def loan_detail_view(request, batch_id):
     Display loan batch details with actions to mark items as returned or lost.
     """
     loan_batch = get_object_or_404(
-        LoanBatch.objects.select_related('user').prefetch_related(
+        Loan.objects.select_related('user').prefetch_related(
             'loan_items__book__authors',
             'loan_items__book__publisher',
             'loan_items__reservation__reservation_batch'
@@ -237,7 +237,7 @@ def mark_returned_view(request, item_id):
     
     if loan_item.status != 'borrowed':
         messages.error(request, 'หนังสือเล่มนี้ไม่ได้อยู่ในสถานะยืมแล้ว')
-        return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+        return redirect('loans:loan_detail', batch_id=loan_item.loan.id)
     
     # Check if this is a damage report
     if request.method == 'POST':
@@ -249,16 +249,16 @@ def mark_returned_view(request, item_id):
         if is_damaged:
             if not damage_amount or not damage_reason:
                 messages.error(request, 'กรุณากรอกจำนวนเงินและเหตุผลสำหรับความเสียหาย')
-                return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+                return redirect('loans:loan_detail', batch_id=loan_item.loan.id)
             
             try:
                 damage_amount = Decimal(damage_amount)
                 if damage_amount <= 0:
                     messages.error(request, 'จำนวนเงินต้องมากกว่า 0')
-                    return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+                    return redirect('loans:loan_detail', batch_id=loan_item.loan.id)
             except (ValueError, TypeError):
                 messages.error(request, 'จำนวนเงินไม่ถูกต้อง')
-                return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+                return redirect('loans:loan_detail', batch_id=loan_item.loan.id)
         
         try:
             with transaction.atomic():
@@ -276,7 +276,7 @@ def mark_returned_view(request, item_id):
                 fine_created = False
                 
                 # Create late return fine if overdue
-                loan_batch = loan_item.loan_batch
+                loan_batch = loan_item.loan
                 if loan_batch.due_date and loan_item.returned_at.date() > loan_batch.due_date.date():
                     days_late = (loan_item.returned_at.date() - loan_batch.due_date.date()).days
                     fine_per_day = Decimal(getattr(settings, 'FINE_LATE_RETURN_PER_DAY', 10))
@@ -325,7 +325,7 @@ def mark_returned_view(request, item_id):
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+    return redirect('loans:loan_detail', batch_id=loan_item.loan.id)
 
 
 @login_required
@@ -340,7 +340,7 @@ def mark_lost_view(request, item_id):
     
     if loan_item.status != 'borrowed':
         messages.error(request, 'หนังสือเล่มนี้ไม่ได้อยู่ในสถานะยืมแล้ว')
-        return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+        return redirect('loans:loan_detail', batch_id=loan_item.loan.id)
     
     if request.method == 'POST':
         try:
@@ -356,7 +356,7 @@ def mark_lost_view(request, item_id):
                 book.save()
                 
                 # Create lost fine
-                loan_batch = loan_item.loan_batch
+                loan_batch = loan_item.loan
                 lost_fine_amount = Decimal(getattr(settings, 'FINE_LOST_BOOK', 500))
                 
                 Fine.objects.create(
@@ -384,7 +384,7 @@ def mark_lost_view(request, item_id):
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('loans:loan_detail', batch_id=loan_item.loan_batch.id)
+    return redirect('loans:loan_detail', batch_id=loan_item.loan.id)
 
 
 @login_required
@@ -427,7 +427,7 @@ def process_batch_return_view(request, batch_id):
     Handles multiple books at once with damage/lost information.
     """
     loan_batch = get_object_or_404(
-        LoanBatch.objects.select_related('user').prefetch_related(
+        Loan.objects.select_related('user').prefetch_related(
             'loan_items__book'
         ),
         id=batch_id
