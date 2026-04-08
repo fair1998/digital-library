@@ -1,5 +1,7 @@
-{% extends 'base_admin.html' %}
-{% block title %}Fine Report - รายงานค่าปรับ{% endblock %}
+{% extends "base_admin.html" %}
+{% block title %}
+    Fine Report - รายงานค่าปรับ
+{% endblock title %}
 {% block content %}
     <div class="container py-4">
         <div class="row mb-4">
@@ -87,7 +89,7 @@
                                     </td>
                                     <td>{{ batch.created_at|date:"d/m/Y H:i" }}</td>
                                     <td>
-                                        <a href="{% url 'fines:batch_detail' batch.id %}"
+                                        <a href="{% url 'dashboard_fines:batch_detail' batch.id %}"
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye me-1"></i>ดูรายละเอียด
                                         </a>
@@ -104,4 +106,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
+{% endblock content %}

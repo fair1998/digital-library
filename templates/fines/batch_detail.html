@@ -1,11 +1,13 @@
-{% extends 'base_admin.html' %}
-{% block title %}รายละเอียดค่าปรับ - Loan Batch #{{ loan_batch.id }}{% endblock %}
+{% extends "base_admin.html" %}
+{% block title %}
+    รายละเอียดค่าปรับ - Loan Batch #{{ loan_batch.id }}
+{% endblock title %}
 {% block content %}
     <div class="container py-4">
         <!-- Header with Back Button -->
         <div class="row mb-4">
             <div class="col">
-                <a href="{% url 'fines:admin_report' %}"
+                <a href="{% url 'dashboard_fines:admin_report' %}"
                    class="btn btn-outline-secondary mb-3">
                     <i class="bi bi-arrow-left me-1"></i>กลับไปรายงานค่าปรับ
                 </a>
@@ -155,4 +157,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
+{% endblock content %}
