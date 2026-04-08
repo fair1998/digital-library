@@ -58,7 +58,7 @@
                     <input type="text"
                            name="search"
                            class="form-control"
-                           placeholder="ชื่อผู้ใช้, อีเมล, ชื่อ-นามสกุล, เบอร์โทร..."
+                           placeholder="รหัสประชาชน, ชื่อผู้ใช้, อีเมล, ชื่อ-นามสกุล, เบอร์โทร..."
                            value="{{ search_query }}">
                 </div>
                 <div class="col-md-2">
@@ -114,18 +114,20 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 15%">ชื่อผู้ใช้</th>
-                                <th style="width: 15%">ชื่อ-นามสกุล</th>
-                                <th style="width: 15%">อีเมล</th>
-                                <th style="width: 10%">เบอร์โทร</th>
-                                <th style="width: 8%" class="text-center">บทบาท</th>
-                                <th style="width: 8%" class="text-center">สถานะ</th>
-                                <th style="width: 12%">วันที่เข้าใช้งาน</th>
+                                <th>รหัสประชาชน</th>
+                                <th>ชื่อผู้ใช้</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>อีเมล</th>
+                                <th>เบอร์โทร</th>
+                                <th class="text-center">บทบาท</th>
+                                <th class="text-center">สถานะ</th>
+                                <th>วันที่เข้าใช้งาน</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for user in page_obj %}
                                 <tr>
+                                    <td>{{ user.citizen_id }}</td>
                                     <td>
                                         <a href="{% url 'users:dashboard_users_detail' user.id %}"
                                            class="text-decoration-none">

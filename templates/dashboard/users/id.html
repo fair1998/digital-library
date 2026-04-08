@@ -47,6 +47,10 @@
                     </div>
                     <hr>
                     <p class="mb-2">
+                        <i class="bi bi-person-badge"></i>
+                        {{ member.citizen_id|default:'-' }}
+                    </p>
+                    <p class="mb-2">
                         <i class="bi bi-envelope"></i>
                         {{ member.email|default:'-' }}
                     </p>

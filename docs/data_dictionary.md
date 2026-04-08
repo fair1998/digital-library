@@ -13,6 +13,7 @@ This document describes the database schema for a digital library management sys
 | Field          | Type        | Constraints | Description                                      |
 | -------------- | ----------- | ----------- | ------------------------------------------------ |
 | `phone_number` | varchar(10) | nullable    | User's phone number (10 digits) for contact info |
+| `citizen_id`   | varchar(13) | nullable    | User's citizen ID (13 digits) for identification |
 
 **Standard Django User Fields (Inherited):**
 
@@ -27,7 +28,7 @@ This document describes the database schema for a digital library management sys
 - `last_login`: Timestamp of last login (nullable)
 - `date_joined`: Account creation timestamp (auto-set on creation)
 
-**Purpose:** Stores all user accounts in the system, extending Django's built-in User model with phone number field
+**Purpose:** Stores all user accounts in the system, extending Django's built-in User model with phone number and citizen ID fields.
 
 ---
 

@@ -92,6 +92,7 @@ def dashboard_users_view(request):
         users = users.annotate(
             full_name=Concat('first_name', Value(' '), 'last_name', output_field=CharField())
         ).filter(
+            Q(citizen_id__icontains=search_query) |
             Q(username__icontains=search_query) |
             Q(email__icontains=search_query) |
             Q(first_name__icontains=search_query) |

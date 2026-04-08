@@ -1,5 +1,7 @@
-{% extends 'base.html' %}
-{% block title %}ลงทะเบียน - Digital Library{% endblock %}
+{% extends "base.html" %}
+{% block title %}
+    ลงทะเบียน - Digital Library
+{% endblock title %}
 {% block content %}
     <div class="container">
         <div class="row justify-content-center">
@@ -45,7 +47,9 @@
                             </div>
                             <!-- First Name -->
                             <div class="mb-3">
-                                <label for="{{ form.first_name.id_for_label }}" class="form-label">ชื่อ</label>
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                    ชื่อ <span class="text-danger">*</span>
+                                </label>
                                 {{ form.first_name }}
                                 {% if form.first_name.errors %}
                                     <div class="text-danger small">
@@ -55,7 +59,9 @@
                             </div>
                             <!-- Last Name -->
                             <div class="mb-3">
-                                <label for="{{ form.last_name.id_for_label }}" class="form-label">นามสกุล</label>
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                    นามสกุล <span class="text-danger">*</span>
+                                </label>
                                 {{ form.last_name }}
                                 {% if form.last_name.errors %}
                                     <div class="text-danger small">
@@ -63,9 +69,23 @@
                                     </div>
                                 {% endif %}
                             </div>
+                            <!-- Citizen ID -->
+                            <div class="mb-3">
+                                <label for="{{ form.citizen_id.id_for_label }}" class="form-label">
+                                    เลขบัตรประชาชน <span class="text-danger">*</span>
+                                </label>
+                                {{ form.citizen_id }}
+                                {% if form.citizen_id.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.citizen_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
                             <!-- Phone Number -->
                             <div class="mb-3">
-                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">เบอร์โทรศัพท์</label>
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                    เบอร์โทรศัพท์ <span class="text-danger">*</span>
+                                </label>
                                 {{ form.phone_number }}
                                 {% if form.phone_number.errors %}
                                     <div class="text-danger small">
@@ -122,4 +142,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
+{% endblock content %}
