@@ -12,8 +12,8 @@ class ReservationInline(admin.TabularInline):
     model = Reservation
     extra = 1
     can_delete = False
-    fields = ('book', 'status', 'created_at', 'updated_at')
-    readonly_fields = ('created_at', 'updated_at')
+    fields = ('book', 'status', 'created_at')
+    readonly_fields = ('created_at',)
     autocomplete_fields = ['book']
     show_change_link = True
     
@@ -24,14 +24,14 @@ class ReservationInline(admin.TabularInline):
 
 @admin.register(ReservationBatch)
 class ReservationBatchAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'status', 'expires_at', 'reservation_count', 'created_at', 'updated_at')
-    list_filter = ('status', 'expires_at', 'created_at', 'updated_at')
+    list_display = ('id', 'user', 'status', 'expires_at', 'reservation_count', 'created_at')
+    list_filter = ('status', 'expires_at', 'created_at')
     search_fields = ('id', 'user__username', 'user__email', 'user__first_name', 'user__last_name')
     date_hierarchy = 'created_at'
     ordering = ('-created_at',)
     list_per_page = 20
     inlines = [ReservationInline]
-    readonly_fields = ('created_at', 'updated_at', 'reservation_count')
+    readonly_fields = ('created_at', 'reservation_count')
     actions = ['confirm_reservations', 'cancel_reservations']
     autocomplete_fields = ['user']
     
@@ -40,7 +40,7 @@ class ReservationBatchAdmin(admin.ModelAdmin):
             'fields': ('user', 'status', 'expires_at', 'reservation_count')
         }),
         ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('created_at',),
             'classes': ('collapse',)
         }),
     )
@@ -183,22 +183,22 @@ class ReservationBatchAdmin(admin.ModelAdmin):
 
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'book', 'reservation_batch_id', 'batch_user', 'batch_status', 'status', 'created_at', 'updated_at')
-    list_filter = ('status', 'created_at', 'updated_at', 'reservation_batch__status')
+    list_display = ('id', 'book', 'reservation_batch_id', 'batch_user', 'batch_status', 'status', 'created_at')
+    list_filter = ('status', 'created_at', 'reservation_batch__status')
     search_fields = ('id', 'book__title', 'book__id', 'reservation_batch__user__username', 'reservation_batch__user__email')
     date_hierarchy = 'created_at'
     ordering = ('-created_at',)
     list_select_related = ('book', 'reservation_batch', 'reservation_batch__user')
     autocomplete_fields = ['book', 'reservation_batch']
     list_per_page = 20
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at',)
     
     fieldsets = (
         ('Reservation Details', {
             'fields': ('reservation_batch', 'book', 'status')
         }),
         ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('created_at',),
             'classes': ('collapse',)
         }),
     )

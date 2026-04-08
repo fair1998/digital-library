@@ -22,7 +22,6 @@ class LoanBatch(models.Model):
         default='active'
     )
     due_date = models.DateTimeField(null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -66,7 +65,6 @@ class LoanItem(models.Model):
         default='borrowed'
     )
     returned_at = models.DateTimeField(null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

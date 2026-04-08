@@ -19,7 +19,6 @@ class ReservationBatch(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservation_batches')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     expires_at = models.DateTimeField(null=True, blank=True, help_text='Expiry time for confirmed reservation - user must pick up books before this time')
-    updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -72,7 +71,6 @@ class Reservation(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reservations')
     reservation_batch = models.ForeignKey(ReservationBatch, on_delete=models.CASCADE, related_name='reservations')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

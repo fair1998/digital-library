@@ -122,7 +122,6 @@ This document describes the database schema for a digital library management sys
 | `user_id`    | int         | not null, FK -> `users.id`                                                                       | Foreign key to user who made the reservation                                                                                                                                       |
 | `status`     | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `completed`, `expired`, `cancelled`) | Batch status: `pending` = awaiting approval, `confirmed` = approved/pending pickup, `completed` = user picked up books, `expired` = pickup window expired, `cancelled` = cancelled |
 | `expires_at` | timestamp   | **nullable**                                                                                     | Expiry time for confirmed reservation - **Automatically set to 3 days from confirmation when admin confirms reservation** (null for pending reservations awaiting confirmation)    |
-| `updated_at` | timestamp   | default `now()`                                                                                  | Timestamp of last update                                                                                                                                                           |
 | `created_at` | timestamp   | default `now()`                                                                                  | Timestamp when reservation batch was created                                                                                                                                       |
 
 **Purpose:** Header/parent record for a single reservation transaction. One reservation batch can contain multiple books (stored in `reservations` table).
@@ -146,7 +145,6 @@ This document describes the database schema for a digital library management sys
 | `book_id`              | int         | not null, FK -> `books.id`                                               | Foreign key to the book being reserved                                                      |
 | `reservation_batch_id` | int         | not null, FK -> `reservation_batches.id`                                 | Foreign key to parent reservation batch                                                     |
 | `status`               | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | Item status: `pending` = awaiting approval, `confirmed` = reserved, `cancelled` = cancelled |
-| `updated_at`           | timestamp   | default `now()`                                                          | Timestamp of last update                                                                    |
 | `created_at`           | timestamp   | default `now()`                                                          | Timestamp when reservation item was created                                                 |
 
 **Purpose:** Child/detail records for individual books within a reservation batch. Each record represents one book reserved in a transaction.
@@ -161,7 +159,6 @@ This document describes the database schema for a digital library management sys
 | `user_id`    | int         | not null, FK -> `users.id`                                | Foreign key to user who borrowed the books                                                                       |
 | `status`     | varchar(20) | not null, default `active`, check (`active`, `completed`) | Batch status: `active` = ยังมีหนังสือที่ยังไม่คืน, `completed` = คืนครบหรือสถานะทุกรายการเป็น returned/lost แล้ว |
 | `due_date`   | timestamp   | nullable                                                  | Due date - when all books in this batch must be returned                                                         |
-| `updated_at` | timestamp   | default `now()`                                           | Timestamp of last update                                                                                         |
 | `created_at` | timestamp   | default `now()`                                           | Timestamp when loan batch was created                                                                            |
 
 **Purpose:** Header/parent record for a single borrowing transaction. One loan batch can contain multiple books (stored in `loan_items` table).
@@ -185,7 +182,6 @@ This document describes the database schema for a digital library management sys
 | `reservation_id` | int         | nullable, **unique**, FK -> `reservations.id`                        | Foreign key to reservation (if this loan originated from a reservation) — **one reservation item can only be loaned once** |
 | `status`         | varchar(20) | not null, default `borrowed`, check (`borrowed`, `returned`, `lost`) | Item status: `borrowed` = currently out, `returned` = returned, `lost` = lost/missing                                      |
 | `returned_at`    | timestamp   | nullable                                                             | Actual return timestamp (null if not yet returned)                                                                         |
-| `updated_at`     | timestamp   | default `now()`                                                      | Timestamp of last update                                                                                                   |
 | `created_at`     | timestamp   | default `now()`                                                      | Timestamp when loan item was created                                                                                       |
 
 **Purpose:** Child/detail records for individual books within a loan batch. Each record represents one book borrowed in a transaction. Links to `reservations` if the loan was made from a prior reservation.
@@ -203,7 +199,6 @@ This document describes the database schema for a digital library management sys
 | `reason`       | text          | nullable                                             | Additional details or notes about the fine                                       |
 | `status`       | varchar(20)   | not null, default `unpaid`, check (`unpaid`, `paid`) | Payment status: `unpaid` = not yet paid, `paid` = paid                           |
 | `paid_at`      | timestamp     | nullable                                             | Timestamp when fine was paid (null if unpaid)                                    |
-| `updated_at`   | timestamp     | default `now()`                                      | Timestamp of last update                                                         |
 | `created_at`   | timestamp     | default `now()`                                      | Timestamp when fine was created                                                  |
 
 **Purpose:** Stores fines/penalties associated with loan items. Fines are created for late returns, lost books, or damaged books. Each fine is linked to a specific loan item.
