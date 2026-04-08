@@ -44,7 +44,6 @@ This document describes the database schema for a digital library management sys
 | `available_quantity` | int          | not null, default `0`, check `>= 0` | Number of copies currently available for borrowing or reservation  |
 | `publish_year`       | int          | nullable, check `>= 0`              | Year the book was published                                        |
 | `publisher_id`       | int          | FK -> `publishers.id`, nullable     | Foreign key reference to publisher                                 |
-| `updated_at`         | timestamp    | default `now()`                     | Timestamp of last update                                           |
 | `created_at`         | timestamp    | default `now()`                     | Timestamp when book was added to system                            |
 
 **Purpose:** Stores all book records in the library system. Each book can have multiple copies tracked via `total_quantity` and `available_quantity`.
@@ -57,7 +56,6 @@ This document describes the database schema for a digital library management sys
 | ------------ | ------------ | --------------- | ------------------------------- |
 | `id`         | int          | PK, increment   | Primary key - Author identifier |
 | `name`       | varchar(255) | not null        | Author's name                   |
-| `updated_at` | timestamp    | default `now()` | Timestamp of last update        |
 | `created_at` | timestamp    | default `now()` | Timestamp when author was added |
 
 **Purpose:** Stores information about book authors. Authors have a many-to-many relationship with books via `book_authors` table.
@@ -70,7 +68,6 @@ This document describes the database schema for a digital library management sys
 | ------------ | ------------ | ---------------- | ------------------------------------------------------ |
 | `id`         | int          | PK, increment    | Primary key - Category identifier                      |
 | `name`       | varchar(255) | not null, unique | Category name (must be unique, e.g., Fiction, Science) |
-| `updated_at` | timestamp    | default `now()`  | Timestamp of last update                               |
 | `created_at` | timestamp    | default `now()`  | Timestamp when category was created                    |
 
 **Purpose:** Stores book categories/genres. Books have a many-to-many relationship with categories via `book_categories` table.
@@ -83,7 +80,6 @@ This document describes the database schema for a digital library management sys
 | ------------ | ------------ | ---------------- | ---------------------------------- |
 | `id`         | int          | PK, increment    | Primary key - Publisher identifier |
 | `name`       | varchar(255) | not null, unique | Publisher name (must be unique)    |
-| `updated_at` | timestamp    | default `now()`  | Timestamp of last update           |
 | `created_at` | timestamp    | default `now()`  | Timestamp when publisher was added |
 
 **Purpose:** Stores information about book publishers. Referenced by books through `publisher_id` foreign key.

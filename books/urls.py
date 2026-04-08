@@ -19,4 +19,19 @@ urlpatterns = [
     path('dashboard/books/form/', views.dashboard_book_form_view, name='dashboard_book_form'),
     path('dashboard/books/form/<int:book_id>/', views.dashboard_books_form_id_view, name='dashboard_book_form_id'),
     path('dashboard/books/delete/<int:book_id>/', views.dashboard_book_delete_view, name='dashboard_book_delete'),
+
+    path('dashboard/authors/', views.dashboard_authors_view, name='dashboard_authors'),
+    path('dashboard/authors/form/', views.dashboard_author_form_view, name='dashboard_author_form'),
+    path('dashboard/authors/form/<int:author_id>/', views.dashboard_author_form_id_view, name='dashboard_author_form_id'),
+    path('dashboard/authors/delete/<int:author_id>/', views.dashboard_author_delete_view, name='dashboard_author_delete'),
+
+    path('dashboard/categories/', views.dashboard_categories_view, name='dashboard_categories'),
+    path('dashboard/categories/form/', views.dashboard_category_form_view, name='dashboard_category_form'),
+    path('dashboard/categories/form/<int:category_id>/', views.dashboard_category_form_id_view, name='dashboard_category_form_id'),
+    path('dashboard/categories/delete/<int:category_id>/', views.dashboard_category_delete_view, name='dashboard_category_delete'),
+
+    path('dashboard/publishers/', views.dashboard_publishers_view, name='dashboard_publishers'),
+    path('dashboard/publishers/form/', views.dashboard_publisher_form_view, name='dashboard_publisher_form'),
+    path('dashboard/publishers/form/<int:publisher_id>/', views.dashboard_publisher_form_id_view, name='dashboard_publisher_form_id'),
+    path('dashboard/publishers/delete/<int:publisher_id>/', views.dashboard_publisher_delete_view, name='dashboard_publisher_delete'),
 ]

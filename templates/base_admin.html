@@ -103,19 +103,37 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if 'dashboard/users' in request.path %}active{% endif %}"
+                           href="{% url 'users:dashboard_users' %}">
+                            <i class="bi bi-people"></i> สมาชิก
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if 'dashboard/books' in request.path %}active{% endif %}"
                            href="{% url 'books:dashboard_books' %}">
                             <i class="bi bi-book"></i> หนังสือ
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if 'dashboard/users' in request.path %}active{% endif %}"
-                           href="{% url 'users:dashboard_users' %}">
-                            <i class="bi bi-people"></i> สมาชิก
+                        <a class="nav-link {% if 'dashboard/authors' in request.path %}active{% endif %}"
+                           href="{% url 'books:dashboard_authors' %}">
+                            <i class="bi bi-person"></i> ผู้แต่ง
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'dashboard/categories' in request.path %}active{% endif %}"
+                           href="{% url 'books:dashboard_categories' %}">
+                            <i class="bi bi-tags"></i> หมวดหมู่
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'dashboard/publishers' in request.path %}active{% endif %}"
+                           href="{% url 'books:dashboard_publishers' %}">
+                            <i class="bi bi-building"></i> สำนักพิมพ์
                         </a>
                     </li>
                     <li>
-                        <hr class="my-2" style="border-color: #34495e;">
+                        <hr class="my-2 border-secondary">
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}">
@@ -135,7 +153,9 @@
                             <i class="bi bi-list"></i>
                         </button>
                         <span class="navbar-brand mb-0 h1">
-                            {% block page_title %}Dashboard{% endblock %}
+                            {% block page_title %}
+                                Dashboard
+                            {% endblock page_title %}
                         </span>
                         <div class="ms-auto">
                             <div class="dropdown">

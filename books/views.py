@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -8,7 +8,12 @@ from django.db import transaction
 from .models import Book, Category, Publisher , Author
 from reservations.models import ReservationBatch, Reservation
 from .cart import Cart
-from .forms import DashboardBookForm
+from .forms import (
+    DashboardAuthorForm,
+    DashboardBookForm,
+    DashboardCategoryForm,
+    DashboardPublisherForm,
+)
 
 def book_list_view(request):
     """
@@ -380,3 +385,309 @@ def dashboard_book_delete_view(request, book_id):
     book.delete()
     messages.success(request, f'ลบหนังสือ "{title}" เรียบร้อยแล้ว')
     return redirect('books:dashboard_books')
+
+@staff_member_required
+def dashboard_authors_view(request):
+    """
+    Admin dashboard view for managing authors.
+    """
+    authors = Author.objects.annotate(books_count=Count('books', distinct=True))
+
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        authors = authors.filter(name__icontains=search_query)
+
+    has_books = request.GET.get('has_books', '').strip()
+    if has_books == 'yes':
+        authors = authors.filter(books_count__gt=0)
+    elif has_books == 'no':
+        authors = authors.filter(books_count=0)
+
+    sort_by = request.GET.get('sort', 'name').strip()
+    allowed_sorts = {
+        'name': 'name',
+        '-name': '-name',
+        '-created_at': '-created_at',
+        'created_at': 'created_at',
+        '-books_count': '-books_count',
+        'books_count': 'books_count',
+    }
+    authors = authors.order_by(allowed_sorts.get(sort_by, 'name'), 'id')
+
+    paginator = Paginator(authors, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'entity_label': 'ผู้แต่ง',
+        'entity_icon': 'bi-person',
+        'add_url_name': 'books:dashboard_author_form',
+        'edit_url_name': 'books:dashboard_author_form_id',
+        'delete_url_name': 'books:dashboard_author_delete',
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'has_books': has_books,
+        'sort_by': sort_by,
+    }
+    return render(request, 'dashboard/library_entities/list.html', context)
+
+@staff_member_required
+def dashboard_categories_view(request):
+    """
+    Admin dashboard view for managing categories.
+    """
+    categories = Category.objects.annotate(books_count=Count('books', distinct=True))
+
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        categories = categories.filter(name__icontains=search_query)
+
+    has_books = request.GET.get('has_books', '').strip()
+    if has_books == 'yes':
+        categories = categories.filter(books_count__gt=0)
+    elif has_books == 'no':
+        categories = categories.filter(books_count=0)
+
+    sort_by = request.GET.get('sort', 'name').strip()
+    allowed_sorts = {
+        'name': 'name',
+        '-name': '-name',
+        '-created_at': '-created_at',
+        'created_at': 'created_at',
+        '-books_count': '-books_count',
+        'books_count': 'books_count',
+    }
+    categories = categories.order_by(allowed_sorts.get(sort_by, 'name'), 'id')
+
+    paginator = Paginator(categories, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'entity_label': 'หมวดหมู่',
+        'entity_icon': 'bi-tags',
+        'add_url_name': 'books:dashboard_category_form',
+        'edit_url_name': 'books:dashboard_category_form_id',
+        'delete_url_name': 'books:dashboard_category_delete',
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'has_books': has_books,
+        'sort_by': sort_by,
+    }
+    return render(request, 'dashboard/library_entities/list.html', context)
+
+@staff_member_required
+def dashboard_publishers_view(request):
+    """
+    Admin dashboard view for managing publishers.
+    """
+    publishers = Publisher.objects.annotate(books_count=Count('book', distinct=True))
+
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        publishers = publishers.filter(name__icontains=search_query)
+
+    has_books = request.GET.get('has_books', '').strip()
+    if has_books == 'yes':
+        publishers = publishers.filter(books_count__gt=0)
+    elif has_books == 'no':
+        publishers = publishers.filter(books_count=0)
+
+    sort_by = request.GET.get('sort', 'name').strip()
+    allowed_sorts = {
+        'name': 'name',
+        '-name': '-name',
+        '-created_at': '-created_at',
+        'created_at': 'created_at',
+        '-books_count': '-books_count',
+        'books_count': 'books_count',
+    }
+    publishers = publishers.order_by(allowed_sorts.get(sort_by, 'name'), 'id')
+
+    paginator = Paginator(publishers, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'entity_label': 'สำนักพิมพ์',
+        'entity_icon': 'bi-building',
+        'add_url_name': 'books:dashboard_publisher_form',
+        'edit_url_name': 'books:dashboard_publisher_form_id',
+        'delete_url_name': 'books:dashboard_publisher_delete',
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'has_books': has_books,
+        'sort_by': sort_by,
+    }
+    return render(request, 'dashboard/library_entities/list.html', context)
+
+
+@staff_member_required
+def dashboard_author_form_view(request):
+    if request.method == 'POST':
+        form = DashboardAuthorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'เพิ่มผู้แต่งเรียบร้อยแล้ว')
+            return redirect('books:dashboard_authors')
+    else:
+        form = DashboardAuthorForm()
+
+    return render(request, 'dashboard/library_entities/form.html', {
+        'form': form,
+        'form_title': 'เพิ่มผู้แต่ง',
+        'entity_label': 'ผู้แต่ง',
+        'entity_icon': 'bi-person',
+        'back_url_name': 'books:dashboard_authors',
+    })
+
+
+@staff_member_required
+def dashboard_author_form_id_view(request, author_id):
+    author = get_object_or_404(Author, id=author_id)
+    if request.method == 'POST':
+        form = DashboardAuthorForm(request.POST, instance=author)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'บันทึกข้อมูลผู้แต่งเรียบร้อยแล้ว')
+            return redirect('books:dashboard_authors')
+    else:
+        form = DashboardAuthorForm(instance=author)
+
+    return render(request, 'dashboard/library_entities/form.html', {
+        'form': form,
+        'form_title': 'แก้ไขผู้แต่ง',
+        'entity_label': 'ผู้แต่ง',
+        'entity_icon': 'bi-person',
+        'back_url_name': 'books:dashboard_authors',
+    })
+
+
+@staff_member_required
+def dashboard_author_delete_view(request, author_id):
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('books:dashboard_authors')
+
+    author = get_object_or_404(Author, id=author_id)
+    if author.books.exists():
+        messages.error(request, f'ไม่สามารถลบผู้แต่ง "{author.name}" ได้ เพราะมีหนังสือผูกอยู่')
+        return redirect('books:dashboard_authors')
+
+    name = author.name
+    author.delete()
+    messages.success(request, f'ลบผู้แต่ง "{name}" เรียบร้อยแล้ว')
+    return redirect('books:dashboard_authors')
+
+
+@staff_member_required
+def dashboard_category_form_view(request):
+    if request.method == 'POST':
+        form = DashboardCategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'เพิ่มหมวดหมู่เรียบร้อยแล้ว')
+            return redirect('books:dashboard_categories')
+    else:
+        form = DashboardCategoryForm()
+
+    return render(request, 'dashboard/library_entities/form.html', {
+        'form': form,
+        'form_title': 'เพิ่มหมวดหมู่',
+        'entity_label': 'หมวดหมู่',
+        'entity_icon': 'bi-tags',
+        'back_url_name': 'books:dashboard_categories',
+    })
+
+
+@staff_member_required
+def dashboard_category_form_id_view(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        form = DashboardCategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'บันทึกข้อมูลหมวดหมู่เรียบร้อยแล้ว')
+            return redirect('books:dashboard_categories')
+    else:
+        form = DashboardCategoryForm(instance=category)
+
+    return render(request, 'dashboard/library_entities/form.html', {
+        'form': form,
+        'form_title': 'แก้ไขหมวดหมู่',
+        'entity_label': 'หมวดหมู่',
+        'entity_icon': 'bi-tags',
+        'back_url_name': 'books:dashboard_categories',
+    })
+
+
+@staff_member_required
+def dashboard_category_delete_view(request, category_id):
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('books:dashboard_categories')
+
+    category = get_object_or_404(Category, id=category_id)
+    if category.books.exists():
+        messages.error(request, f'ไม่สามารถลบหมวดหมู่ "{category.name}" ได้ เพราะมีหนังสือผูกอยู่')
+        return redirect('books:dashboard_categories')
+
+    name = category.name
+    category.delete()
+    messages.success(request, f'ลบหมวดหมู่ "{name}" เรียบร้อยแล้ว')
+    return redirect('books:dashboard_categories')
+
+
+@staff_member_required
+def dashboard_publisher_form_view(request):
+    if request.method == 'POST':
+        form = DashboardPublisherForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'เพิ่มสำนักพิมพ์เรียบร้อยแล้ว')
+            return redirect('books:dashboard_publishers')
+    else:
+        form = DashboardPublisherForm()
+
+    return render(request, 'dashboard/library_entities/form.html', {
+        'form': form,
+        'form_title': 'เพิ่มสำนักพิมพ์',
+        'entity_label': 'สำนักพิมพ์',
+        'entity_icon': 'bi-building',
+        'back_url_name': 'books:dashboard_publishers',
+    })
+
+
+@staff_member_required
+def dashboard_publisher_form_id_view(request, publisher_id):
+    publisher = get_object_or_404(Publisher, id=publisher_id)
+    if request.method == 'POST':
+        form = DashboardPublisherForm(request.POST, instance=publisher)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'บันทึกข้อมูลสำนักพิมพ์เรียบร้อยแล้ว')
+            return redirect('books:dashboard_publishers')
+    else:
+        form = DashboardPublisherForm(instance=publisher)
+
+    return render(request, 'dashboard/library_entities/form.html', {
+        'form': form,
+        'form_title': 'แก้ไขสำนักพิมพ์',
+        'entity_label': 'สำนักพิมพ์',
+        'entity_icon': 'bi-building',
+        'back_url_name': 'books:dashboard_publishers',
+    })
+
+
+@staff_member_required
+def dashboard_publisher_delete_view(request, publisher_id):
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('books:dashboard_publishers')
+
+    publisher = get_object_or_404(Publisher, id=publisher_id)
+    if publisher.book_set.exists():
+        messages.error(request, f'ไม่สามารถลบสำนักพิมพ์ "{publisher.name}" ได้ เพราะมีหนังสือผูกอยู่')
+        return redirect('books:dashboard_publishers')
+
+    name = publisher.name
+    publisher.delete()
+    messages.success(request, f'ลบสำนักพิมพ์ "{name}" เรียบร้อยแล้ว')
+    return redirect('books:dashboard_publishers')

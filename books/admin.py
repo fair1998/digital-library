@@ -19,9 +19,9 @@ class BookCategoryInline(admin.TabularInline):
 
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "books_count", "created_at", "updated_at")
+    list_display = ("id", "name", "books_count", "created_at")
     search_fields = ("name",)
-    list_filter = ("created_at", "updated_at")
+    list_filter = ("created_at",)
     ordering = ("name",)
     list_per_page = 20
 
@@ -36,14 +36,14 @@ class AuthorAdmin(admin.ModelAdmin):
         # get_queryset() provides books_count.
         return getattr(obj, "books_count", 0)
 
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("created_at",)
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "books_count", "created_at", "updated_at")
+    list_display = ("id", "name", "books_count", "created_at")
     search_fields = ("name",)
-    list_filter = ("created_at", "updated_at")
+    list_filter = ("created_at",)
     ordering = ("name",)
     list_per_page = 20
 
@@ -58,14 +58,14 @@ class CategoryAdmin(admin.ModelAdmin):
         # get_queryset() provides books_count.
         return getattr(obj, "books_count", 0)
 
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("created_at",)
 
 
 @admin.register(Publisher)
 class PublisherAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "books_count", "created_at", "updated_at")
+    list_display = ("id", "name", "books_count", "created_at")
     search_fields = ("name",)
-    list_filter = ("created_at", "updated_at")
+    list_filter = ("created_at",)
     ordering = ("name",)
     list_per_page = 20
 
@@ -79,7 +79,7 @@ class PublisherAdmin(admin.ModelAdmin):
     def books_count(self, obj):
         return getattr(obj, "books_count", 0)
 
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("created_at",)
 
 
 @admin.register(Book)

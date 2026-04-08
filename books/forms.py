@@ -1,5 +1,5 @@
 from django import forms
-from books.models import Book
+from books.models import Author, Book, Category, Publisher
 
 class DashboardBookForm(forms.ModelForm):
     class Meta:
@@ -39,3 +39,26 @@ class DashboardBookForm(forms.ModelForm):
                 self.add_error('available_quantity', 'จำนวนพร้อมให้ยืมต้องไม่มากกว่าจำนวนทั้งหมด')
 
         return cleaned_data
+
+
+class BaseNamedEntityDashboardForm(forms.ModelForm):
+    class Meta:
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ชื่อ'}),
+        }
+
+
+class DashboardAuthorForm(BaseNamedEntityDashboardForm):
+    class Meta(BaseNamedEntityDashboardForm.Meta):
+        model = Author
+
+
+class DashboardCategoryForm(BaseNamedEntityDashboardForm):
+    class Meta(BaseNamedEntityDashboardForm.Meta):
+        model = Category
+
+
+class DashboardPublisherForm(BaseNamedEntityDashboardForm):
+    class Meta(BaseNamedEntityDashboardForm.Meta):
+        model = Publisher

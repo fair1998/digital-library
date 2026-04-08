@@ -1,0 +1,36 @@
+{% extends "base_admin.html" %}
+{% block title %}
+    {{ form_title }}
+{% endblock title %}
+{% block page_title %}
+    <i class="bi {{ entity_icon }}"></i> {{ form_title }}
+{% endblock page_title %}
+{% block content %}
+    <div class="card">
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="col-12">
+                        <div class="alert alert-danger mb-0">
+                            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="col-md-8">
+                    <label class="form-label">
+                        ชื่อ{{ entity_label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.name }}
+                    {% for error in form.name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> บันทึก
+                    </button>
+                    <a href="{% url back_url_name %}" class="btn btn-secondary ms-2">ยกเลิก</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

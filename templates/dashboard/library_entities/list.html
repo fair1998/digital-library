@@ -1,0 +1,163 @@
+{% extends "base_admin.html" %}
+{% block title %}
+    จัดการ{{ entity_label }}
+{% endblock title %}
+{% block page_title %}
+    <i class="bi {{ entity_icon }}"></i> จัดการ{{ entity_label }}
+{% endblock page_title %}
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="bi {{ entity_icon }}"></i> รายการ{{ entity_label }}
+        </h3>
+        <a href="{% url add_url_name %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> เพิ่ม{{ entity_label }}
+        </a>
+    </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">
+                        <i class="bi bi-search"></i> ค้นหา
+                    </label>
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           placeholder="ชื่อ{{ entity_label }}..."
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="bi bi-funnel"></i> การใช้งานกับหนังสือ
+                    </label>
+                    <select name="has_books" class="form-select">
+                        <option value="" {% if not has_books %}selected{% endif %}>ทั้งหมด</option>
+                        <option value="yes" {% if has_books == 'yes' %}selected{% endif %}>มีหนังสือผูกอยู่</option>
+                        <option value="no" {% if has_books == 'no' %}selected{% endif %}>ยังไม่มีหนังสือผูก</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="bi bi-sort-down"></i> เรียงตาม
+                    </label>
+                    <select name="sort" class="form-select">
+                        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>ชื่อ (ก-ฮ)</option>
+                        <option value="-name" {% if sort_by == '-name' %}selected{% endif %}>ชื่อ (ฮ-ก)</option>
+                        <option value="-books_count"
+                                {% if sort_by == '-books_count' %}selected{% endif %}>จำนวนหนังสือ (มากไปน้อย)</option>
+                        <option value="books_count"
+                                {% if sort_by == 'books_count' %}selected{% endif %}>จำนวนหนังสือ (น้อยไปมาก)</option>
+                        <option value="-created_at"
+                                {% if sort_by == '-created_at' %}selected{% endif %}>สร้างล่าสุด</option>
+                        <option value="created_at"
+                                {% if sort_by == 'created_at' %}selected{% endif %}>สร้างเก่าสุด</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> ค้นหา
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul"></i> รายการ{{ entity_label }}
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if page_obj.object_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ชื่อ</th>
+                                <th class="text-center" style="width: 180px;">จำนวนหนังสือ</th>
+                                <th style="width: 220px;">วันที่สร้าง</th>
+                                <th class="text-center" style="width: 170px;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in page_obj %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.name }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if item.books_count > 0 %}
+                                            <span class="badge bg-success">{{ item.books_count }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ item.created_at|date:"d/m/Y H:i" }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{% url edit_url_name item.id %}"
+                                           class="btn btn-sm btn-primary"
+                                           title="แก้ไข"><i class="bi bi-pencil"></i></a>
+                                        <form method="post"
+                                              action="{% url delete_url_name item.id %}"
+                                              class="d-inline"
+                                              onsubmit="return confirm('ต้องการลบ &quot;{{ item.name }}&quot; หรือไม่?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger" title="ลบ">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <p class="text-muted mt-3">ไม่พบข้อมูล{{ entity_label }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if has_books %}&has_books={{ has_books }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if has_books %}&has_books={{ has_books }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">หน้า {{ page_obj.number }} จาก {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if has_books %}&has_books={{ has_books }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if has_books %}&has_books={{ has_books }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endblock content %}
