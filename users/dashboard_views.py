@@ -3,7 +3,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from books.models import Book
-from reservations.models import ReservationBatch
+from reservations.models import Hold
 from loans.models import Loan, LoanItem
 from fines.models import Fine
 
@@ -18,10 +18,10 @@ def dashboard_home_view(request):
     total_book_copies = Book.objects.aggregate(total=Count('id'))
     available_books = Book.objects.filter(available_quantity__gt=0).count()
     
-    # Reservations statistics
-    pending_reservations = ReservationBatch.objects.filter(status='pending').count()
-    confirmed_reservations = ReservationBatch.objects.filter(status='confirmed').count()
-    expired_reservations = ReservationBatch.objects.filter(
+    # Hold items statistics
+    pending_hold_items = Hold.objects.filter(status='pending').count()
+    confirmed_hold_items = Hold.objects.filter(status='confirmed').count()
+    expired_hold_items = Hold.objects.filter(
         status='pending',
         expires_at__lt=timezone.now()
     ).count()
@@ -40,7 +40,7 @@ def dashboard_home_view(request):
     total_fines_amount = Fine.objects.aggregate(total=Sum('amount'))['total'] or 0
     
     # Recent activities
-    recent_reservations = ReservationBatch.objects.select_related('user').order_by('-created_at')[:5]
+    recent_hold_items = Hold.objects.select_related('user').order_by('-created_at')[:5]
     recent_loans = Loan.objects.select_related('user').order_by('-created_at')[:5]
     
     context = {
@@ -49,9 +49,9 @@ def dashboard_home_view(request):
         'available_books': available_books,
         
         # Reservations
-        'pending_reservations': pending_reservations,
-        'confirmed_reservations': confirmed_reservations,
-        'expired_reservations': expired_reservations,
+        'pending_reservations': pending_hold_items,
+        'confirmed_reservations': confirmed_hold_items,
+        'expired_reservations': expired_hold_items,
         
         # Loans
         'active_loans': active_loans,
@@ -64,7 +64,7 @@ def dashboard_home_view(request):
         'total_fines_amount': total_fines_amount,
         
         # Recent activities
-        'recent_reservations': recent_reservations,
+        'recent_reservations': recent_hold_items,
         'recent_loans': recent_loans,
     }
     

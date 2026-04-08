@@ -1,5 +1,10 @@
+from typing import TYPE_CHECKING
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q , Manager
+
+if TYPE_CHECKING:
+    from reservations.models import HoldItem
+    from loans.models import LoanItem
 
 
 class Author(models.Model):
@@ -7,8 +12,10 @@ class Author(models.Model):
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    if TYPE_CHECKING:
+        books: Manager["Book"]
+
     class Meta:
-        # Keep table name aligned with docs/data_dictionary.md.
         db_table = "authors"
         verbose_name = "Author"
         verbose_name_plural = "Authors"
@@ -22,8 +29,10 @@ class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    if TYPE_CHECKING:
+        books: Manager["Book"]
+
     class Meta:
-        # Keep table name aligned with docs/data_dictionary.md.
         db_table = "categories"
         verbose_name = "Category"
         verbose_name_plural = "Categories"
@@ -37,8 +46,10 @@ class Publisher(models.Model):
     name = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    if TYPE_CHECKING:
+        books: Manager["Book"]
+
     class Meta:
-        # Keep table name aligned with docs/data_dictionary.md.
         db_table = "publishers"
         verbose_name = "Publisher"
         verbose_name_plural = "Publishers"
@@ -57,7 +68,6 @@ class Book(models.Model):
         blank=False,
     )
     description = models.TextField(null=True, blank=True)
-    # Stored as a file path (Django will manage actual storage backend; later can be swapped to S3).
     image_url = models.ImageField(
         upload_to="books/covers/",
         max_length=255,
@@ -72,27 +82,32 @@ class Book(models.Model):
     publish_year = models.IntegerField(null=True, blank=True)
 
     publisher = models.ForeignKey(
-        "Publisher",
+        Publisher,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        related_name='books',
     )
 
     authors = models.ManyToManyField(
-        "Author",
+        Author,
         through="BookAuthor",
         related_name="books",
     )
     categories = models.ManyToManyField(
-        "Category",
+        Category,
         through="BookCategory",
         related_name="books",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    if TYPE_CHECKING:
+        hold_items: Manager[HoldItem]
+        hold_items: Manager[HoldItem]
+        loan_items: Manager[LoanItem]
+
     class Meta:
-        # Keep table name aligned with docs/data_dictionary.md.
         db_table = "books"
         verbose_name = "Book"
         verbose_name_plural = "Books"
@@ -121,7 +136,6 @@ class BookAuthor(models.Model):
     author = models.ForeignKey("Author", on_delete=models.CASCADE)
 
     class Meta:
-        # Keep table name aligned with docs/data_dictionary.md.
         db_table = "book_authors"
         verbose_name = "Book Author"
         verbose_name_plural = "Book Authors"
@@ -142,7 +156,6 @@ class BookCategory(models.Model):
     category = models.ForeignKey("Category", on_delete=models.CASCADE)
 
     class Meta:
-        # Keep table name aligned with docs/data_dictionary.md.
         db_table = "book_categories"
         verbose_name = "Book Category"
         verbose_name_plural = "Book Categories"

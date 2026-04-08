@@ -8,8 +8,8 @@ from .models import Loan, LoanItem
 class LoanItemInline(admin.TabularInline):
     model = LoanItem
     extra = 1
-    fields = ('book', 'reservation', 'status', 'returned_at')
-    autocomplete_fields = ['book', 'reservation']
+    fields = ('book', 'hold_item', 'status', 'returned_at')
+    autocomplete_fields = ['book', 'hold_item']
     readonly_fields = ('returned_at',)
 
 
@@ -53,7 +53,7 @@ class LoanBatchAdmin(admin.ModelAdmin):
 
 @admin.register(LoanItem)
 class LoanItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'book', 'batch_user', 'batch_due_date', 'reservation', 'status', 'returned_at', 'created_at')
+    list_display = ('id', 'book', 'batch_user', 'batch_due_date', 'hold_item', 'status', 'returned_at', 'created_at')
     list_filter = ('status', 'created_at', 'returned_at', 'loan__due_date')
     search_fields = (
         'id',
@@ -64,15 +64,15 @@ class LoanItemAdmin(admin.ModelAdmin):
         'loan__user__last_name'
     )
     date_hierarchy = 'created_at'
-    autocomplete_fields = ['book', 'loan', 'reservation']
+    autocomplete_fields = ['book', 'loan', 'hold_item']
     readonly_fields = ('created_at',)
     actions = ['mark_as_returned', 'mark_as_lost']
-    list_select_related = ['book', 'loan', 'loan__user', 'reservation']
+    list_select_related = ['book', 'loan', 'loan__user', 'hold_item']
     list_per_page = 20
     
     fieldsets = (
         ('Loan Item Information', {
-            'fields': ('book', 'loan', 'reservation', 'status', 'returned_at')
+            'fields': ('book', 'loan', 'hold_item', 'status', 'returned_at')
         }),
         ('Timestamps', {
             'fields': ('created_at',),

@@ -59,7 +59,7 @@
                         </span>
                     </p>
                     <p>
-                        <strong>Total Books:</strong> {{ batch.reservations.count }}
+                        <strong>Total Books:</strong> {{ batch.hold_items.count }}
                     </p>
                 </div>
             </div>
@@ -95,15 +95,15 @@
                                                {% if not has_available_books %}disabled{% endif %}>
                                     </th>
                                 {% endif %}
-                                <th>Book Title</th>
-                                <th>Author</th>
-                                <th>Publisher</th>
-                                <th>Stock Status</th>
-                                <th>Reservation Status</th>
+                                <th>ชื่อหนังสือ</th>
+                                <th>ผู้แต่ง</th>
+                                <th>สำนักพิมพ์</th>
+                                <th>สถานะสต็อก</th>
+                                <th>สถานะการจอง</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for reservation in batch.reservations.all %}
+                            {% for reservation in batch.hold_items.all %}
                                 <tr class="{% if reservation.book.available_quantity == 0 %}table-danger{% endif %}">
                                     {% if batch.status == 'pending' %}
                                         <td>

@@ -146,7 +146,7 @@ def dashboard_users_detail_view(request, user_id):
     from django.contrib.auth import get_user_model
     from django.utils import timezone
     from django.db.models import Count
-    from reservations.models import ReservationBatch, Reservation
+    from reservations.models import Hold, HoldItem
     from loans.models import Loan, LoanItem
     from fines.models import Fine
     from books.models import Category
@@ -154,9 +154,9 @@ def dashboard_users_detail_view(request, user_id):
     User = get_user_model()
     member = get_object_or_404(User, pk=user_id)
 
-    reservations_qs = ReservationBatch.objects.filter(user=member)
-    reservation_items_qs = Reservation.objects.filter(reservation_batch__user=member)
-    loan_batches_qs = Loan.objects.filter(user=member)
+    holds_qs = Hold.objects.filter(user=member)
+    hold_items_qs = HoldItem.objects.filter(reservation_batch__user=member)
+    loans_qs = Loan.objects.filter(user=member)
     loan_items_qs = LoanItem.objects.filter(loan__user=member)
     fines_qs = Fine.objects.filter(loan_item__loan__user=member)
 
@@ -175,24 +175,24 @@ def dashboard_users_detail_view(request, user_id):
     context = {
         'member': member,
         'stats': {
-            'total_reservations': reservations_qs.count(),
-            'total_reserved_books': reservation_items_qs.count(),
-            'pending_reservations': reservations_qs.filter(status='pending').count(),
-            'confirmed_reservations': reservations_qs.filter(status='confirmed').count(),
-            'completed_reservations': reservations_qs.filter(status='completed').count(),
-            'expired_reservations': reservations_qs.filter(status='expired').count(),
-            'cancelled_reservations': reservations_qs.filter(status='cancelled').count(),
-            'total_loan_batches': loan_batches_qs.count(),
+            'total_reservations': holds_qs.count(),
+            'total_reserved_books': hold_items_qs.count(),
+            'pending_reservations': holds_qs.filter(status='pending').count(),
+            'confirmed_reservations': holds_qs.filter(status='confirmed').count(),
+            'completed_reservations': holds_qs.filter(status='completed').count(),
+            'expired_reservations': holds_qs.filter(status='expired').count(),
+            'cancelled_reservations': holds_qs.filter(status='cancelled').count(),
+            'total_loan_batches': loans_qs.count(),
             'total_loan_books': loan_items_qs.count(),
             'returned_loan_books': loan_items_qs.filter(status='returned').count(),
             'lost_loan_books': loan_items_qs.filter(status='lost').count(),
             'active_loans': loan_items_qs.filter(status='borrowed').count(),
-            'active_loan_batches': loan_batches_qs.filter(status='active').count(),
+            'active_loan_batches': loans_qs.filter(status='active').count(),
             'overdue_loans': loan_items_qs.filter(
                 status='borrowed',
                 loan__due_date__lt=timezone.now(),
             ).count(),
-            'completed_loans': loan_batches_qs.filter(status='completed').count(),
+            'completed_loans': loans_qs.filter(status='completed').count(),
             'total_fines_amount': total_fines_amount,
             'total_fines_count': fines_qs.count(),
             'late_return_fines_amount': late_return_fines_amount,
@@ -232,7 +232,7 @@ def toggle_user_status_api(request, user_id):
         return JsonResponse({
             'success': True,
             'is_active': user.is_active,
-            'message': f'อัพเดทสถานะของ {user.username} เป็น {"เปิดใช้งาน" if user.is_active else "ปิดใช้งาน"}'
+            'message': f'อัพเดทสถานะของ {user.get_username()} เป็น {"เปิดใช้งาน" if user.is_active else "ปิดใช้งาน"}'
         })
     except User.DoesNotExist:
         return JsonResponse({'error': 'ไม่พบผู้ใช้'}, status=404)

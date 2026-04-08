@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from datetime import timedelta
 from decimal import Decimal
 from .models import Loan, LoanItem
-from reservations.models import ReservationBatch, Reservation
+from reservations.models import Hold
 from books.models import Book
 from fines.models import Fine
 
@@ -19,22 +19,15 @@ def my_loans_view(request):
     """
     Display user's loan history.
     """
-    loan_batches = Loan.objects.filter(
+    loans = Loan.objects.filter(
         user=request.user
     ).prefetch_related(
         'loan_items__book__authors',
         'loan_items__book__publisher'
     ).order_by('-created_at')
     
-    # Calculate if loans are overdue (only for active batches)
-    now = timezone.now()
-    for batch in loan_batches:
-        batch.is_overdue = batch.status == 'active' and batch.due_date and batch.due_date < now
-        for item in batch.loan_items.all():
-            item.is_overdue = batch.is_overdue and item.status == 'borrowed'
-    
     context = {
-        'loan_batches': loan_batches,
+        'loan_batches': loans,
     }
     
     return render(request, 'loans/my_loans.html', context)
@@ -53,21 +46,21 @@ def create_loan_view(request, batch_id):
     Create a loan from a confirmed reservation batch.
     This happens when user comes to pick up the books.
     """
-    reservation_batch = get_object_or_404(
-        ReservationBatch.objects.prefetch_related(
-            'reservations__book__authors',
-            'reservations__book__publisher'
+    hold = get_object_or_404(
+        Hold.objects.prefetch_related(
+            'hold_items__book__authors',
+            'hold_items__book__publisher'
         ),
         id=batch_id
     )
     
     # Validate that batch is confirmed
-    if reservation_batch.status != 'confirmed':
+    if hold.status != 'confirmed':
         messages.error(request, 'การจองนี้ยังไม่ได้รับการยืนยันหรือถูกยกเลิกแล้ว')
         return redirect('dashboard_reservations')
     
     # Check if expired
-    if reservation_batch.is_expired():
+    if hold.is_expired():
         messages.error(request, 'การจองนี้หมดอายุแล้ว กรุณายกเลิกการจองและให้ user จองใหม่')
         return redirect('dashboard_reservations')
     
@@ -82,20 +75,20 @@ def create_loan_view(request, batch_id):
             with transaction.atomic():
                 # Create loan batch
                 loan_batch = Loan.objects.create(
-                    user=reservation_batch.user,
+                    user=hold.user,
                     due_date=timezone.now() + timedelta(days=loan_days)
                 )
                 
-                # Create loan items from confirmed reservations
-                confirmed_reservations = reservation_batch.reservations.filter(
+                # Create loan items from confirmed hold items
+                confirmed_hold_items = hold.hold_items.filter(
                     status='confirmed'
                 )
                 
-                for reservation in confirmed_reservations:
+                for hold_item in confirmed_hold_items:
                     LoanItem.objects.create(
-                        book=reservation.book,
+                        book=hold_item.book,
                         loan=loan_batch,
-                        reservation=reservation,
+                        hold_item=hold_item,
                         status='borrowed'
                     )
                 
@@ -113,21 +106,21 @@ def create_loan_view(request, batch_id):
                             book.available_quantity -= 1
                             book.save()
                             
-                            # Create loan item (no reservation link for additional books)
+                            # Create loan item (no hold item link for additional books)
                             LoanItem.objects.create(
                                 book=book,
                                 loan=loan_batch,
-                                reservation=None,
+                                hold_item=None,
                                 status='borrowed'
                             )
                         except Book.DoesNotExist:
                             raise ValueError(f'ไม่พบหนังสือ ID: {book_id}')
                 
-                # Update reservation batch status to completed
-                reservation_batch.status = 'completed'
-                reservation_batch.save()
+                # Update hold status to completed
+                hold.status = 'completed'
+                hold.save()
                 
-                total_books = confirmed_reservations.count() + len(additional_book_ids)
+                total_books = confirmed_hold_items.count() + len(additional_book_ids)
                 messages.success(
                     request,
                     f'สร้างรายการยืมสำเร็จ! ยืมทั้งหมด {total_books} เล่ม กำหนดคืนวันที่ {loan_batch.due_date.strftime("%d/%m/%Y")}'
@@ -139,13 +132,13 @@ def create_loan_view(request, batch_id):
             return redirect('dashboard_reservations')
     
     # GET request - show confirmation page
-    confirmed_reservations = reservation_batch.reservations.filter(
+    confirmed_hold_items = hold.hold_items.filter(
         status='confirmed'
     )
     
     context = {
-        'reservation_batch': reservation_batch,
-        'reservations': confirmed_reservations,
+        'reservation_batch': hold,
+        'reservations': confirmed_hold_items,
     }
     
     return render(request, 'loans/create_loan.html', context)
@@ -180,13 +173,6 @@ def active_loans_view(request):
     
     loan_batches = loan_batches.order_by('-created_at')
     
-    # Calculate overdue status (only for active batches)
-    now = timezone.now()
-    for batch in loan_batches:
-        batch.is_overdue = batch.status == 'active' and batch.due_date and batch.due_date < now
-        for item in batch.loan_items.all():
-            item.is_overdue = batch.is_overdue and item.status == 'borrowed'
-    
     context = {
         'loan_batches': loan_batches,
         'status_filter': status_filter,
@@ -206,17 +192,10 @@ def loan_detail_view(request, batch_id):
         Loan.objects.select_related('user').prefetch_related(
             'loan_items__book__authors',
             'loan_items__book__publisher',
-            'loan_items__reservation__reservation_batch'
+            'loan_items__hold_item__hold'
         ),
         id=batch_id
     )
-    
-    # Calculate overdue (only for active batches)
-    now = timezone.now()
-    loan_batch.is_overdue = loan_batch.status == 'active' and loan_batch.due_date and loan_batch.due_date < now
-    
-    for item in loan_batch.loan_items.all():
-        item.is_overdue = loan_batch.is_overdue and item.status == 'borrowed'
     
     context = {
         'loan_batch': loan_batch,
@@ -426,7 +405,7 @@ def process_batch_return_view(request, batch_id):
     Process batch return/lost with immediate fine payment.
     Handles multiple books at once with damage/lost information.
     """
-    loan_batch = get_object_or_404(
+    loan = get_object_or_404(
         Loan.objects.select_related('user').prefetch_related(
             'loan_items__book'
         ),
@@ -442,7 +421,7 @@ def process_batch_return_view(request, batch_id):
                 lost_count = 0
                 
                 # Get all loan items that are still borrowed
-                borrowed_items = loan_batch.loan_items.filter(status='borrowed')
+                borrowed_items = loan.loan_items.filter(status='borrowed')
                 
                 for item in borrowed_items:
                     action = request.POST.get(f'action_{item.id}')
@@ -460,8 +439,8 @@ def process_batch_return_view(request, batch_id):
                         returned_count += 1
                         
                         # Check for late return fine
-                        if loan_batch.due_date and now.date() > loan_batch.due_date.date():
-                            days_late = (now.date() - loan_batch.due_date.date()).days
+                        if loan.due_date and now.date() > loan.due_date.date():
+                            days_late = (now.date() - loan.due_date.date()).days
                             late_fine_per_day = Decimal(getattr(settings, 'FINE_LATE_RETURN_PER_DAY', 10))
                             late_fine_amount = late_fine_per_day * days_late
                             
@@ -509,10 +488,10 @@ def process_batch_return_view(request, batch_id):
                         total_fine_amount += lost_fine_amount
                 
                 # Check if all items in batch are completed
-                all_completed = not loan_batch.loan_items.filter(status='borrowed').exists()
+                all_completed = not loan.loan_items.filter(status='borrowed').exists()
                 if all_completed:
-                    loan_batch.status = 'completed'
-                    loan_batch.save()
+                    loan.status = 'completed'
+                    loan.save()
                 
                 # Create success message
                 msg_parts = []
@@ -525,11 +504,11 @@ def process_batch_return_view(request, batch_id):
                 
                 messages.success(request, 'ดำเนินการสำเร็จ: ' + ', '.join(msg_parts))
                 
-                return redirect('loans:loan_detail', batch_id=loan_batch.id)
+                return redirect('loans:loan_detail', batch_id=loan.id)
                 
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
-            return redirect('loans:loan_detail', batch_id=loan_batch.id)
+            return redirect('loans:loan_detail', batch_id=loan.id)
     
     # GET request - should not reach here (handled in template)
-    return redirect('loans:loan_detail', batch_id=loan_batch.id)
+    return redirect('loans:loan_detail', batch_id=loan.id)

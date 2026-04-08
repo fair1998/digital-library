@@ -6,7 +6,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db import transaction
 from .models import Book, Category, Publisher , Author
-from reservations.models import ReservationBatch, Reservation
+from reservations.models import Hold, HoldItem
 from .cart import Cart
 from .forms import (
     DashboardAuthorForm,
@@ -92,7 +92,7 @@ def reserve_book_view(request, book_id):
 @login_required
 def add_to_cart_view(request, book_id):
     """
-    Add a book to the reservation cart.
+    Add a book to the hold item cart.
     """
     from django.http import JsonResponse
     
@@ -190,8 +190,8 @@ def remove_from_cart_view(request, book_id):
 @login_required
 def confirm_cart_view(request):
     """
-    Confirm reservation for all books in cart.
-    Creates a ReservationBatch with multiple Reservation items.
+    Confirm hold for all books in cart.
+    Creates a Hold with multiple HoldItem items.
     """
     if request.method != 'POST':
         messages.error(request, 'Invalid request method.')
@@ -221,19 +221,19 @@ def confirm_cart_view(request):
                 )
                 return redirect('books:view_cart')
             
-            # Create reservation batch
+            # Create hold
             # Note: expires_at will be set by admin when confirming
-            reservation_batch = ReservationBatch.objects.create(
+            holds = Hold.objects.create(
                 user=request.user,
                 status='pending',
                 expires_at=None  # Admin will set this when confirming
             )
             
-            # Create reservation items
+            # Create hold items
             for book in books:
-                Reservation.objects.create(
+                HoldItem.objects.create(
                     book=book,
-                    reservation_batch=reservation_batch,
+                    hold=holds,
                     status='pending'
                 )
             
@@ -374,7 +374,7 @@ def dashboard_book_delete_view(request, book_id):
 
     book = get_object_or_404(Book, id=book_id)
 
-    if book.reservations.exists() or book.loan_items.exists():
+    if book.hold_items.exists() or book.loan_items.exists():
         messages.error(
             request,
             f'ไม่สามารถลบ "{book.title}" ได้ เนื่องจากมีประวัติการจองหรือการยืมอยู่ในระบบ'
@@ -683,7 +683,7 @@ def dashboard_publisher_delete_view(request, publisher_id):
         return redirect('books:dashboard_publishers')
 
     publisher = get_object_or_404(Publisher, id=publisher_id)
-    if publisher.book_set.exists():
+    if publisher.books.exists():
         messages.error(request, f'ไม่สามารถลบสำนักพิมพ์ "{publisher.name}" ได้ เพราะมีหนังสือผูกอยู่')
         return redirect('books:dashboard_publishers')
 

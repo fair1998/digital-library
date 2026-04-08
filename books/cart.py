@@ -1,12 +1,12 @@
 """
-Shopping cart utilities for book reservations.
+Shopping cart utilities for book holds.
 Uses Django session to store cart items before confirmation.
 """
 
 
 class Cart:
     """
-    Shopping cart for book reservations stored in session.
+    Shopping cart for book holds stored in session.
     """
     
     def __init__(self, request):
