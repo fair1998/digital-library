@@ -42,6 +42,11 @@
                     {% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label">ISBN</label>
+                    {{ form.isbn }}
+                    {% for error in form.isbn.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6">
                     <label class="form-label">สำนักพิมพ์</label>
                     {{ form.publisher }}
                     {% for error in form.publisher.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}

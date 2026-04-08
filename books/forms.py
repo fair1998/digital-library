@@ -6,6 +6,7 @@ class DashboardBookForm(forms.ModelForm):
         model = Book
         fields = [
             'title',
+            'isbn',
             'description',
             'image_url',
             'total_quantity',
@@ -17,6 +18,7 @@ class DashboardBookForm(forms.ModelForm):
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ชื่อหนังสือ'}),
+            'isbn': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'เช่น 9786160000000'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'รายละเอียดหนังสือ'}),
             'image_url': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'total_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),

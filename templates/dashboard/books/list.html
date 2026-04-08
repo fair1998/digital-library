@@ -33,7 +33,7 @@
                     <input type="text"
                            name="search"
                            class="form-control"
-                           placeholder="ชื่อหนังสือ..."
+                           placeholder="ชื่อหนังสือ... , ISBN..."
                            value="{{ request.GET.search }}">
                 </div>
                 <div class="col-md-2">
@@ -108,6 +108,7 @@
                             <tr>
                                 <th>ปก</th>
                                 <th>ชื่อหนังสือ</th>
+                                <th>ISBN</th>
                                 <th>ผู้แต่ง</th>
                                 <th>หมวดหมู่</th>
                                 <th>สำนักพิมพ์</th>
@@ -133,8 +134,8 @@
                                     </td>
                                     <td>
                                         <strong>{{ book.title }}</strong>
-                                        <div class="text-muted small">ID: {{ book.id }}</div>
                                     </td>
+                                    <td>{{ book.isbn|default:'-' }}</td>
                                     <td>
                                         {% for author in book.authors.all %}
                                             <span class="badge bg-secondary">{{ author.name }}</span>

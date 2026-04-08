@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Q
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -18,7 +19,10 @@ def book_list_view(request):
     # Search by title
     search_query = request.GET.get('search', '')
     if search_query:
-        books = books.filter(title__icontains=search_query)
+        books = books.filter(
+            Q(title__icontains=search_query) |
+            Q(isbn__icontains=search_query)
+        )
     
     # Filter by category
     category_id = request.GET.get('category', '')
@@ -251,7 +255,10 @@ def dashboard_books_view(request):
 
     search_query = request.GET.get('search', '').strip()
     if search_query:
-        books = books.filter(title__icontains=search_query)
+        books = books.filter(
+            Q(title__icontains=search_query) |
+            Q(isbn__icontains=search_query)
+        )
 
     category_id = request.GET.get('category', '').strip()
     if category_id:

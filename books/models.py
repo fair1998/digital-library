@@ -53,6 +53,12 @@ class Publisher(models.Model):
 class Book(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
+    isbn = models.CharField(
+        max_length=13,
+        unique=True,
+        null=False,
+        blank=False,
+    )
     description = models.TextField(null=True, blank=True)
     # Stored as a file path (Django will manage actual storage backend; later can be swapped to S3).
     image_url = models.ImageField(
