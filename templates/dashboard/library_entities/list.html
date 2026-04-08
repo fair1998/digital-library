@@ -5,6 +5,19 @@
 {% block page_title %}
     <i class="bi {{ entity_icon }}"></i> จัดการ{{ entity_label }}
 {% endblock page_title %}
+{% block extra_css %}
+    <style>
+        .col-books-count {
+            width: 180px;
+        }
+        .col-created-at {
+            width: 220px;
+        }
+        .col-actions {
+            width: 170px;
+        }
+    </style>
+{% endblock extra_css %}
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0">
@@ -75,9 +88,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th>ชื่อ</th>
-                                <th class="text-center" style="width: 180px;">จำนวนหนังสือ</th>
-                                <th style="width: 220px;">วันที่สร้าง</th>
-                                <th class="text-center" style="width: 170px;">จัดการ</th>
+                                <th class="text-center col-books-count">จำนวนหนังสือ</th>
+                                <th class="col-created-at">วันที่สร้าง</th>
+                                <th class="text-center col-actions">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody>

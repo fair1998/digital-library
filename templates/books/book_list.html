@@ -1,5 +1,7 @@
-{% extends 'base.html' %}
-{% block title %}รายการหนังสือ - Digital Library{% endblock %}
+{% extends "base.html" %}
+{% block title %}
+    รายการหนังสือ - Digital Library
+{% endblock title %}
 {% block content %}
     <style>
     .toast-container {
@@ -7,6 +9,12 @@
         top: 80px;
         right: 20px;
         z-index: 1050;
+    }
+    .book-placeholder {
+        height: 300px;
+    }
+    .book-placeholder-icon {
+        font-size: 4rem;
     }
     </style>
     <div class="container mt-4">
@@ -74,14 +82,13 @@
                         <div class="card h-100">
                             {% if book.image_url %}
                                 <img src="{{ book.image_url.url }}"
-                                     class="card-img-top"
-                                     alt="{{ book.title }}"
-                                     style="height: 300px;
-                                            object-fit: cover">
+                                     width="100%"
+                                     height="300"
+                                     class="card-img-top object-fit-cover"
+                                     alt="{{ book.title }}">
                             {% else %}
-                                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center"
-                                     style="height: 300px">
-                                    <i class="bi bi-book" style="font-size: 4rem; color: white;"></i>
+                                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center book-placeholder">
+                                    <i class="bi bi-book text-white book-placeholder-icon"></i>
                                 </div>
                             {% endif %}
                             <div class="card-body d-flex flex-column">
@@ -251,4 +258,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
     </script>
-{% endblock %}
+{% endblock content %}

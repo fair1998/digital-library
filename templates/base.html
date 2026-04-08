@@ -3,8 +3,14 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description"
+              content="ระบบห้องสมุดดิจิทัลที่ช่วยให้คุณค้นหา จอง และยืมหนังสือออนไลน์ได้อย่างสะดวก รวดเร็ว พร้อมจัดการรายการยืมคืนได้ครบในที่เดียว">
+        <meta name="keywords"
+              content="ห้องสมุดดิจิทัล, ยืมหนังสือออนไลน์, จองหนังสือ, ระบบห้องสมุด, library system, digital library">
         <title>
-            {% block title %}Digital Library System{% endblock %}
+            {% block title %}
+                ระบบห้องสมุดดิจิทัล | ค้นหา จอง และยืมหนังสือออนไลน์
+            {% endblock title %}
         </title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
               rel="stylesheet"
@@ -28,7 +34,8 @@
             margin-top: auto;
         }
         </style>
-        {% block extra_css %}{% endblock %}
+        {% block extra_css %}
+        {% endblock extra_css %}
     </head>
     <body>
         <!-- Navigation Bar -->
@@ -138,20 +145,21 @@
         {% endif %}
         <!-- Main Content -->
         <main class="py-4">
-            {% block content %}{% endblock %}
+            {% block content %}
+            {% endblock content %}
         </main>
         <!-- Global Toast Notification -->
-        {% include 'includes/toast.html' %}
+        {% include "includes/toast.html" %}
         <!-- Footer -->
         <footer class="bg-light py-4 mt-5">
             <div class="container text-center text-muted">
-                <p class="mb-0">&copy; 2026 Digital Library System. All rights reserved.</p>
+                <p class="mb-0">© 2026 Digital Library System. All rights reserved.</p>
             </div>
         </footer>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
                 integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
                 crossorigin="anonymous"></script>
         {% block extra_js %}
-        {% endblock %}
+        {% endblock extra_js %}
     </body>
 </html>

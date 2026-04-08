@@ -1,5 +1,7 @@
-{% extends 'base_admin.html' %}
-{% block title %}Loan Detail - รายละเอียดการยืม{% endblock %}
+{% extends "base_admin.html" %}
+{% block title %}
+    Loan Detail - รายละเอียดการยืม
+{% endblock title %}
 {% block content %}
     <div class="container py-4">
         <div class="row mb-4">
@@ -251,7 +253,7 @@
                                         <strong>หนังสือมีความเสียหาย</strong>
                                     </label>
                                 </div>
-                                <div id="damageFields{{ item.id }}" style="display: none;">
+                                <div id="damageFields{{ item.id }}" class="d-none">
                                     <div class="mb-3">
                                         <label for="damageAmount{{ item.id }}" class="form-label">
                                             จำนวนค่าปรับ (บาท) <span class="text-danger">*</span>
@@ -363,4 +365,4 @@
             }
         }
     </script>
-{% endblock %}
+{% endblock content %}
