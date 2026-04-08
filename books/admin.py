@@ -96,7 +96,6 @@ class BookAdmin(admin.ModelAdmin):
         "author_names",
         "category_names",
         "created_at",
-        "updated_at",
     )
     search_fields = (
         "id",
@@ -121,7 +120,7 @@ class BookAdmin(admin.ModelAdmin):
             'fields': ('total_quantity', 'available_quantity')
         }),
         ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('created_at',),
             'classes': ('collapse',)
         }),
     )
@@ -130,7 +129,7 @@ class BookAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         return queryset.prefetch_related("authors", "categories")
 
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("created_at",)
 
     @admin.display(description="Cover")
     def cover_preview(self, obj):
