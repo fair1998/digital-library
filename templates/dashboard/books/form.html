@@ -1,0 +1,129 @@
+{% extends "base_admin.html" %}
+{% block title %}
+    เพิ่ม/แก้ไขหนังสือ
+{% endblock title %}
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css">
+    <style>
+    .book-cover-preview {
+        width: 96px;
+        height: 128px;
+        object-fit: cover;
+    }
+    .ts-wrapper {
+        min-width: 0;
+    }
+    .ts-control {
+        min-height: 42px;
+    }
+    </style>
+{% endblock extra_css %}
+{% block page_title %}
+    <i class="bi bi-book"></i> {{ form_title|default:'เพิ่มหนังสือ' }}
+{% endblock page_title %}
+{% block content %}
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" class="row g-3">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="col-12">
+                        <div class="alert alert-danger mb-0">
+                            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="col-md-6">
+                    <label class="form-label">
+                        ชื่อหนังสือ <span class="text-danger">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">สำนักพิมพ์</label>
+                    {{ form.publisher }}
+                    {% for error in form.publisher.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">รายละเอียด</label>
+                    {{ form.description }}
+                    {% for error in form.description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">ปีที่พิมพ์</label>
+                    {{ form.publish_year }}
+                    {% for error in form.publish_year.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">
+                        จำนวนทั้งหมด <span class="text-danger">*</span>
+                    </label>
+                    {{ form.total_quantity }}
+                    {% for error in form.total_quantity.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">
+                        พร้อมให้ยืม <span class="text-danger">*</span>
+                    </label>
+                    {{ form.available_quantity }}
+                    {% for error in form.available_quantity.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">ผู้แต่ง</label>
+                    <small class="text-muted d-block mb-1">พิมพ์เพื่อค้นหา หรือเลือกจากรายการ</small>
+                    {{ form.authors }}
+                    {% for error in form.authors.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">หมวดหมู่</label>
+                    <small class="text-muted d-block mb-1">พิมพ์เพื่อค้นหา หรือเลือกจากรายการ</small>
+                    {{ form.categories }}
+                    {% for error in form.categories.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">รูปปกหนังสือ</label>
+                    {{ form.image_url }}
+                    {% for error in form.image_url.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    {% if book and book.image_url %}
+                        <div class="mt-2">
+                            <img src="{{ book.image_url.url }}"
+                                 alt="cover"
+                                 class="rounded border book-cover-preview"
+                                 width="96"
+                                 height="128">
+                            <div class="small text-muted">ปกปัจจุบัน</div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> บันทึก
+                    </button>
+                    <a href="{% url 'books:dashboard_books' %}"
+                       class="btn btn-secondary ms-2">ยกเลิก</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        new TomSelect('#id_authors', {
+            plugins: ['remove_button'],
+            placeholder: 'เลือกหรือค้นหาผู้แต่ง...',
+            maxOptions: null,
+            create: false,
+        });
+        new TomSelect('#id_categories', {
+            plugins: ['remove_button'],
+            placeholder: 'เลือกหรือค้นหาหมวดหมู่...',
+            maxOptions: null,
+            create: false,
+        });
+    });
+    </script>
+{% endblock extra_js %}

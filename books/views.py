@@ -1,15 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db import transaction
-from django.utils import timezone
-from datetime import timedelta
 from .models import Book, Category, Publisher
 from reservations.models import ReservationBatch, Reservation
 from .cart import Cart
-
+from .forms import DashboardBookForm
 
 def book_list_view(request):
     """
@@ -243,3 +241,128 @@ def confirm_cart_view(request):
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาดในการจองหนังสือ: {str(e)}')
         return redirect('books:view_cart')
+
+@staff_member_required
+def dashboard_books_view(request):
+    """
+    Admin dashboard view for managing books.
+    """
+    books = Book.objects.all().select_related('publisher').prefetch_related('authors', 'categories')
+
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        books = books.filter(title__icontains=search_query)
+
+    category_id = request.GET.get('category', '').strip()
+    if category_id:
+        books = books.filter(categories__id=category_id)
+
+    publisher_id = request.GET.get('publisher', '').strip()
+    if publisher_id:
+        books = books.filter(publisher__id=publisher_id)
+
+    sort_by = request.GET.get('sort', 'title').strip()
+    allowed_sorts = {
+        'title': 'title',
+        '-title': '-title',
+        '-created_at': '-created_at',
+        'created_at': 'created_at',
+        '-available_quantity': '-available_quantity',
+        'available_quantity': 'available_quantity',
+        '-total_quantity': '-total_quantity',
+        'total_quantity': 'total_quantity',
+        '-publish_year': '-publish_year',
+        'publish_year': 'publish_year',
+    }
+    sort_order = allowed_sorts.get(sort_by, 'title')
+
+    books = books.order_by(sort_order).distinct()
+
+    paginator = Paginator(books, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    categories = Category.objects.all().order_by('name')
+    publishers = Publisher.objects.all().order_by('name')
+    
+    context = {
+        'page_obj': page_obj,
+        'categories': categories,
+        'publishers': publishers,
+        'search_query': search_query,
+        'selected_category': category_id,
+        'selected_publisher': publisher_id,
+        'sort_by': sort_by,
+    }
+    
+    return render(request, 'dashboard/books/list.html', context)
+
+
+@staff_member_required
+def dashboard_book_form_view(request):
+    """
+    Admin dashboard view for creating a new book.
+    """
+    if request.method == 'POST':
+        form = DashboardBookForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'เพิ่มหนังสือเรียบร้อยแล้ว')
+            return redirect('books:dashboard_books')
+    else:
+        form = DashboardBookForm()
+
+    context = {
+        'form': form,
+        'form_title': 'เพิ่มหนังสือ',
+        'book': None,
+    }
+    return render(request, 'dashboard/books/form.html', context)
+
+
+@staff_member_required
+def dashboard_books_form_id_view(request, book_id):
+    """
+    Admin dashboard view for editing an existing book.
+    """
+    book = get_object_or_404(Book, id=book_id)
+
+    if request.method == 'POST':
+        form = DashboardBookForm(request.POST, request.FILES, instance=book)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'บันทึกข้อมูลหนังสือเรียบร้อยแล้ว')
+            return redirect('books:dashboard_books')
+    else:
+        form = DashboardBookForm(instance=book)
+
+    context = {
+        'form': form,
+        'form_title': 'แก้ไขหนังสือ',
+        'book': book,
+    }
+    return render(request, 'dashboard/books/form.html', context)
+
+
+@staff_member_required
+def dashboard_book_delete_view(request, book_id):
+    """
+    Admin dashboard action for deleting a book.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('books:dashboard_books')
+
+    book = get_object_or_404(Book, id=book_id)
+
+    if book.reservations.exists() or book.loan_items.exists():
+        messages.error(
+            request,
+            f'ไม่สามารถลบ "{book.title}" ได้ เนื่องจากมีประวัติการจองหรือการยืมอยู่ในระบบ'
+        )
+        return redirect('books:dashboard_books')
+
+    title = book.title
+    book.delete()
+    messages.success(request, f'ลบหนังสือ "{title}" เรียบร้อยแล้ว')
+    return redirect('books:dashboard_books')

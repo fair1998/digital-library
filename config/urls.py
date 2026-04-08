@@ -29,7 +29,7 @@ urlpatterns = [
 
     path('', home_view, name='home'),
     path('', include('users.urls')),
-    path('books/', include('books.urls')),
+    path('', include('books.urls')),
     path('reservations/', include('reservations.urls')),
     path('loans/', include('loans.urls')),
     path('my-fines/', include('fines.urls')),

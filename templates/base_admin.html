@@ -103,6 +103,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if 'dashboard/books' in request.path %}active{% endif %}"
+                           href="{% url 'books:dashboard_books' %}">
+                            <i class="bi bi-book"></i> หนังสือ
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if 'dashboard/users' in request.path %}active{% endif %}"
                            href="{% url 'users:dashboard_users' %}">
                             <i class="bi bi-people"></i> สมาชิก
