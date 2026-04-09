@@ -3,45 +3,50 @@
     เข้าสู่ระบบ
 {% endblock title %}
 {% block content %}
-    <div class="container">
+    <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-5">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <h4 class="mb-0 fw-semibold">
                             <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
                         </h4>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <form method="post" novalidate>
                             {% csrf_token %}
                             {% if form.non_field_errors %}
-                                <div class="alert alert-danger" role="alert">
+                                <div class="alert alert-danger border-0" role="alert">
+                                    <i class="bi bi-x-circle-fill me-2"></i>
                                     {% for error in form.non_field_errors %}{{ error }}{% endfor %}
                                 </div>
                             {% endif %}
                             <!-- Username -->
                             <div class="mb-3">
-                                <label for="{{ form.username.id_for_label }}" class="form-label">ชื่อผู้ใช้</label>
+                                <label for="{{ form.username.id_for_label }}" class="form-label fw-medium">
+                                    <i class="bi bi-person"></i> ชื่อผู้ใช้
+                                </label>
                                 {{ form.username }}
                                 {% if form.username.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.username.errors %}<i class="bi bi-exclamation-circle"></i> {{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
                             </div>
                             <!-- Password -->
                             <div class="mb-3">
-                                <label for="{{ form.password.id_for_label }}" class="form-label">รหัสผ่าน</label>
+                                <label for="{{ form.password.id_for_label }}" class="form-label fw-medium">
+                                    <i class="bi bi-lock"></i> รหัสผ่าน
+                                </label>
                                 {{ form.password }}
                                 {% if form.password.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.password.errors %}<i class="bi bi-exclamation-circle"></i> {{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
                             </div>
                             <!-- Remember Me -->
-                            <div class="mb-3 form-check">
+                            <div class="mb-4 form-check">
                                 <input type="checkbox"
                                        class="form-check-input"
                                        id="rememberMe"
@@ -49,17 +54,18 @@
                                 <label class="form-check-label" for="rememberMe">จดจำฉันไว้</label>
                             </div>
                             <!-- Submit Button -->
-                            <div class="d-grid gap-2">
+                            <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
                                 </button>
                             </div>
                         </form>
                     </div>
-                    <div class="card-footer text-center">
-                        <p class="mb-0">
+                    <div class="card-footer text-center bg-light py-3">
+                        <p class="mb-0 text-muted">
                             ยังไม่มีบัญชี?
-                            <a href="{% url 'users:register' %}">ลงทะเบียนที่นี่</a>
+                            <a href="{% url 'users:register' %}"
+                               class="text-decoration-none fw-medium">ลงทะเบียนที่นี่</a>
                         </p>
                     </div>
                 </div>

@@ -12,22 +12,23 @@
         width: 60px;
         height: 80px;
     }
-    .line-clamp-3 {
+    .line-clamp-2 {
         display: -webkit-box;
         -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 2;
         overflow: hidden;
     }
     </style>
 {% endblock extra_css %}
 {% block content %}
     <div class="container mt-4">
-        <div class="row">
+        <!-- Breadcrumb -->
+        <div class="row mb-3">
             <div class="col">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <a href="{% url 'home' %}">หน้าแรก</a>
+                            <a href="{% url 'home' %}"><i class="bi bi-house-fill"></i> หน้าแรก</a>
                         </li>
                         <li class="breadcrumb-item">
                             <a href="{% url 'books:book_list' %}">รายการหนังสือ</a>
@@ -37,32 +38,35 @@
                 </nav>
             </div>
         </div>
+        <!-- Page Header -->
         <div class="row mb-4">
             <div class="col">
-                <h1>
-                    <i class="bi bi-list-check"></i> รายการจองหนังสือ
+                <h1 class="fw-bold">
+                    <i class="bi bi-list-check text-primary"></i> รายการจองหนังสือ
                 </h1>
-                <p class="text-muted">คุณมีหนังสือ {{ cart_count }} เล่มในรายการจอง</p>
+                <p class="text-muted">
+                    คุณมีหนังสือ <strong>{{ cart_count }} เล่ม</strong> ในรายการจอง
+                </p>
             </div>
         </div>
         {% if cart_items %}
-            <div class="row">
+            <div class="row g-4">
                 <div class="col-lg-8">
                     <!-- Cart Items -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-primary text-white py-3">
                             <h5 class="mb-0">
                                 <i class="bi bi-list-ul"></i> รายการหนังสือที่เลือก
                             </h5>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                                <table class="table table-hover mb-0 align-middle">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>ปก</th>
+                                            <th style="width: 100px;">ปก</th>
                                             <th>ชื่อหนังสือ</th>
-                                            <th>จัดการ</th>
+                                            <th style="width: 100px;" class="text-center">จัดการ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -83,12 +87,19 @@
                                                 </td>
                                                 <td>
                                                     <a href="{% url 'books:book_detail' item.book.id %}"
-                                                       class="text-decoration-none">
-                                                        <strong>{{ item.book.title }}</strong>
+                                                       class="text-decoration-none fw-semibold mb-1 d-block">
+                                                        {{ item.book.title }}
                                                     </a>
-                                                    <p class="line-clamp-3 mb-0 text-muted">{{ item.book.description }}</p>
+                                                    <small class="text-muted line-clamp-2">{{ item.book.description }}</small>
+                                                    {% if not item.is_available %}
+                                                        <div class="mt-1">
+                                                            <span class="badge bg-danger">
+                                                                <i class="bi bi-exclamation-triangle"></i> ไม่มีให้ยืม
+                                                            </span>
+                                                        </div>
+                                                    {% endif %}
                                                 </td>
-                                                <td>
+                                                <td class="text-center">
                                                     <form method="post"
                                                           action="{% url 'books:remove_from_cart' item.book.id %}"
                                                           class="d-inline">
@@ -110,20 +121,20 @@
                 </div>
                 <div class="col-lg-4">
                     <!-- Summary Card -->
-                    <div class="card mb-4 sticky-top">
-                        <div class="card-header bg-info text-white">
+                    <div class="card shadow-sm border-0 mb-4 sticky-top">
+                        <div class="card-header bg-info text-white py-3">
                             <h5 class="mb-0">
                                 <i class="bi bi-clipboard-check"></i> สรุปการจอง
                             </h5>
                         </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>จำนวนหนังสือ:</span>
-                                    <strong>{{ cart_count }} เล่ม</strong>
+                        <div class="card-body p-4">
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-muted">จำนวนหนังสือ:</span>
+                                    <strong class="fs-5">{{ cart_count }} เล่ม</strong>
                                 </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>ระยะเวลาจอง:</span>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">ระยะเวลาจอง:</span>
                                     <strong>3 วัน</strong>
                                 </div>
                             </div>
@@ -131,46 +142,54 @@
                             {% if has_unavailable %}
                                 <div class="alert alert-warning mb-3">
                                     <i class="bi bi-exclamation-triangle"></i>
-                                    <small>มีหนังสือบางเล่มไม่มีให้ยืม กรุณาลบออกก่อนยืนยันการจอง</small>
+                                    <small class="d-block mt-1">
+                                        <strong>มีหนังสือบางเล่มไม่มีให้ยืม</strong>
+                                        <br>
+                                        กรุณาลบออกก่อนยืนยันการจอง
+                                    </small>
                                 </div>
                             {% endif %}
-                            <div class="alert alert-info mb-3">
-                                <i class="bi bi-info-circle"></i>
-                                <small>
-                                    <strong>หมายเหตุ:</strong>
-                                    <ul class="mb-0 mt-2">
-                                        <li>การจองจะหมดอายุภายใน 3 วัน</li>
-                                        <li>รอการยืนยันจากเจ้าหน้าที่</li>
-                                        <li>ตรวจสอบสถานะที่หน้า "การจองของฉัน"</li>
-                                    </ul>
-                                </small>
+                            <div class="alert alert-info mb-4">
+                                <div class="d-flex">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <small>
+                                        <strong>หมายเหตุ:</strong>
+                                        <ul class="mb-0 mt-2 ps-3">
+                                            <li>การจองจะหมดอายุภายใน 3 วัน</li>
+                                            <li>รอการยืนยันจากเจ้าหน้าที่</li>
+                                            <li>ตรวจสอบสถานะที่หน้า "การจองของฉัน"</li>
+                                        </ul>
+                                    </small>
+                                </div>
                             </div>
-                            <form method="post" action="{% url 'books:confirm_cart' %}">
-                                {% csrf_token %}
-                                <button type="submit"
-                                        class="btn btn-primary w-100 btn-lg"
-                                        {% if has_unavailable %}disabled{% endif %}>
-                                    <i class="bi bi-check-circle"></i> ยืนยันการจอง
-                                </button>
-                            </form>
-                            <a href="{% url 'books:book_list' %}"
-                               class="btn btn-outline-secondary w-100 mt-2">
-                                <i class="bi bi-arrow-left"></i> เลือกหนังสือเพิ่ม
-                            </a>
+                            <div class="d-grid gap-2">
+                                <form method="post" action="{% url 'books:confirm_cart' %}">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="btn btn-primary w-100 btn-lg"
+                                            {% if has_unavailable %}disabled{% endif %}>
+                                        <i class="bi bi-check-circle"></i> ยืนยันการจอง
+                                    </button>
+                                </form>
+                                <a href="{% url 'books:book_list' %}"
+                                   class="btn btn-outline-secondary w-100">
+                                    <i class="bi bi-arrow-left"></i> เลือกหนังสือเพิ่ม
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         {% else %}
             <!-- Empty Cart -->
-            <div class="row">
-                <div class="col-md-6 offset-md-3">
-                    <div class="card text-center">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card text-center shadow-sm border-0">
                         <div class="card-body py-5">
-                            <i class="bi bi-clipboard-x text-secondary display-4"></i>
-                            <h3 class="mt-3">รายการจองของคุณว่างเปล่า</h3>
+                            <i class="bi bi-clipboard-x text-muted" style="font-size: 5rem;"></i>
+                            <h3 class="mt-4 mb-3 fw-semibold">รายการจองของคุณว่างเปล่า</h3>
                             <p class="text-muted mb-4">ยังไม่มีหนังสือในรายการจอง เริ่มเลือกหนังสือที่คุณสนใจเลย!</p>
-                            <a href="{% url 'books:book_list' %}" class="btn btn-primary">
+                            <a href="{% url 'books:book_list' %}" class="btn btn-primary btn-lg">
                                 <i class="bi bi-search"></i> เรียกดูหนังสือ
                             </a>
                         </div>

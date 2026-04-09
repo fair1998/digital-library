@@ -4,9 +4,12 @@
 {% endblock title %}
 {% block content %}
     <div class="container mt-4">
+        <!-- Page Header -->
         <div class="row mb-4">
             <div class="col">
-                <h1>รายการจองของฉัน</h1>
+                <h1 class="fw-bold">
+                    <i class="bi bi-bookmark-fill text-primary"></i> รายการจองของฉัน
+                </h1>
                 <p class="text-muted">ประวัติการจองหนังสือทั้งหมดของคุณ</p>
             </div>
         </div>
@@ -14,12 +17,11 @@
             <div class="row">
                 <div class="col">
                     {% for hold in holds %}
-                        <div class="card mb-3">
-                            <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center py-3 bg-light">
                                 <div>
-                                    <h5 class="mb-0">
-                                        <i class="bi bi-bookmark-fill"></i>
-                                        การจอง #{{ hold.id }}
+                                    <h5 class="mb-1 fw-semibold">
+                                        <i class="bi bi-bookmark-fill"></i> การจอง #{{ hold.id }}
                                     </h5>
                                     <small class="text-muted">
                                         <i class="bi bi-calendar"></i> วันที่จอง: {{ hold.created_at|date:"d/m/Y H:i" }}
@@ -27,44 +29,67 @@
                                 </div>
                                 <div>
                                     {% if hold.status == 'pending' %}
-                                        <span class="badge bg-info fs-6">รอดำเนินการ</span>
+                                        <span class="badge bg-info fs-6">
+                                            <i class="bi bi-clock"></i> รอดำเนินการ
+                                        </span>
                                     {% elif hold.status == 'confirmed' %}
                                         {% if hold.is_expired %}
-                                            <span class="badge bg-warning text-dark fs-6">กำลังจะหมดอายุ</span>
+                                            <span class="badge bg-warning text-dark fs-6">
+                                                <i class="bi bi-exclamation-triangle"></i> กำลังจะหมดอายุ
+                                            </span>
                                         {% else %}
-                                            <span class="badge bg-success fs-6">ยืนยันแล้ว</span>
+                                            <span class="badge bg-success fs-6">
+                                                <i class="bi bi-check-circle"></i> ยืนยันแล้ว
+                                            </span>
                                         {% endif %}
                                     {% elif hold.status == 'completed' %}
-                                        <span class="badge bg-primary fs-6">รับหนังสือแล้ว</span>
+                                        <span class="badge bg-primary fs-6">
+                                            <i class="bi bi-book"></i> รับหนังสือแล้ว
+                                        </span>
                                     {% elif hold.status == 'expired' %}
-                                        <span class="badge bg-danger fs-6">หมดอายุ (ไม่มารับ)</span>
+                                        <span class="badge bg-danger fs-6">
+                                            <i class="bi bi-x-circle"></i> หมดอายุ
+                                        </span>
                                     {% elif hold.status == 'cancelled' %}
-                                        <span class="badge bg-secondary fs-6">ยกเลิกแล้ว</span>
+                                        <span class="badge bg-secondary fs-6">
+                                            <i class="bi bi-x"></i> ยกเลิกแล้ว
+                                        </span>
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-4">
                                 <!-- Expiry Information -->
                                 {% if hold.expires_at %}
-                                    <div class="mb-3">
-                                        <strong>รับหนังสือภายในวันที่ถีง:</strong>
-                                        <span class="{% if hold.status == 'confirmed' and hold.is_expired %}text-danger fw-bold{% endif %}">
-                                            {{ hold.expires_at|date:"d/m/Y H:i" }}
-                                        </span>
-                                        {% if hold.status == 'confirmed' and hold.is_expired %}
-                                            <span class="badge bg-danger ms-2">หมดเวลารับหนังสือแล้ว!</span>
-                                        {% elif hold.status == 'completed' %}
-                                            <span class="badge bg-primary ms-2">รับหนังสือเรียบร้อยแล้ว</span>
-                                        {% elif hold.status == 'expired' %}
-                                            <span class="badge bg-secondary ms-2">หมดอายุ (ถูกยกเลิก)</span>
-                                        {% endif %}
+                                    <div class="alert {% if hold.status == 'confirmed' and hold.is_expired %}alert-warning{% elif hold.status == 'confirmed' %}alert-info{% else %}alert-secondary{% endif %} border-0 mb-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi {% if hold.status == 'confirmed' and hold.is_expired %}bi-exclamation-triangle-fill{% else %}bi-calendar-check{% endif %} fs-4 me-3"></i>
+                                            <div>
+                                                <strong>รับหนังสือภายในวันที่:</strong>
+                                                <span class="{% if hold.status == 'confirmed' and hold.is_expired %}fw-bold text-danger{% endif %}">
+                                                    {{ hold.expires_at|date:"d/m/Y H:i" }}
+                                                </span>
+                                                {% if hold.status == 'confirmed' and hold.is_expired %}
+                                                    <span class="badge bg-danger ms-2">
+                                                        <i class="bi bi-exclamation"></i> หมดเวลารับหนังสือแล้ว!
+                                                    </span>
+                                                {% elif hold.status == 'completed' %}
+                                                    <span class="badge bg-primary ms-2">
+                                                        <i class="bi bi-check"></i> รับหนังสือเรียบร้อยแล้ว
+                                                    </span>
+                                                {% elif hold.status == 'expired' %}
+                                                    <span class="badge bg-secondary ms-2">หมดอายุ (ถูกยกเลิก)</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
                                     </div>
                                 {% endif %}
                                 <!-- Reserved Books -->
-                                <h6 class="mb-3">รายการหนังสือที่จอง ({{ hold.hold_items.count }} เล่ม)</h6>
+                                <h6 class="fw-semibold mb-3">
+                                    <i class="bi bi-book-fill"></i> รายการหนังสือที่จอง ({{ hold.hold_items.count }} เล่ม)
+                                </h6>
                                 <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
                                             <tr>
                                                 <th>หนังสือ</th>
                                                 <th>ผู้แต่ง</th>
@@ -77,9 +102,9 @@
                                                 <tr>
                                                     <td>
                                                         <a href="{% url 'books:book_detail' item.book.id %}"
-                                                           class="text-decoration-none">{{ item.book.title }}</a>
+                                                           class="text-decoration-none fw-medium">{{ item.book.title }}</a>
                                                     </td>
-                                                    <td>
+                                                    <td class="text-muted">
                                                         {% if item.book.authors.all %}
                                                             {% for author in item.book.authors.all %}
                                                                 {{ author.name }}
@@ -89,14 +114,20 @@
                                                             -
                                                         {% endif %}
                                                     </td>
-                                                    <td>{{ item.book.publisher.name|default:"-" }}</td>
+                                                    <td class="text-muted">{{ item.book.publisher.name|default:"-" }}</td>
                                                     <td>
                                                         {% if item.status == 'pending' %}
-                                                            <span class="badge bg-info">รอดำเนินการ</span>
+                                                            <span class="badge bg-info">
+                                                                <i class="bi bi-clock"></i> รอดำเนินการ
+                                                            </span>
                                                         {% elif item.status == 'confirmed' %}
-                                                            <span class="badge bg-success">ยืนยันแล้ว</span>
+                                                            <span class="badge bg-success">
+                                                                <i class="bi bi-check-circle"></i> ยืนยันแล้ว
+                                                            </span>
                                                         {% elif item.status == 'cancelled' %}
-                                                            <span class="badge bg-secondary">ยกเลิกแล้ว</span>
+                                                            <span class="badge bg-secondary">
+                                                                <i class="bi bi-x"></i> ยกเลิกแล้ว
+                                                            </span>
                                                         {% endif %}
                                                     </td>
                                                 </tr>
@@ -106,17 +137,17 @@
                                 </div>
                                 <!-- Cancel Button for Pending Holds -->
                                 {% if hold.can_be_cancelled_by_user %}
-                                    <div class="mt-3">
+                                    <div class="mt-4 d-flex align-items-center gap-3">
                                         <form method="post"
                                               action="{% url 'holds:cancel_hold' hold.id %}"
                                               class="d-inline"
                                               onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจอง #{{ hold.id }}?');">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <button type="submit" class="btn btn-outline-danger">
                                                 <i class="bi bi-x-circle"></i> ยกเลิกการจอง
                                             </button>
                                         </form>
-                                        <small class="text-muted ms-2">
+                                        <small class="text-muted">
                                             <i class="bi bi-info-circle"></i> คุณสามารถยกเลิกการจองที่ยังไม่ได้รับการยืนยันได้
                                         </small>
                                     </div>
@@ -127,9 +158,13 @@
                 </div>
             </div>
         {% else %}
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> คุณยังไม่มีประวัติการจองหนังสือ
-                <a href="{% url 'books:book_list' %}" class="alert-link">ค้นหาหนังสือเพื่อจอง</a>
+            <div class="text-center py-5">
+                <i class="bi bi-bookmark-x text-muted" style="font-size: 5rem;"></i>
+                <h4 class="mt-4 text-muted">คุณยังไม่มีประวัติการจองหนังสือ</h4>
+                <p class="text-muted mb-4">เริ่มต้นค้นหาและจองหนังสือที่คุณสนใจเลย</p>
+                <a href="{% url 'books:book_list' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-search"></i> ค้นหาหนังสือเพื่อจอง
+                </a>
             </div>
         {% endif %}
     </div>
