@@ -33,8 +33,8 @@
                                             <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด
                                         </span>
                                     {% else %}
-                                        <span class="badge bg-primary fs-6">
-                                            <i class="bi bi-check-circle"></i> ปกติ
+                                        <span class="badge {% if batch.status == 'completed' %}bg-success{% else %}bg-primary{% endif %} fs-6">
+                                            <i class="bi bi-check-circle"></i> {{ batch.get_status_display }}
                                         </span>
                                     {% endif %}
                                 </div>
@@ -62,10 +62,8 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th>หนังสือ</th>
-                                                <th>ผู้แต่ง</th>
-                                                <th>สำนักพิมพ์</th>
-                                                <th>สถานะ</th>
-                                                <th>วันที่คืน</th>
+                                                <th style="width: 150px;">สถานะ</th>
+                                                <th style="width: 180px;">วันที่คืน</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -75,17 +73,6 @@
                                                         <a href="{% url 'books:book_detail' item.book.id %}"
                                                            class="text-decoration-none fw-medium">{{ item.book.title }}</a>
                                                     </td>
-                                                    <td class="text-muted">
-                                                        {% if item.book.authors.all %}
-                                                            {% for author in item.book.authors.all %}
-                                                                {{ author.name }}
-                                                                {% if not forloop.last %},{% endif %}
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            -
-                                                        {% endif %}
-                                                    </td>
-                                                    <td class="text-muted">{{ item.book.publisher.name|default:"-" }}</td>
                                                     <td>
                                                         {% if item.status == 'borrowed' %}
                                                             {% if item.is_overdue %}
