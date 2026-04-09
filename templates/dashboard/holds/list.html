@@ -294,7 +294,7 @@
                                         <i class="bi bi-check-circle"></i> Confirmed
                                     </span>
                                     {% if not batch.is_expired %}
-                                        <a href="{% url 'loans:create_loan' batch.id %}"
+                                        <a href="{% url 'holds:dashboard_create_loan_from_hold' batch.id %}"
                                            class="btn btn-sm btn-outline-primary mt-2">
                                             <i class="bi bi-box-seam"></i> Mark Picked Up
                                         </a>

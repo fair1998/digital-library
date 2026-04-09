@@ -98,8 +98,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if 'loans/admin/active' in request.path %}active{% endif %}"
-                           href="{% url 'loans:active_loans' %}">
+                        <a class="nav-link {% if 'loans' in request.path %}active{% endif %}"
+                           href="{% url 'loans:dashboard_loans' %}">
                             <i class="bi bi-book-half"></i> รายการยืม
                         </a>
                     </li>

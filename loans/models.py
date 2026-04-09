@@ -40,6 +40,10 @@ class Loan(models.Model):
 
     def __str__(self):
         return f"Loan #{self.id} - {self.user.username}"
+    
+    @property
+    def status_label(self) -> str:
+        return self.get_status_display() # type: ignore[attr-defined]
 
     @property
     def is_overdue(self) -> bool:

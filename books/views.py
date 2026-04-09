@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count, Q
 from django.core.paginator import Paginator
@@ -691,3 +692,32 @@ def dashboard_publisher_delete_view(request, publisher_id):
     publisher.delete()
     messages.success(request, f'ลบสำนักพิมพ์ "{name}" เรียบร้อยแล้ว')
     return redirect('books:dashboard_publishers')
+
+def get_books_api(request):
+    """
+    API endpoint for searching books
+    Returns JSON with book data.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'books': []})
+    
+    # Search books by title or authors
+    books = Book.objects.filter(
+        Q(title__icontains=query) |
+        Q(authors__name__icontains=query)
+    ).select_related('publisher').prefetch_related('authors').distinct()[:10]
+    
+    books_data = []
+    for book in books:
+        authors_str = ', '.join([author.name for author in book.authors.all()])
+        books_data.append({
+            'id': book.id,
+            'title': book.title,
+            'authors': authors_str,
+            'publisher': book.publisher.name if book.publisher else '',
+            'available_quantity': book.available_quantity,
+        })
+    
+    return JsonResponse({'books': books_data})

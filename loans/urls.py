@@ -4,17 +4,10 @@ from . import views
 app_name = 'loans'
 
 urlpatterns = [
-    # Member views
     path('my-loans/', views.my_loans_view, name='my_loans'),
     
-    # API endpoints
-    path('api/search-books/', views.search_books_api, name='search_books_api'),
-    
-    # Admin views
-    path('admin/create/<int:batch_id>/', views.create_loan_view, name='create_loan'),
-    path('admin/active/', views.active_loans_view, name='active_loans'),
-    path('admin/detail/<int:batch_id>/', views.loan_detail_view, name='loan_detail'),
-    path('admin/mark-returned/<int:item_id>/', views.mark_returned_view, name='mark_returned'),
-    path('admin/mark-lost/<int:item_id>/', views.mark_lost_view, name='mark_lost'),
-    path('admin/process-batch-return/<int:batch_id>/', views.process_batch_return_view, name='process_batch_return'),
+    path('dashboard/loans/', views.dashboard_loans_view, name='dashboard_loans'),
+    path('dashboard/loans/<int:loan_id>/', views.dashboard_loan_detail_view, name='dashboard_loan_detail'),
+    path('dashboard/loans/<int:loan_id>/return/', views.dashboard_return_loan_view, name='dashboard_return_loan'),
 ]
+

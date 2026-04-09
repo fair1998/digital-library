@@ -137,7 +137,7 @@ AUTH_USER_MODEL = 'users.User'
 HOLD_EXPIRY_DAYS = 3  # จำนวนวันที่การจองจะหมดอายุ
 
 # Loan Settings
-LOAN_PERIOD_DAYS = 14  # จำนวนวันที่สามารถยืมหนังสือได้
+LOAN_PERIOD_DAYS = 7  # จำนวนวันที่สามารถยืมหนังสือได้
 
 # Fine Settings
 FINE_LATE_RETURN_PER_DAY = 10  # ค่าปรับคืนช้าต่อวัน (บาท)

@@ -6,6 +6,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
 from datetime import timedelta
+
+from loans.models import Loan, LoanItem
 from .models import Hold, HoldItem
 from books.models import Book
 
@@ -30,7 +32,7 @@ def my_holds_view(request):
 
 
 @login_required
-def cancel_hold_book_action(request, id):
+def cancel_hold_book_action(request, hold_id):
     """
     Allow user to cancel their own pending hold item batch.
     """
@@ -39,7 +41,7 @@ def cancel_hold_book_action(request, id):
         return redirect('holds:my_holds')
     
     # Get batch and verify ownership
-    hold = get_object_or_404(Hold, id=id, user=request.user)
+    hold = get_object_or_404(Hold, id=hold_id, user=request.user)
     
     # Check if user can cancel
     if not hold.can_be_cancelled_by_user:
@@ -138,7 +140,7 @@ def dashboard_holds_view(request):
 
 
 @staff_member_required
-def dashboard_hold_detail_view(request, id):
+def dashboard_hold_detail_view(request, hold_id):
     """
     Display detailed view of a hold batch with ability to manage individual items.
     """
@@ -147,7 +149,7 @@ def dashboard_hold_detail_view(request, id):
             'hold_items__book__authors',
             'hold_items__book__publisher'
         ),
-        id=id
+        id=hold_id
     )
     
     # Check stock availability
@@ -170,7 +172,7 @@ def dashboard_hold_detail_view(request, id):
 
 
 @staff_member_required
-def dashboard_confirm_hold_books_action(request, id):
+def dashboard_confirm_hold_books_view(request, hold_id):
     """
     Admin action to confirm selected hold items.
     Unselected items will be automatically rejected/cancelled.
@@ -179,7 +181,7 @@ def dashboard_confirm_hold_books_action(request, id):
         messages.error(request, 'Invalid request method.')
         return redirect('holds:dashboard_holds')
     
-    hold = get_object_or_404(Hold, id=id)
+    hold = get_object_or_404(Hold, id=hold_id)
     
     # Check if can be confirmed
     if hold.status != 'pending':
@@ -187,14 +189,14 @@ def dashboard_confirm_hold_books_action(request, id):
             request,
             f'ไม่สามารถยืนยันการจอง #{hold.id} ได้ (สถานะ: {hold.status_label})'
         )
-        return redirect('holds:dashboard_hold_detail', id=id)
+        return redirect('holds:dashboard_hold_detail', hold_id=hold_id)
     
     # Get selected hold item IDs
     selected_ids = request.POST.getlist('hold_item_ids')
     
     if not selected_ids:
         messages.warning(request, 'กรุณาเลือกหนังสือที่ต้องการยืนยัน')
-        return redirect('holds:dashboard_hold_detail', id=id)
+        return redirect('holds:dashboard_hold_detail', hold_id=hold_id)
     
     try:
         with transaction.atomic():
@@ -268,109 +270,10 @@ def dashboard_confirm_hold_books_action(request, id):
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('holds:dashboard_hold_detail', id=id)
-
-
-@staff_member_required
-def dashboard_confirm_hold_action(request, id):
-    """
-    Admin action to confirm a pending hold item batch (all items at once).
-    Updates batch status, hold items status, and book availability.
-    """
-    if request.method != 'POST':
-        messages.error(request, 'Invalid request method.')
-        return redirect('holds:dashboard_holds')
-    
-    hold = get_object_or_404(Hold, id=id)
-    
-    # Check if can be confirmed
-    if hold.status != 'pending':
-        messages.error(
-            request,
-            f'ไม่สามารถยืนยันการจอง #{hold.id} ได้ (สถานะ: {hold.status_label})'
-        )
-        return redirect('holds:dashboard_holds')
-    
-    try:
-        with transaction.atomic():
-            # Refresh batch data to get latest status
-            hold.refresh_from_db()
-            
-            # Check book availability (only for pending hold items)
-            insufficient_books = []
-            pending_hold_items = hold.hold_items.filter(status='pending').select_related('book')
-            
-            for hold_item in pending_hold_items:
-                # Refresh to get latest available_quantity
-                hold_item.book.refresh_from_db()
-                if hold_item.book.available_quantity < 1:
-                    insufficient_books.append(hold_item.book.title)
-            
-            if insufficient_books:
-                messages.error(
-                    request,
-                    f'ไม่สามารถยืนยันได้ เนื่องจากหนังสือต่อไปนี้ไม่เพียงพอ: {", ".join(insufficient_books)}'
-                )
-                return redirect('holds:dashboard_holds')
-            
-            # Count how many can be confirmed
-            confirmable_count = pending_hold_items.filter(
-                book__available_quantity__gt=0
-            ).count()
-            
-            if confirmable_count == 0:
-                messages.error(request, 'ไม่มีหนังสือที่สามารถยืนยันได้')
-                return redirect('holds:dashboard_holds')
-            
-            # Update hold items and decrease book quantity (only pending items)
-            confirmed_count = 0
-            for hold_item in pending_hold_items:
-                # Refresh hold item to check current status
-                hold_item.refresh_from_db()
-                
-                # Only process if still pending (might have been changed)
-                if hold_item.status == 'pending' and hold_item.book.available_quantity > 0:
-                    hold_item.status = 'confirmed'
-                    hold_item.save()
-                    
-                    # Decrease available quantity
-                    book = hold_item.book
-                    book.refresh_from_db()
-                    book.available_quantity -= 1
-                    book.save()
-                    
-                    confirmed_count += 1
-            
-            # Check if all hold items are now confirmed or cancelled
-            all_processed = not hold.hold_items.filter(status='pending').exists()
-            has_confirmed = hold.hold_items.filter(status='confirmed').exists()
-            
-            # Update batch status
-            if has_confirmed:
-                # If we have at least one confirmed item, mark batch as confirmed
-                hold.status = 'confirmed'
-                # Set expiry time for confirmed hold (user must pick up books before this time)
-                expiry_days = getattr(settings, 'HOLD_EXPIRY_DAYS', 3)
-                hold.expires_at = timezone.now() + timedelta(days=expiry_days)
-                hold.save()
-            elif all_processed:
-                # If all items are cancelled and none confirmed, mark batch as cancelled
-                hold.status = 'cancelled'
-                hold.save()
-            
-            messages.success(
-                request,
-                f'ยืนยันการจอง #{hold.id} สำเร็จ ({confirmed_count} เล่ม, User: {hold.user.username})'
-            )
-            
-    except Exception as e:
-        messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
-    
-    return redirect('holds:dashboard_holds')
-
+    return redirect('holds:dashboard_hold_detail', hold_id=hold_id)
 
 @staff_member_required
-def dashboard_cancel_hold_action(request, id):
+def dashboard_cancel_hold_view(request, hold_id):
     """
     Admin action to cancel a hold item batch.
     If expired, mark as 'expired', otherwise 'cancelled'.
@@ -379,7 +282,7 @@ def dashboard_cancel_hold_action(request, id):
         messages.error(request, 'Invalid request method.')
         return redirect('holds:dashboard_holds')
     
-    hold = get_object_or_404(Hold, id=id)
+    hold = get_object_or_404(Hold, id=hold_id)
     
     # Check if already finalized
     if hold.status in ['cancelled', 'expired', 'completed']:
@@ -420,3 +323,106 @@ def dashboard_cancel_hold_action(request, id):
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
     return redirect('holds:dashboard_holds')
+
+@staff_member_required
+def dashboard_create_loan_from_hold_view(request, hold_id):
+    """
+    Create a loan from a confirmed hold batch.
+    This happens when user comes to pick up the books.
+    """
+    hold = get_object_or_404(
+        Hold.objects.prefetch_related(
+            'hold_items__book__authors',
+            'hold_items__book__publisher'
+        ),
+        id=hold_id
+    )
+    
+    # Validate that batch is confirmed
+    if hold.status != 'confirmed':
+        messages.error(request, 'การจองนี้ยังไม่ได้รับการยืนยันหรือถูกยกเลิกแล้ว')
+        return redirect('holds:dashboard_holds')
+    
+    # Check if expired
+    if hold.is_expired:
+        messages.error(request, 'การจองนี้หมดอายุแล้ว กรุณายกเลิกการจองและให้ user จองใหม่')
+        return redirect('holds:dashboard_holds')
+    
+    if request.method == 'POST':
+        # Get loan period from settings or default 7 days
+        loan_days = getattr(settings, 'LOAN_PERIOD_DAYS', 7)
+        
+        # Get additional books from POST data
+        additional_book_ids = request.POST.getlist('additional_books')
+        
+        try:
+            with transaction.atomic():
+                # Create loan batch
+                loan_batch = Loan.objects.create(
+                    user=hold.user,
+                    due_date=timezone.now() + timedelta(days=loan_days)
+                )
+                
+                # Create loan items from confirmed hold items
+                confirmed_hold_items = hold.hold_items.filter(
+                    status='confirmed'
+                )
+                
+                for hold_item in confirmed_hold_items:
+                    LoanItem.objects.create(
+                        book=hold_item.book,
+                        loan=loan_batch,
+                        hold_item=hold_item,
+                        status='borrowed'
+                    )
+                
+                # Create loan items for additional books
+                if additional_book_ids:
+                    for book_id in additional_book_ids:
+                        try:
+                            book = Book.objects.get(id=book_id)
+                            
+                            # Check if book is available
+                            if book.available_quantity <= 0:
+                                raise ValueError(f'หนังสือ "{book.title}" ไม่มีในคลัง')
+                            
+                            # Decrease available quantity
+                            book.available_quantity -= 1
+                            book.save()
+                            
+                            # Create loan item (no hold item link for additional books)
+                            LoanItem.objects.create(
+                                book=book,
+                                loan=loan_batch,
+                                hold_item=None,
+                                status='borrowed'
+                            )
+                        except Book.DoesNotExist:
+                            raise ValueError(f'ไม่พบหนังสือ ID: {book_id}')
+                
+                # Update hold status to completed
+                hold.status = 'completed'
+                hold.save()
+                
+                total_books = confirmed_hold_items.count() + len(additional_book_ids)
+                messages.success(
+                    request,
+                    f'สร้างรายการยืมสำเร็จ! ยืมทั้งหมด {total_books} เล่ม กำหนดคืนวันที่ {loan_batch.due_date.strftime("%d/%m/%Y")}'
+                )
+                return redirect('loans:dashboard_loans')
+                
+        except Exception as e:
+            messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
+            return redirect('holds:dashboard_holds')
+    
+    # GET request - show confirmation page
+    confirmed_hold_items = hold.hold_items.filter(
+        status='confirmed'
+    )
+    
+    context = {
+        'hold': hold,
+        'hold_items': confirmed_hold_items,
+    }
+    
+    return render(request, 'dashboard/holds/create_loan_from_hold.html', context)
