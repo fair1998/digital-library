@@ -76,10 +76,10 @@
                                             <td>{{ forloop.counter }}</td>
                                             <td>
                                                 <strong>{{ item.book.title }}</strong>
-                                                {% if item.reservation %}
+                                                {% if item.hold_item %}
                                                     <br>
                                                     <small class="text-muted">
-                                                        <i class="bi bi-bookmark me-1"></i>จากการจอง #{{ item.reservation.reservation_batch.id }}
+                                                        <i class="bi bi-bookmark me-1"></i>จากการจอง #{{ item.hold_item.hold.id }}
                                                     </small>
                                                 {% endif %}
                                             </td>

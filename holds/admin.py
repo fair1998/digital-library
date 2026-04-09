@@ -61,7 +61,7 @@ class HoldAdmin(admin.ModelAdmin):
         failed_count = 0
         
         # Get expiry days from settings or use default (3 days)
-        expiry_days = getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)
+        expiry_days = getattr(settings, 'HOLD_EXPIRY_DAYS', 3)
         
         for batch in queryset:
             if not batch.can_be_confirmed():

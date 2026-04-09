@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from django.db.models import Manager
 
 if TYPE_CHECKING:
-    from reservations.models import HoldItem
+    from holds.models import HoldItem
 
 class Hold(models.Model):
     """Header/parent record for a single hold transaction."""

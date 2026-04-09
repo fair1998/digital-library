@@ -103,29 +103,29 @@
                                     <h6 class="text-primary mb-0">
                                         <i class="bi bi-calendar-check"></i> การจองทั้งหมด
                                     </h6>
-                                    <span class="badge bg-primary fs-6">{{ stats.total_reservations }}</span>
+                                    <span class="badge bg-primary fs-6">{{ stats.total_holds }}</span>
                                 </div>
                                 <div class="small text-muted mb-2">รวมหนังสือที่เคยจอง {{ stats.total_reserved_books }} เล่ม</div>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between px-0">
                                         <span>รอดำเนินการ</span>
-                                        <strong>{{ stats.pending_reservations }}</strong>
+                                        <strong>{{ stats.pending_holds }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between px-0">
                                         <span>ยืนยันแล้ว</span>
-                                        <strong>{{ stats.confirmed_reservations }}</strong>
+                                        <strong>{{ stats.confirmed_holds }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between px-0">
                                         <span>เสร็จสิ้น</span>
-                                        <strong>{{ stats.completed_reservations }}</strong>
+                                        <strong>{{ stats.completed_holds }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between px-0">
                                         <span>หมดอายุ</span>
-                                        <strong>{{ stats.expired_reservations }}</strong>
+                                        <strong>{{ stats.expired_holds }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between px-0 pb-0">
                                         <span>ยกเลิก</span>
-                                        <strong>{{ stats.cancelled_reservations }}</strong>
+                                        <strong>{{ stats.cancelled_holds }}</strong>
                                     </li>
                                 </ul>
                             </div>
@@ -136,7 +136,7 @@
                                     <h6 class="text-success mb-0">
                                         <i class="bi bi-book"></i> การยืมทั้งหมด
                                     </h6>
-                                    <span class="badge bg-success fs-6">{{ stats.total_loan_batches }}</span>
+                                    <span class="badge bg-success fs-6">{{ stats.total_loans }}</span>
                                 </div>
                                 <div class="small text-muted mb-2">จำนวนครั้งของการยืมทั้งหมด</div>
                                 <ul class="list-group list-group-flush">
@@ -165,13 +165,13 @@
                                     <h6 class="text-warning mb-0">
                                         <i class="bi bi-hourglass-split"></i> การยืมที่กำลังดำเนินการ
                                     </h6>
-                                    <span class="badge bg-warning text-dark fs-6">{{ stats.active_loan_batches }}</span>
+                                    <span class="badge bg-warning text-dark fs-6">{{ stats.total_active_loans }}</span>
                                 </div>
                                 <div class="small text-muted mb-2">จำนวนชุดยืมที่ยังไม่ปิดรายการ</div>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between px-0">
                                         <span>กำลังยืมอยู่</span>
-                                        <strong>{{ stats.active_loans }} เล่ม</strong>
+                                        <strong>{{ stats.active_loan_books }} เล่ม</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between px-0 pb-0">
                                         <span>เกินกำหนดส่งคืน</span>

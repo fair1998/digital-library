@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Sum
 from django.utils import timezone
 from books.models import Book
-from reservations.models import Hold
+from holds.models import Hold
 from loans.models import Loan, LoanItem
 from fines.models import Fine
 
@@ -48,10 +48,10 @@ def dashboard_home_view(request):
         'total_books': total_books,
         'available_books': available_books,
         
-        # Reservations
-        'pending_reservations': pending_hold_items,
-        'confirmed_reservations': confirmed_hold_items,
-        'expired_reservations': expired_hold_items,
+        # Hold items
+        'pending_hold_items': pending_hold_items,
+        'confirmed_hold_items': confirmed_hold_items,
+        'expired_hold_items': expired_hold_items,
         
         # Loans
         'active_loans': active_loans,
@@ -64,7 +64,7 @@ def dashboard_home_view(request):
         'total_fines_amount': total_fines_amount,
         
         # Recent activities
-        'recent_reservations': recent_hold_items,
+        'recent_hold_items': recent_hold_items,
         'recent_loans': recent_loans,
     }
     

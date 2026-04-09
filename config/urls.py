@@ -21,7 +21,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from users.views import home_view
 from users.dashboard_views import dashboard_home_view
-from reservations.urls import dashboard_urlpatterns as reservations_dashboard_urls
 from fines.urls import dashboard_urlpatterns as fines_dashboard_urls
 
 
@@ -31,13 +30,12 @@ urlpatterns = [
     path('', home_view, name='home'),
     path('', include('users.urls')),
     path('', include('books.urls')),
-    path('reservations/', include('reservations.urls')),
+    path('', include('holds.urls')),
     path('loans/', include('loans.urls')),
     path('my-fines/', include('fines.urls')),
     
     # Admin Dashboard
     path('dashboard/', dashboard_home_view, name='dashboard_home'),
-    path('dashboard/', include(reservations_dashboard_urls)),
     path('dashboard/', include((fines_dashboard_urls, 'fines'), namespace='dashboard_fines')),
 ]
 

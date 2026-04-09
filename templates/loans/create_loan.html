@@ -39,7 +39,7 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <a href="{% url 'dashboard_reservations' %}">Reservations</a>
+                            <a href="{% url 'holds:dashboard_holds' %}">รายการจอง</a>
                         </li>
                         <li class="breadcrumb-item active">สร้างรายการยืม</li>
                     </ol>
@@ -74,19 +74,19 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <p>
-                                    <strong>ชื่อ:</strong> {{ reservation_batch.user.get_full_name|default:reservation_batch.user.username }}
+                                    <strong>ชื่อ:</strong> {{ hold.user.get_full_name|default:hold.user.username }}
                                 </p>
                                 <p>
-                                    <strong>Username:</strong> {{ reservation_batch.user.username }}
+                                    <strong>Username:</strong> {{ hold.user.username }}
                                 </p>
                             </div>
                             <div class="col-md-6">
                                 <p>
-                                    <strong>Email:</strong> {{ reservation_batch.user.email }}
+                                    <strong>Email:</strong> {{ hold.user.email }}
                                 </p>
-                                {% if reservation_batch.user.phone_number %}
+                                {% if hold.user.phone_number %}
                                     <p>
-                                        <strong>โทรศัพท์:</strong> {{ reservation_batch.user.phone_number }}
+                                        <strong>โทรศัพท์:</strong> {{ hold.user.phone_number }}
                                     </p>
                                 {% endif %}
                             </div>
@@ -111,20 +111,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for reservation in reservations %}
+                                    {% for hold_item in hold_items %}
                                         <tr>
                                             <td>{{ forloop.counter }}</td>
                                             <td>
-                                                <strong>{{ reservation.book.title }}</strong>
+                                                <strong>{{ hold_item.book.title }}</strong>
                                             </td>
                                             <td>
-                                                {% if reservation.book.authors.exists %}
-                                                    {{ reservation.book.authors.all|join:", " }}
+                                                {% if hold_item.book.authors.exists %}
+                                                    {{ hold_item.book.authors.all|join:", " }}
                                                 {% else %}
                                                     <span class="text-muted">-</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ reservation.book.publisher.name|default:"-" }}</td>
+                                            <td>{{ hold_item.book.publisher.name|default:"-" }}</td>
                                         </tr>
                                     {% empty %}
                                         <tr>
@@ -173,7 +173,7 @@
                                 <strong>คำเตือน:</strong> การกดยืนยันจะสร้างรายการยืมและเปลี่ยนสถานะการจองเป็น "เสร็จสิ้น"
                             </div>
                             <div class="d-flex justify-content-between">
-                                <a href="{% url 'dashboard_reservations' %}" class="btn btn-secondary">
+                                <a href="{% url 'holds:dashboard_holds' %}" class="btn btn-secondary">
                                     <i class="bi bi-arrow-left me-1"></i>ยกเลิก
                                 </a>
                                 <button type="submit" class="btn btn-success btn-lg">
@@ -192,20 +192,20 @@
                         </h5>
                         <hr>
                         <p>
-                            <strong>Batch ID:</strong> #{{ reservation_batch.id }}
+                            <strong>Batch ID:</strong> #{{ hold.id }}
                         </p>
                         <p>
-                            <strong>สถานะ:</strong> <span class="badge bg-primary">{{ reservation_batch.get_status_display }}</span>
+                            <strong>สถานะ:</strong> <span class="badge bg-primary">{{ hold.get_status_display }}</span>
                         </p>
                         <p>
-                            <strong>จำนวนหนังสือ:</strong> {{ reservations.count }} เล่ม
+                            <strong>จำนวนหนังสือ:</strong> {{ hold_items.count }} เล่ม
                         </p>
                         <p>
-                            <strong>วันที่จอง:</strong> {{ reservation_batch.created_at|date:"d/m/Y H:i" }}
+                            <strong>วันที่จอง:</strong> {{ hold.created_at|date:"d/m/Y H:i" }}
                         </p>
-                        {% if reservation_batch.expires_at %}
+                        {% if hold.expires_at %}
                             <p>
-                                <strong>หมดอายุ:</strong> {{ reservation_batch.expires_at|date:"d/m/Y H:i" }}
+                                <strong>หมดอายุ:</strong> {{ hold.expires_at|date:"d/m/Y H:i" }}
                             </p>
                         {% endif %}
                         <hr>

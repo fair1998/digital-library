@@ -11,11 +11,11 @@ from books.models import Book
 
 
 @login_required
-def my_hold_items_view(request):
+def my_holds_view(request):
     """
     Display user's hold item history.
     """
-    hold = Hold.objects.filter(
+    holds = Hold.objects.filter(
         user=request.user
     ).prefetch_related(
         'hold_items__book__authors',
@@ -23,23 +23,23 @@ def my_hold_items_view(request):
     ).order_by('-created_at')
     
     context = {
-        'reservation_batches': hold,
+        'holds': holds,
     }
     
-    return render(request, 'reservations/my_reservations.html', context)
+    return render(request, 'holds/list.html', context)
 
 
 @login_required
-def cancel_hold_item_view(request, batch_id):
+def cancel_hold_book_action(request, id):
     """
     Allow user to cancel their own pending hold item batch.
     """
     if request.method != 'POST':
         messages.error(request, 'Invalid request method.')
-        return redirect('reservations:my_reservations')
+        return redirect('holds:my_holds')
     
     # Get batch and verify ownership
-    batch = get_object_or_404(Hold, id=batch_id, user=request.user)
+    batch = get_object_or_404(Hold, id=id, user=request.user)
     
     # Check if user can cancel
     if not batch.can_be_cancelled_by_user():
@@ -47,7 +47,7 @@ def cancel_hold_item_view(request, batch_id):
             request,
             f'ไม่สามารถยกเลิกการจอง #{batch.id} ได้ (สถานะ: {batch.get_status_display()})'
         )
-        return redirect('reservations:my_reservations')
+        return redirect('holds:my_holds')
     
     try:
         with transaction.atomic():
@@ -68,11 +68,11 @@ def cancel_hold_item_view(request, batch_id):
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('reservations:my_reservations')
+    return redirect('holds:my_hold_list')
 
 
 @staff_member_required
-def admin_dashboard_view(request):
+def dashboard_holds_view(request):
     """
     Admin dashboard to manage all hold batches.
     Shows pending, confirmed, completed, cancelled, and expired holds.
@@ -126,7 +126,7 @@ def admin_dashboard_view(request):
     }
     
     context = {
-        'reservation_batches': holds,
+        'holds': holds,
         'status_filter': status_filter,
         'batch_id_filter': batch_id_filter,
         'user_filter': user_filter,
@@ -134,11 +134,11 @@ def admin_dashboard_view(request):
         'expired_batches': expired_batches,
     }
     
-    return render(request, 'reservations/admin_dashboard.html', context)
+    return render(request, 'dashboard/holds/list.html', context)
 
 
 @staff_member_required
-def admin_hold_item_detail_view(request, batch_id):
+def dashboard_hold_detail_view(request, id):
     """
     Display detailed view of a hold batch with ability to manage individual items.
     """
@@ -147,7 +147,7 @@ def admin_hold_item_detail_view(request, batch_id):
             'hold_items__book__authors',
             'hold_items__book__publisher'
         ),
-        id=batch_id
+        id=id
     )
     
     # Check stock availability
@@ -166,20 +166,20 @@ def admin_hold_item_detail_view(request, batch_id):
         'has_available_books': has_available_books,
     }
     
-    return render(request, 'reservations/reservation_detail.html', context)
+    return render(request, 'dashboard/holds/detail.html', context)
 
 
 @staff_member_required
-def admin_confirm_selected_hold_items_view(request, batch_id):
+def dashboard_confirm_hold_books_action(request, id):
     """
     Admin action to confirm selected hold items.
     Unselected items will be automatically rejected/cancelled.
     """
     if request.method != 'POST':
         messages.error(request, 'Invalid request method.')
-        return redirect('dashboard_reservations')
+        return redirect('holds:dashboard_holds')
     
-    batch = get_object_or_404(Hold, id=batch_id)
+    batch = get_object_or_404(Hold, id=id)
     
     # Check if can be confirmed
     if batch.status != 'pending':
@@ -187,14 +187,14 @@ def admin_confirm_selected_hold_items_view(request, batch_id):
             request,
             f'ไม่สามารถยืนยันการจอง #{batch.id} ได้ (สถานะ: {batch.get_status_display()})'
         )
-        return redirect('dashboard_reservation_detail', batch_id=batch_id)
+        return redirect('holds:dashboard_hold_detail', id=id)
     
-    # Get selected reservation IDs
-    selected_ids = request.POST.getlist('reservation_ids')
+    # Get selected hold item IDs
+    selected_ids = request.POST.getlist('hold_item_ids')
     
     if not selected_ids:
         messages.warning(request, 'กรุณาเลือกหนังสือที่ต้องการยืนยัน')
-        return redirect('dashboard_reservation_detail', batch_id=batch_id)
+        return redirect('holds:dashboard_hold_detail', batch_id=id)
     
     try:
         with transaction.atomic():
@@ -239,8 +239,8 @@ def admin_confirm_selected_hold_items_view(request, batch_id):
             
             if has_confirmed:
                 batch.status = 'confirmed'
-                # Set expiry time for confirmed reservation (user must pick up books before this time)
-                expiry_days = getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)
+                # Set expiry time for confirmed hold (user must pick up books before this time)
+                expiry_days = getattr(settings, 'HOLD_EXPIRY_DAYS', 3)
                 batch.expires_at = timezone.now() + timedelta(days=expiry_days)
                 batch.save()
             elif all_processed:
@@ -268,20 +268,20 @@ def admin_confirm_selected_hold_items_view(request, batch_id):
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('dashboard_reservation_detail', batch_id=batch_id)
+    return redirect('holds:dashboard_hold_detail', batch_id=id)
 
 
 @staff_member_required
-def admin_confirm_hold_item_view(request, batch_id):
+def dashboard_confirm_hold_action(request, id):
     """
     Admin action to confirm a pending hold item batch (all items at once).
     Updates batch status, hold items status, and book availability.
     """
     if request.method != 'POST':
         messages.error(request, 'Invalid request method.')
-        return redirect('dashboard_reservations')
+        return redirect('holds:dashboard_holds')
     
-    hold = get_object_or_404(Hold, id=batch_id)
+    hold = get_object_or_404(Hold, id=id)
     
     # Check if can be confirmed
     if hold.status != 'pending':
@@ -289,7 +289,7 @@ def admin_confirm_hold_item_view(request, batch_id):
             request,
             f'ไม่สามารถยืนยันการจอง #{hold.id} ได้ (สถานะ: {hold.get_status_display()})'
         )
-        return redirect('dashboard_reservations')
+        return redirect('holds:dashboard_holds')
     
     try:
         with transaction.atomic():
@@ -311,7 +311,7 @@ def admin_confirm_hold_item_view(request, batch_id):
                     request,
                     f'ไม่สามารถยืนยันได้ เนื่องจากหนังสือต่อไปนี้ไม่เพียงพอ: {", ".join(insufficient_books)}'
                 )
-                return redirect('dashboard_reservations')
+                return redirect('holds:dashboard_holds')
             
             # Count how many can be confirmed
             confirmable_count = pending_hold_items.filter(
@@ -320,7 +320,7 @@ def admin_confirm_hold_item_view(request, batch_id):
             
             if confirmable_count == 0:
                 messages.error(request, 'ไม่มีหนังสือที่สามารถยืนยันได้')
-                return redirect('dashboard_reservations')
+                return redirect('holds:dashboard_holds')
             
             # Update hold items and decrease book quantity (only pending items)
             confirmed_count = 0
@@ -349,8 +349,8 @@ def admin_confirm_hold_item_view(request, batch_id):
             if has_confirmed:
                 # If we have at least one confirmed item, mark batch as confirmed
                 hold.status = 'confirmed'
-                # Set expiry time for confirmed reservation (user must pick up books before this time)
-                expiry_days = getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)
+                # Set expiry time for confirmed hold (user must pick up books before this time)
+                expiry_days = getattr(settings, 'HOLD_EXPIRY_DAYS', 3)
                 hold.expires_at = timezone.now() + timedelta(days=expiry_days)
                 hold.save()
             elif all_processed:
@@ -366,25 +366,25 @@ def admin_confirm_hold_item_view(request, batch_id):
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('dashboard_reservations')
+    return redirect('holds:dashboard_holds')
 
 
 @staff_member_required
-def admin_cancel_hold_item_view(request, batch_id):
+def dashboard_cancel_hold_action(request, id):
     """
     Admin action to cancel a hold item batch.
     If expired, mark as 'expired', otherwise 'cancelled'.
     """
     if request.method != 'POST':
         messages.error(request, 'Invalid request method.')
-        return redirect('dashboard_reservations')
+        return redirect('holds:dashboard_holds')
     
-    batch = get_object_or_404(Hold, id=batch_id)
+    batch = get_object_or_404(Hold, id=id)
     
     # Check if already finalized
     if batch.status in ['cancelled', 'expired', 'completed']:
         messages.warning(request, f'การจอง #{batch.id} ถูกจัดการไปแล้ว (สถานะ: {batch.get_status_display()})')
-        return redirect('dashboard_reservations')
+        return redirect('holds:dashboard_holds')
     
     # Check if this is an expired cancellation
     is_expired_cancellation = batch.is_expired() and batch.status == 'confirmed'
@@ -419,4 +419,4 @@ def admin_cancel_hold_item_view(request, batch_id):
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('dashboard_reservations')
+    return redirect('holds:dashboard_holds')

@@ -6,7 +6,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db import transaction
 from .models import Book, Category, Publisher , Author
-from reservations.models import Hold, HoldItem
+from holds.models import Hold, HoldItem
 from .cart import Cart
 from .forms import (
     DashboardAuthorForm,
@@ -245,7 +245,7 @@ def confirm_cart_view(request):
                 f'จองหนังสือ {len(books)} เล่มสำเร็จ! '
                 f'กรุณารอการยืนยันจากเจ้าหน้าที่'
             )
-            return redirect('reservations:my_reservations')
+            return redirect('holds:my_holds')
             
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาดในการจองหนังสือ: {str(e)}')

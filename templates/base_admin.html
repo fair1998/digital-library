@@ -92,21 +92,21 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if 'reservations' in request.path %}active{% endif %}"
-                           href="{% url 'dashboard_reservations' %}">
-                            <i class="bi bi-calendar-check"></i> Reservations
+                        <a class="nav-link {% if 'holds' in request.path %}active{% endif %}"
+                           href="{% url 'holds:dashboard_holds' %}">
+                            <i class="bi bi-calendar-check"></i> รายการจอง
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if 'loans/admin/active' in request.path %}active{% endif %}"
                            href="{% url 'loans:active_loans' %}">
-                            <i class="bi bi-book-half"></i> Active Loans
+                            <i class="bi bi-book-half"></i> รายการยืม
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {% if 'dashboard/fines' in request.path %}active{% endif %}"
                            href="{% url 'dashboard_fines:admin_report' %}">
-                            <i class="bi bi-cash-coin"></i> Fines Report
+                            <i class="bi bi-cash-coin"></i> รายงานค่าปรับ
                         </a>
                     </li>
                     <li class="nav-item">

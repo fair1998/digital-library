@@ -25,18 +25,18 @@
                 </div>
             </div>
         </div>
-        <!-- Reservations Stats -->
+        <!-- Hold Items Stats -->
         <div class="col-md-3">
             <div class="card border-warning">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-muted mb-2">Pending Reservations</h6>
-                            <h2 class="mb-0">{{ pending_reservations }}</h2>
-                            {% if expired_reservations > 0 %}
-                                <small class="text-danger">{{ expired_reservations }} expired</small>
+                            <h6 class="text-muted mb-2">การจองที่รอดำเนินการ</h6>
+                            <h2 class="mb-0">{{ pending_hold_items }}</h2>
+                            {% if expired_hold_items > 0 %}
+                                <small class="text-danger">{{ expired_hold_items }} หมดอายุ</small>
                             {% else %}
-                                <small class="text-muted">{{ confirmed_reservations }} confirmed</small>
+                                <small class="text-muted">{{ confirmed_hold_items }} ยืนยันแล้ว</small>
                             {% endif %}
                         </div>
                         <div class="fs-1 text-warning">
@@ -92,7 +92,7 @@
                 <div class="card-body text-center">
                     <i class="bi bi-check-circle text-success fs-1"></i>
                     <h3 class="mt-2">{{ returned_loans }}</h3>
-                    <p class="text-muted mb-0">Books Returned</p>
+                    <p class="text-muted mb-0">คืนหนังสือ</p>
                 </div>
             </div>
         </div>
@@ -101,7 +101,7 @@
                 <div class="card-body text-center">
                     <i class="bi bi-exclamation-triangle text-warning fs-1"></i>
                     <h3 class="mt-2">{{ lost_books }}</h3>
-                    <p class="text-muted mb-0">Lost Books</p>
+                    <p class="text-muted mb-0">หนังสือสูญหาย</p>
                 </div>
             </div>
         </div>
@@ -109,50 +109,50 @@
             <div class="card">
                 <div class="card-body text-center">
                     <i class="bi bi-calendar-x text-danger fs-1"></i>
-                    <h3 class="mt-2">{{ expired_reservations }}</h3>
-                    <p class="text-muted mb-0">Expired Reservations</p>
+                    <h3 class="mt-2">{{ expired_hold_items }}</h3>
+                    <p class="text-muted mb-0">การจองหมดอายุ</p>
                 </div>
             </div>
         </div>
     </div>
     <!-- Recent Activities -->
     <div class="row">
-        <!-- Recent Reservations -->
+        <!-- Recent Hold Items -->
         <div class="col-md-6 mb-4">
             <div class="card">
                 <div class="card-header bg-white">
                     <h5 class="mb-0">
-                        <i class="bi bi-calendar-check text-warning"></i> Recent Reservations
+                        <i class="bi bi-calendar-check text-warning"></i> การจองล่าสุด
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if recent_reservations %}
+                    {% if recent_hold_items %}
                         <div class="list-group list-group-flush">
-                            {% for batch in recent_reservations %}
+                            {% for hold_item in recent_hold_items %}
                                 <div class="list-group-item">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <h6 class="mb-1">
-                                                <i class="bi bi-person"></i> {{ batch.user.username }}
+                                                <i class="bi bi-person"></i> {{ hold_item.user.username }}
                                             </h6>
-                                            <small class="text-muted">Batch #{{ batch.id }} - {{ batch.reservations.count }} books</small>
+                                            <small class="text-muted">Batch #{{ hold_item.id }} - {{ hold_item.hold_items.count }} books</small>
                                         </div>
-                                        <span class="badge bg-{% if batch.status == 'pending' %}warning{% elif batch.status == 'confirmed' %}success{% elif batch.status == 'completed' %}primary{% elif batch.status == 'expired' %}danger{% else %}secondary{% endif %}">
-                                            {{ batch.get_status_display }}
+                                        <span class="badge bg-{% if hold_item.status == 'pending' %}warning{% elif hold_item.status == 'confirmed' %}success{% elif hold_item.status == 'completed' %}primary{% elif hold_item.status == 'expired' %}danger{% else %}secondary{% endif %}">
+                                            {{ hold_item.get_status_display }}
                                         </span>
                                     </div>
-                                    <small class="text-muted">{{ batch.created_at|date:"d M Y H:i" }}</small>
+                                    <small class="text-muted">{{ hold_item.created_at|date:"d M Y H:i" }}</small>
                                 </div>
                             {% endfor %}
                         </div>
                         <div class="text-center mt-3">
-                            <a href="{% url 'dashboard_reservations' %}"
+                            <a href="{% url 'holds:dashboard_holds' %}"
                                class="btn btn-sm btn-outline-primary">
-                                View All Reservations <i class="bi bi-arrow-right"></i>
+                                ดูการจองทั้งหมด <i class="bi bi-arrow-right"></i>
                             </a>
                         </div>
                     {% else %}
-                        <p class="text-muted text-center">No recent reservations</p>
+                        <p class="text-muted text-center">ไม่มีการจองล่าสุด</p>
                     {% endif %}
                 </div>
             </div>
@@ -162,35 +162,35 @@
             <div class="card">
                 <div class="card-header bg-white">
                     <h5 class="mb-0">
-                        <i class="bi bi-book-half text-info"></i> Recent Loans
+                        <i class="bi bi-book-half text-info"></i> การยืมล่าสุด
                     </h5>
                 </div>
                 <div class="card-body">
                     {% if recent_loans %}
                         <div class="list-group list-group-flush">
-                            {% for batch in recent_loans %}
+                            {% for loan in recent_loans %}
                                 <div class="list-group-item">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <h6 class="mb-1">
-                                                <i class="bi bi-person"></i> {{ batch.user.username }}
+                                                <i class="bi bi-person"></i> {{ loan.user.username }}
                                             </h6>
-                                            <small class="text-muted">Batch #{{ batch.id }} - {{ batch.loan_items.count }} books</small>
+                                            <small class="text-muted">Batch #{{ loan.id }} - {{ loan.loan_items.count }} books</small>
                                         </div>
-                                        <small class="text-muted">Due: {{ batch.due_date|date:"d M Y" }}</small>
+                                        <small class="text-muted">Due: {{ loan.due_date|date:"d M Y" }}</small>
                                     </div>
-                                    <small class="text-muted">{{ batch.created_at|date:"d M Y H:i" }}</small>
+                                    <small class="text-muted">{{ loan.created_at|date:"d M Y H:i" }}</small>
                                 </div>
                             {% endfor %}
                         </div>
                         <div class="text-center mt-3">
                             <a href="{% url 'loans:active_loans' %}"
                                class="btn btn-sm btn-outline-primary">
-                                View All Loans <i class="bi bi-arrow-right"></i>
+                                ดูการยืมทั้งหมด <i class="bi bi-arrow-right"></i>
                             </a>
                         </div>
                     {% else %}
-                        <p class="text-muted text-center">No recent loans</p>
+                        <p class="text-muted text-center">ไม่มีการยืมล่าสุด</p>
                     {% endif %}
                 </div>
             </div>
@@ -200,17 +200,17 @@
     <div class="card">
         <div class="card-header bg-white">
             <h5 class="mb-0">
-                <i class="bi bi-lightning"></i> Quick Actions
+                <i class="bi bi-lightning"></i> การดำเนินการด่วน
             </h5>
         </div>
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <a href="{% url 'dashboard_reservations' %}"
+                    <a href="{% url 'holds:dashboard_holds' %}"
                        class="btn btn-outline-warning w-100">
                         <i class="bi bi-calendar-check"></i>
                         <br>
-                        Manage Reservations
+                        จัดการการจอง
                     </a>
                 </div>
                 <div class="col-md-3">
@@ -218,7 +218,7 @@
                        class="btn btn-outline-success w-100">
                         <i class="bi bi-book-half"></i>
                         <br>
-                        Active Loans
+                        การยืมที่ใช้งานอยู่
                     </a>
                 </div>
             </div>

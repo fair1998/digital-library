@@ -1,10 +1,10 @@
 {% extends "base_admin.html" %}
 {% load static %}
 {% block title %}
-    Reservations Management
+    จัดการการจอง
 {% endblock title %}
 {% block page_title %}
-    Reservations Management
+    จัดการการจอง
 {% endblock page_title %}
 {% block content %}
     <!-- Statistics Cards -->
@@ -12,7 +12,7 @@
         <div class="col-md-2">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5 class="card-title text-muted">Total</h5>
+                    <h5 class="card-title text-muted">ทั้งหมด</h5>
                     <h2 class="display-4">{{ stats.total }}</h2>
                 </div>
             </div>
@@ -20,7 +20,7 @@
         <div class="col-md-2">
             <div class="card text-center border-warning">
                 <div class="card-body">
-                    <h5 class="card-title text-warning">Pending</h5>
+                    <h5 class="card-title text-warning">รอดำเนินการ</h5>
                     <h2 class="display-4">{{ stats.pending }}</h2>
                 </div>
             </div>
@@ -28,7 +28,7 @@
         <div class="col-md-2">
             <div class="card text-center border-success">
                 <div class="card-body">
-                    <h5 class="card-title text-success">Confirmed</h5>
+                    <h5 class="card-title text-success">ยืนยันแล้ว</h5>
                     <h2 class="display-4">{{ stats.confirmed }}</h2>
                 </div>
             </div>
@@ -36,7 +36,7 @@
         <div class="col-md-2">
             <div class="card text-center border-primary">
                 <div class="card-body">
-                    <h5 class="card-title text-primary">Completed</h5>
+                    <h5 class="card-title text-primary">เสร็จสิ้น</h5>
                     <h2 class="display-4">{{ stats.completed }}</h2>
                     <small class="text-muted">รับหนังสือแล้ว</small>
                 </div>
@@ -46,7 +46,7 @@
             <div class="card text-center border-danger">
                 <div class="card-body">
                     <h5 class="card-title text-danger">
-                        <i class="bi bi-exclamation-triangle-fill"></i> Need Action
+                        <i class="bi bi-exclamation-triangle-fill"></i> ต้องดำเนินการ
                     </h5>
                     <h2 class="display-4">{{ stats.expired_pending }}</h2>
                     <small class="text-muted">หมดอายุแล้ว</small>
@@ -56,7 +56,7 @@
         <div class="col-md-2">
             <div class="card text-center border-danger opacity-75">
                 <div class="card-body">
-                    <h5 class="card-title text-danger">Expired</h5>
+                    <h5 class="card-title text-danger">หมดอายุ</h5>
                     <h2 class="display-4">{{ stats.expired }}</h2>
                     <small class="text-muted">ไม่มารับ</small>
                 </div>
@@ -65,18 +65,18 @@
         <div class="col-md-2">
             <div class="card text-center border-secondary">
                 <div class="card-body">
-                    <h5 class="card-title text-secondary">Cancelled</h5>
+                    <h5 class="card-title text-secondary">ยกเลิก</h5>
                     <h2 class="display-4">{{ stats.cancelled }}</h2>
                     <small class="text-muted">ยกเลิก</small>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Expired Reservations Alert -->
+    <!-- Expired Hold items Alert -->
     {% if expired_batches %}
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <h5 class="alert-heading">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>พบการจองที่หมดอายุ (Confirmed) {{ expired_batches|length }} รายการ
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>พบการจองที่หมดอายุ {{ expired_batches|length }} รายการ
             </h5>
             <p class="mb-3">
                 การจองเหล่านี้ได้รับการยืนยันแล้ว แต่ลูกค้าไม่มารับหนังสือภายในเวลาที่กำหนด กรุณายกเลิกเพื่อปล่อยสต็อคหนังสือ:
@@ -86,18 +86,18 @@
                     <thead>
                         <tr>
                             <th>Batch ID</th>
-                            <th>User</th>
-                            <th>Books</th>
+                            <th>ผู้ใช้</th>
+                            <th>หนังสือ</th>
                             <th>วันที่ยืนยัน</th>
                             <th>หมดอายุเมื่อ</th>
-                            <th>Action</th>
+                            <th>การดำเนินการ</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for batch in expired_batches %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'dashboard_reservation_detail' batch.id %}"
+                                    <a href="{% url 'holds:dashboard_hold_detail' batch.id %}"
                                        class="btn btn-sm btn-outline-primary">#{{ batch.id }}</a>
                                 </td>
                                 <td>
@@ -107,7 +107,7 @@
                                         <small>{{ batch.user.get_full_name }}</small>
                                     {% endif %}
                                 </td>
-                                <td>{{ batch.reservations.count }} เล่ม</td>
+                                <td>{{ batch.hold_items.count }} เล่ม</td>
                                 <td>
                                     <small>{{ batch.created_at|date:"d M Y H:i" }}</small>
                                 </td>
@@ -116,7 +116,7 @@
                                 </td>
                                 <td>
                                     <form method="post"
-                                          action="{% url 'dashboard_reservations_cancel' batch.id %}"
+                                          action="{% url 'holds:dashboard_cancel_hold' batch.id %}"
                                           class="d-inline"
                                           onsubmit="return confirm('ยืนยันการยกเลิกการจอง #{{ batch.id }} ของ {{ batch.user.username }}?');">
                                         {% csrf_token %}
@@ -183,15 +183,15 @@
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="bi bi-search"></i> Search
                     </button>
-                    <a href="{% url 'dashboard_reservations' %}" class="btn btn-secondary">
+                    <a href="{% url 'holds:dashboard_holds' %}" class="btn btn-secondary">
                         <i class="bi bi-x-circle"></i> Clear
                     </a>
                 </div>
             </form>
         </div>
     </div>
-    <!-- Reservations List -->
-    {% if reservation_batches %}
+    <!-- Hold items List -->
+    {% if holds %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -205,30 +205,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for batch in reservation_batches %}
+                    {% for hold in holds %}
                         <tr>
                             <td>
-                                <a href="{% url 'dashboard_reservation_detail' batch.id %}"
+                                <a href="{% url 'holds:dashboard_hold_detail' hold.id %}"
                                    class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i> #{{ batch.id }}
+                                    <i class="bi bi-eye"></i> #{{ hold.id }}
                                 </a>
                             </td>
                             <td>
-                                <i class="bi bi-person"></i> {{ batch.user.username }}
-                                {% if batch.user.get_full_name %}
+                                <i class="bi bi-person"></i> {{ hold.user.username }}
+                                {% if hold.user.get_full_name %}
                                     <br>
-                                    <small class="text-muted">{{ batch.user.get_full_name }}</small>
+                                    <small class="text-muted">{{ hold.user.get_full_name }}</small>
                                 {% endif %}
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-outline-primary"
                                         type="button"
                                         data-bs-toggle="collapse"
-                                        data-bs-target="#books-{{ batch.id }}"
+                                        data-bs-target="#books-{{ hold.id }}"
                                         aria-expanded="false">
-                                    <i class="bi bi-book"></i> {{ batch.reservations.count }} books
+                                    <i class="bi bi-book"></i> {{ hold.hold_items.count }} books
                                 </button>
-                                <div class="collapse mt-2" id="books-{{ batch.id }}">
+                                <div class="collapse mt-2" id="books-{{ hold.id }}">
                                     <div class="table-responsive">
                                         <table class="table table-sm mb-0">
                                             <thead>
@@ -236,37 +236,37 @@
                                                     <th>Book</th>
                                                     <th>Stock</th>
                                                     <th>Status</th>
-                                                    {% if batch.status == 'pending' %}<th>Action</th>{% endif %}
+                                                    {% if hold.status == 'pending' %}<th>Action</th>{% endif %}
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {% for reservation in batch.reservations.all %}
+                                                {% for hold_item in hold.hold_items.all %}
                                                     <tr>
                                                         <td>
-                                                            <strong>{{ reservation.book.title }}</strong>
+                                                            <strong>{{ hold_item.book.title }}</strong>
                                                             <br>
                                                             <small class="text-muted">
-                                                                {% for author in reservation.book.authors.all %}
+                                                                {% for author in hold_item.book.authors.all %}
                                                                     {{ author.name }}
                                                                     {% if not forloop.last %},{% endif %}
                                                                 {% endfor %}
                                                             </small>
                                                         </td>
                                                         <td>
-                                                            {% if reservation.book.available_quantity > 0 %}
-                                                                <span class="badge bg-success">{{ reservation.book.available_quantity }}/{{ reservation.book.total_quantity }}</span>
+                                                            {% if hold_item.book.available_quantity > 0 %}
+                                                                <span class="badge bg-success">{{ hold_item.book.available_quantity }}/{{ hold_item.book.total_quantity }}</span>
                                                             {% else %}
-                                                                <span class="badge bg-danger">0/{{ reservation.book.total_quantity }}</span>
+                                                                <span class="badge bg-danger">0/{{ hold_item.book.total_quantity }}</span>
                                                             {% endif %}
                                                         </td>
                                                         <td>
-                                                            <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% else %}secondary{% endif %}">
-                                                                {{ reservation.get_status_display }}
+                                                            <span class="badge bg-{% if hold_item.status == 'pending' %}warning{% elif hold_item.status == 'confirmed' %}success{% else %}secondary{% endif %}">
+                                                                {{ hold_item.get_status_display }}
                                                             </span>
                                                         </td>
-                                                        {% if batch.status == 'pending' %}
+                                                        {% if hold.status == 'pending' %}
                                                             <td>
-                                                                {% if reservation.book.available_quantity > 0 %}
+                                                                {% if hold_item.book.available_quantity > 0 %}
                                                                     <small class="text-success">
                                                                         <i class="bi bi-check-circle"></i> Ready
                                                                     </small>

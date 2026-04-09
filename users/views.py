@@ -146,7 +146,7 @@ def dashboard_users_detail_view(request, user_id):
     from django.contrib.auth import get_user_model
     from django.utils import timezone
     from django.db.models import Count
-    from reservations.models import Hold, HoldItem
+    from holds.models import Hold, HoldItem
     from loans.models import Loan, LoanItem
     from fines.models import Fine
     from books.models import Category
@@ -155,7 +155,7 @@ def dashboard_users_detail_view(request, user_id):
     member = get_object_or_404(User, pk=user_id)
 
     holds_qs = Hold.objects.filter(user=member)
-    hold_items_qs = HoldItem.objects.filter(reservation_batch__user=member)
+    hold_items_qs = HoldItem.objects.filter(hold__user=member)
     loans_qs = Loan.objects.filter(user=member)
     loan_items_qs = LoanItem.objects.filter(loan__user=member)
     fines_qs = Fine.objects.filter(loan_item__loan__user=member)
@@ -175,19 +175,19 @@ def dashboard_users_detail_view(request, user_id):
     context = {
         'member': member,
         'stats': {
-            'total_reservations': holds_qs.count(),
+            'total_holds': holds_qs.count(),
             'total_reserved_books': hold_items_qs.count(),
-            'pending_reservations': holds_qs.filter(status='pending').count(),
-            'confirmed_reservations': holds_qs.filter(status='confirmed').count(),
-            'completed_reservations': holds_qs.filter(status='completed').count(),
-            'expired_reservations': holds_qs.filter(status='expired').count(),
-            'cancelled_reservations': holds_qs.filter(status='cancelled').count(),
-            'total_loan_batches': loans_qs.count(),
+            'pending_holds': holds_qs.filter(status='pending').count(),
+            'confirmed_holds': holds_qs.filter(status='confirmed').count(),
+            'completed_holds': holds_qs.filter(status='completed').count(),
+            'expired_holds': holds_qs.filter(status='expired').count(),
+            'cancelled_holds': holds_qs.filter(status='cancelled').count(),
+            'total_loans': loans_qs.count(),
             'total_loan_books': loan_items_qs.count(),
             'returned_loan_books': loan_items_qs.filter(status='returned').count(),
             'lost_loan_books': loan_items_qs.filter(status='lost').count(),
-            'active_loans': loan_items_qs.filter(status='borrowed').count(),
-            'active_loan_batches': loans_qs.filter(status='active').count(),
+            'active_loan_books': loan_items_qs.filter(status='borrowed').count(),
+            'total_active_loans': loans_qs.filter(status='active').count(),
             'overdue_loans': loan_items_qs.filter(
                 status='borrowed',
                 loan__due_date__lt=timezone.now(),
@@ -203,7 +203,7 @@ def dashboard_users_detail_view(request, user_id):
         'top_categories': top_categories,
     }
 
-    return render(request, 'dashboard/users/id.html', context)
+    return render(request, 'dashboard/users/detail.html', context)
 
 @staff_member_required
 def toggle_user_status_api(request, user_id):

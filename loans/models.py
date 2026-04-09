@@ -4,7 +4,7 @@ from django.db import models
 from django.conf import settings
 from regex import T
 from books.models import Book
-from reservations.models import HoldItem
+from holds.models import HoldItem
 from django.utils import timezone
 from django.db.models import Manager
 

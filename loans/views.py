@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from datetime import timedelta
 from decimal import Decimal
 from .models import Loan, LoanItem
-from reservations.models import Hold
+from holds.models import Hold
 from books.models import Book
 from fines.models import Fine
 
@@ -43,7 +43,7 @@ def is_staff(user):
 @user_passes_test(is_staff)
 def create_loan_view(request, batch_id):
     """
-    Create a loan from a confirmed reservation batch.
+    Create a loan from a confirmed hold batch.
     This happens when user comes to pick up the books.
     """
     hold = get_object_or_404(
@@ -57,12 +57,12 @@ def create_loan_view(request, batch_id):
     # Validate that batch is confirmed
     if hold.status != 'confirmed':
         messages.error(request, 'การจองนี้ยังไม่ได้รับการยืนยันหรือถูกยกเลิกแล้ว')
-        return redirect('dashboard_reservations')
+        return redirect('holds:dashboard_holds')
     
     # Check if expired
     if hold.is_expired():
         messages.error(request, 'การจองนี้หมดอายุแล้ว กรุณายกเลิกการจองและให้ user จองใหม่')
-        return redirect('dashboard_reservations')
+        return redirect('holds:dashboard_holds')
     
     if request.method == 'POST':
         # Get loan period from settings or default 14 days
@@ -129,7 +129,7 @@ def create_loan_view(request, batch_id):
                 
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
-            return redirect('dashboard_reservations')
+            return redirect('holds:dashboard_holds')
     
     # GET request - show confirmation page
     confirmed_hold_items = hold.hold_items.filter(
@@ -137,8 +137,8 @@ def create_loan_view(request, batch_id):
     )
     
     context = {
-        'reservation_batch': hold,
-        'reservations': confirmed_hold_items,
+        'hold': hold,
+        'hold_items': confirmed_hold_items,
     }
     
     return render(request, 'loans/create_loan.html', context)

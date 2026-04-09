@@ -1,9 +1,9 @@
 {% extends "base_admin.html" %}
 {% block title %}
-    Reservation #{{ batch.id }} Detail
+    รายละเอียดการจอง #{{ batch.id }}
 {% endblock title %}
 {% block page_title %}
-    Reservation #{{ batch.id }} - {{ batch.user.username }}
+    รายละเอียดการจอง #{{ batch.id }} - {{ batch.user.username }}
 {% endblock page_title %}
 {% block extra_css %}
     <style>
@@ -16,7 +16,7 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <a href="{% url 'dashboard_reservations' %}"
+            <a href="{% url 'holds:dashboard_holds' %}"
                class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Back to List
             </a>
@@ -80,7 +80,7 @@
                 </div>
             {% endif %}
             <form method="post"
-                  action="{% url 'dashboard_reservations_confirm_selected' batch.id %}"
+                  action="{% url 'holds:dashboard_confirm_hold_books' batch.id %}"
                   id="confirmForm">
                 {% csrf_token %}
                 <div class="table-responsive">
@@ -103,49 +103,49 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for reservation in batch.hold_items.all %}
-                                <tr class="{% if reservation.book.available_quantity == 0 %}table-danger{% endif %}">
+                            {% for hold_item in batch.hold_items.all %}
+                                <tr class="{% if hold_item.book.available_quantity == 0 %}table-danger{% endif %}">
                                     {% if batch.status == 'pending' %}
                                         <td>
-                                            {% if reservation.book.available_quantity > 0 %}
+                                            {% if hold_item.book.available_quantity > 0 %}
                                                 <input type="checkbox"
-                                                       class="form-check-input reservation-checkbox"
-                                                       name="reservation_ids"
-                                                       value="{{ reservation.id }}">
+                                                       class="form-check-input hold-item-checkbox"
+                                                       name="hold_item_ids"
+                                                       value="{{ hold_item.id }}">
                                             {% else %}
                                                 <input type="checkbox" class="form-check-input" disabled>
                                             {% endif %}
                                         </td>
                                     {% endif %}
                                     <td>
-                                        <strong>{{ reservation.book.title }}</strong>
+                                        <strong>{{ hold_item.book.title }}</strong>
                                         <br>
-                                        <small class="text-muted">ISBN: {{ reservation.book.isbn|default:"-" }}</small>
+                                        <small class="text-muted">ISBN: {{ hold_item.book.isbn|default:"-" }}</small>
                                     </td>
                                     <td>
-                                        {% for author in reservation.book.authors.all %}
+                                        {% for author in hold_item.book.authors.all %}
                                             <span class="badge bg-secondary">{{ author.name }}</span>
                                         {% empty %}
                                             -
                                         {% endfor %}
                                     </td>
-                                    <td>{{ reservation.book.publisher.name|default:"-" }}</td>
+                                    <td>{{ hold_item.book.publisher.name|default:"-" }}</td>
                                     <td>
-                                        {% if reservation.book.available_quantity > 0 %}
+                                        {% if hold_item.book.available_quantity > 0 %}
                                             <span class="badge bg-success fs-6">
                                                 <i class="bi bi-check-circle"></i>
-                                                {{ reservation.book.available_quantity }}/{{ reservation.book.total_quantity }} available
+                                                {{ hold_item.book.available_quantity }}/{{ hold_item.book.total_quantity }} available
                                             </span>
                                         {% else %}
                                             <span class="badge bg-danger fs-6">
                                                 <i class="bi bi-x-circle"></i>
-                                                Out of Stock (0/{{ reservation.book.total_quantity }})
+                                                Out of Stock (0/{{ hold_item.book.total_quantity }})
                                             </span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'confirmed' %}success{% else %}secondary{% endif %} fs-6">
-                                            {{ reservation.get_status_display }}
+                                        <span class="badge bg-{% if hold_item.status == 'pending' %}warning{% elif hold_item.status == 'confirmed' %}success{% else %}secondary{% endif %} fs-6">
+                                            {{ hold_item.get_status_display }}
                                         </span>
                                     </td>
                                 </tr>
@@ -157,7 +157,7 @@
                     <div class="mt-4">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <span id="selectedCount" class="text-muted">0 books selected</span>
+                                <span id="selectedCount" class="text-muted">0 หนังสือที่เลือก</span>
                             </div>
                             <div class="btn-group">
                                 <button type="submit"
@@ -165,12 +165,12 @@
                                         id="confirmBtn"
                                         disabled
                                         onclick="return confirm('ยืนยันการจองหนังสือที่เลือก?')">
-                                    <i class="bi bi-check-circle"></i> Confirm Selected Books
+                                    <i class="bi bi-check-circle"></i> ยืนยันการจองหนังสือที่เลือก
                                 </button>
                                 <button type="button"
                                         class="btn btn-danger"
                                         onclick="if(confirm('ยกเลิกการจองทั้งหมด?')) { document.getElementById('cancelForm').submit(); }">
-                                    <i class="bi bi-x-circle"></i> Cancel All
+                                    <i class="bi bi-x-circle"></i> ยกเลิกทั้งหมด
                                 </button>
                             </div>
                         </div>
@@ -179,12 +179,12 @@
                     <div class="mt-4">
                         <div class="btn-group">
                             <a href="{% url 'loans:create_loan' batch.id %}" class="btn btn-primary">
-                                <i class="bi bi-box-seam"></i> Mark as Picked Up
+                                <i class="bi bi-box-seam"></i> รับหนังสือ
                             </a>
                             <button type="button"
                                     class="btn btn-outline-danger"
                                     onclick="if(confirm('ยกเลิกการจองที่ยืนยันแล้ว?\n(จะคืนจำนวนหนังสือกลับ)')) { document.getElementById('cancelForm').submit(); }">
-                                <i class="bi bi-x-circle"></i> Cancel This Reservation
+                                <i class="bi bi-x-circle"></i> ยกเลิกการจอง
                             </button>
                         </div>
                     </div>
@@ -192,7 +192,7 @@
             </form>
             <!-- Hidden Cancel Form -->
             <form method="post"
-                  action="{% url 'dashboard_reservations_cancel' batch.id %}"
+                  action="{% url 'holds:dashboard_cancel_hold' batch.id %}"
                   id="cancelForm"
                   class="d-none">
                 {% csrf_token %}
@@ -204,7 +204,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const selectAll = document.getElementById('selectAll');
-        const checkboxes = document.querySelectorAll('.reservation-checkbox');
+        const checkboxes = document.querySelectorAll('.hold-item-checkbox');
         const confirmBtn = document.getElementById('confirmBtn');
         const selectedCount = document.getElementById('selectedCount');
         
@@ -222,7 +222,7 @@
         });
         
         function updateSelectedCount() {
-            const checkedCount = document.querySelectorAll('.reservation-checkbox:checked').length;
+            const checkedCount = document.querySelectorAll('.hold-item-checkbox:checked').length;
             selectedCount.textContent = checkedCount + ' book' + (checkedCount !== 1 ? 's' : '') + ' selected';
             confirmBtn.disabled = checkedCount === 0;
             

@@ -1,5 +1,7 @@
-{% extends 'base.html' %}
-{% block title %}รายการจองของฉัน - Digital Library{% endblock %}
+{% extends "base.html" %}
+{% block title %}
+    รายการจองของฉัน - Digital Library
+{% endblock title %}
 {% block content %}
     <div class="container mt-4">
         <div class="row mb-4">
@@ -8,58 +10,58 @@
                 <p class="text-muted">ประวัติการจองหนังสือทั้งหมดของคุณ</p>
             </div>
         </div>
-        {% if reservation_batches %}
+        {% if holds %}
             <div class="row">
                 <div class="col">
-                    {% for batch in reservation_batches %}
+                    {% for hold in holds %}
                         <div class="card mb-3">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div>
                                     <h5 class="mb-0">
                                         <i class="bi bi-bookmark-fill"></i>
-                                        การจอง #{{ batch.id }}
+                                        การจอง #{{ hold.id }}
                                     </h5>
                                     <small class="text-muted">
-                                        <i class="bi bi-calendar"></i> วันที่จอง: {{ batch.created_at|date:"d/m/Y H:i" }}
+                                        <i class="bi bi-calendar"></i> วันที่จอง: {{ hold.created_at|date:"d/m/Y H:i" }}
                                     </small>
                                 </div>
                                 <div>
-                                    {% if batch.status == 'pending' %}
+                                    {% if hold.status == 'pending' %}
                                         <span class="badge bg-info fs-6">รอดำเนินการ</span>
-                                    {% elif batch.status == 'confirmed' %}
-                                        {% if batch.is_expired %}
+                                    {% elif hold.status == 'confirmed' %}
+                                        {% if hold.is_expired %}
                                             <span class="badge bg-warning text-dark fs-6">กำลังจะหมดอายุ</span>
                                         {% else %}
                                             <span class="badge bg-success fs-6">ยืนยันแล้ว</span>
                                         {% endif %}
-                                    {% elif batch.status == 'completed' %}
+                                    {% elif hold.status == 'completed' %}
                                         <span class="badge bg-primary fs-6">รับหนังสือแล้ว</span>
-                                    {% elif batch.status == 'expired' %}
+                                    {% elif hold.status == 'expired' %}
                                         <span class="badge bg-danger fs-6">หมดอายุ (ไม่มารับ)</span>
-                                    {% elif batch.status == 'cancelled' %}
+                                    {% elif hold.status == 'cancelled' %}
                                         <span class="badge bg-secondary fs-6">ยกเลิกแล้ว</span>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="card-body">
                                 <!-- Expiry Information -->
-                                {% if batch.expires_at %}
+                                {% if hold.expires_at %}
                                     <div class="mb-3">
                                         <strong>รับหนังสือภายในวันที่ถีง:</strong>
-                                        <span class="{% if batch.status == 'confirmed' and batch.is_expired %}text-danger fw-bold{% endif %}">
-                                            {{ batch.expires_at|date:"d/m/Y H:i" }}
+                                        <span class="{% if hold.status == 'confirmed' and hold.is_expired %}text-danger fw-bold{% endif %}">
+                                            {{ hold.expires_at|date:"d/m/Y H:i" }}
                                         </span>
-                                        {% if batch.status == 'confirmed' and batch.is_expired %}
+                                        {% if hold.status == 'confirmed' and hold.is_expired %}
                                             <span class="badge bg-danger ms-2">หมดเวลารับหนังสือแล้ว!</span>
-                                        {% elif batch.status == 'completed' %}
+                                        {% elif hold.status == 'completed' %}
                                             <span class="badge bg-primary ms-2">รับหนังสือเรียบร้อยแล้ว</span>
-                                        {% elif batch.status == 'expired' %}
+                                        {% elif hold.status == 'expired' %}
                                             <span class="badge bg-secondary ms-2">หมดอายุ (ถูกยกเลิก)</span>
                                         {% endif %}
                                     </div>
                                 {% endif %}
                                 <!-- Reserved Books -->
-                                <h6 class="mb-3">รายการหนังสือที่จอง ({{ batch.reservations.count }} เล่ม)</h6>
+                                <h6 class="mb-3">รายการหนังสือที่จอง ({{ hold.hold_items.count }} เล่ม)</h6>
                                 <div class="table-responsive">
                                     <table class="table table-sm">
                                         <thead>
@@ -71,17 +73,15 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for reservation in batch.reservations.all %}
+                                            {% for item in hold.hold_items.all %}
                                                 <tr>
                                                     <td>
-                                                        <a href="{% url 'books:book_detail' reservation.book.id %}"
-                                                           class="text-decoration-none">
-                                                            {{ reservation.book.title }}
-                                                        </a>
+                                                        <a href="{% url 'books:book_detail' item.book.id %}"
+                                                           class="text-decoration-none">{{ item.book.title }}</a>
                                                     </td>
                                                     <td>
-                                                        {% if reservation.book.authors.all %}
-                                                            {% for author in reservation.book.authors.all %}
+                                                        {% if item.book.authors.all %}
+                                                            {% for author in item.book.authors.all %}
                                                                 {{ author.name }}
                                                                 {% if not forloop.last %},{% endif %}
                                                             {% endfor %}
@@ -89,13 +89,13 @@
                                                             -
                                                         {% endif %}
                                                     </td>
-                                                    <td>{{ reservation.book.publisher.name|default:"-" }}</td>
+                                                    <td>{{ item.book.publisher.name|default:"-" }}</td>
                                                     <td>
-                                                        {% if reservation.status == 'pending' %}
+                                                        {% if item.status == 'pending' %}
                                                             <span class="badge bg-info">รอดำเนินการ</span>
-                                                        {% elif reservation.status == 'confirmed' %}
+                                                        {% elif item.status == 'confirmed' %}
                                                             <span class="badge bg-success">ยืนยันแล้ว</span>
-                                                        {% elif reservation.status == 'cancelled' %}
+                                                        {% elif item.status == 'cancelled' %}
                                                             <span class="badge bg-secondary">ยกเลิกแล้ว</span>
                                                         {% endif %}
                                                     </td>
@@ -104,13 +104,13 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <!-- Cancel Button for Pending Reservations -->
-                                {% if batch.can_be_cancelled_by_user %}
+                                <!-- Cancel Button for Pending Holds -->
+                                {% if hold.can_be_cancelled_by_user %}
                                     <div class="mt-3">
                                         <form method="post"
-                                              action="{% url 'reservations:cancel_reservation' batch.id %}"
+                                              action="{% url 'holds:cancel_hold_book' hold.id %}"
                                               class="d-inline"
-                                              onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจอง #{{ batch.id }}?');">
+                                              onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจอง #{{ hold.id }}?');">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                                 <i class="bi bi-x-circle"></i> ยกเลิกการจอง

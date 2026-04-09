@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import Q , Manager
 
 if TYPE_CHECKING:
-    from reservations.models import HoldItem
+    from holds.models import HoldItem
     from loans.models import LoanItem
 
 
