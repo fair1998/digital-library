@@ -61,7 +61,32 @@ def logout_view(request):
 
 def home_view(request):
     """Home page view"""
-    return render(request, 'home.html')
+    from books.models import Book
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Count
+    
+    # Get latest 10 books
+    latest_books = Book.objects.filter(
+        total_quantity__gt=0
+    ).order_by('-created_at')[:10]
+    
+    # Get popular books (most borrowed in last 30 days)
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    popular_books = Book.objects.filter(
+        loan_items__created_at__gte=thirty_days_ago
+    ).annotate(
+        loan_count=Count('loan_items')
+    ).filter(
+        loan_count__gt=0
+    ).order_by('-loan_count')[:10]
+    
+    context = {
+        'latest_books': latest_books,
+        'popular_books': popular_books,
+    }
+    
+    return render(request, 'home.html', context)
 
 @staff_member_required
 def dashboard_users_view(request):
