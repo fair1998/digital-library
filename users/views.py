@@ -139,7 +139,7 @@ def dashboard_users_view(request):
         'inactive_users': inactive_users,
     }
     
-    return render(request, 'dashboard/users/index.html', context)
+    return render(request, 'dashboard/users/list.html', context)
 
 @staff_member_required
 def dashboard_user_detail_view(request, user_id):
