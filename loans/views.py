@@ -299,7 +299,7 @@ def mark_returned_view(request, item_id):
                 
                 # Redirect to fines report if fine was created
                 if fine_created:
-                    return redirect('dashboard_fines:admin_report')
+                    return redirect('fines:dashboard_fines')
                     
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
@@ -358,7 +358,7 @@ def mark_lost_view(request, item_id):
                 )
                 
                 # Redirect to fines report
-                return redirect('dashboard_fines:admin_report')
+                return redirect('fines:dashboard_fines')
                 
         except Exception as e:
             messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')

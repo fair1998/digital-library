@@ -252,13 +252,14 @@
             const fields = document.getElementById('damageFields_' + itemId);
             
             if (checkbox.checked) {
-                fields.style.display = 'block';
+                fields.classList.remove('d-none');
             } else {
-                fields.style.display = 'none';
+                fields.classList.add('d-none');
             }
         }
         
         function calculateFines() {
+            console.log('Calculating fines...');
             const dueDate = new Date('{{ loan_batch.due_date|date:"Y-m-d" }}');
             const today = new Date();
             const lateFinePerDay = parseFloat('{{ FINE_LATE_RETURN_PER_DAY|default:10 }}');
@@ -305,12 +306,12 @@
                 detailsDiv.innerHTML = '<ul class="mb-0">' + 
                     fineDetails.map(d => `<li>${d}</li>`).join('') + 
                     `</ul><hr><strong>รวมทั้งหมด: ${totalFine.toFixed(2)} บาท</strong>`;
-                summaryDiv.style.display = 'block';
-                submitBtn.style.display = 'inline-block';
+                summaryDiv.classList.remove('d-none');
+                submitBtn.classList.remove('d-none');
             } else {
-                summaryDiv.style.display = 'none';
-                submitBtn.style.display = 'inline-block';
                 detailsDiv.innerHTML = '<p class="mb-0">ไม่มีค่าปรับ</p>';
+                summaryDiv.classList.remove('d-none');
+                submitBtn.classList.remove('d-none');
             }
         }
     </script>

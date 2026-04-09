@@ -25,7 +25,7 @@ class FineAdmin(admin.ModelAdmin):
         'reason'
     ]
     readonly_fields = ['paid_at']
-    list_select_related = ['loan_item', 'loan_item__book', 'loan_item__loan_batch', 'loan_item__loan__user']
+    list_select_related = ['loan_item', 'loan_item__book', 'loan_item__loan', 'loan_item__loan__user']
     autocomplete_fields = ['loan_item']
     
     fieldsets = (

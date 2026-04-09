@@ -21,22 +21,18 @@ from django.conf import settings
 from django.conf.urls.static import static
 from users.views import home_view
 from users.dashboard_views import dashboard_home_view
-from fines.urls import dashboard_urlpatterns as fines_dashboard_urls
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('', home_view, name='home'),
+    path('dashboard/', dashboard_home_view, name='dashboard_home'),
     path('', include('users.urls')),
     path('', include('books.urls')),
     path('', include('holds.urls')),
-    path('loans/', include('loans.urls')),
-    path('my-fines/', include('fines.urls')),
-    
-    # Admin Dashboard
-    path('dashboard/', dashboard_home_view, name='dashboard_home'),
-    path('dashboard/', include((fines_dashboard_urls, 'fines'), namespace='dashboard_fines')),
+    path('', include('loans.urls')),
+    path('', include('fines.urls')),
 ]
 
 if settings.DEBUG:

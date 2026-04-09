@@ -38,7 +38,7 @@ def my_fines_view(request):
 
 @login_required
 @user_passes_test(is_staff)
-def admin_fines_report_view(request):
+def dashboard_fines_view(request):
     """
     Display loan batches with fines grouped by batch.
     Admin can search by user or loan batch ID.
@@ -79,12 +79,12 @@ def admin_fines_report_view(request):
         'search_query': search_query,
     }
     
-    return render(request, 'fines/admin_report.html', context)
+    return render(request, 'dashboard/fines/list.html', context)
 
 
 @login_required
 @user_passes_test(is_staff)
-def loan_batch_fines_detail_view(request, batch_id):
+def dashboard_fines_detail_view(request, loan_id):
     """
     Display detailed fine information for a specific loan batch.
     All fines are paid immediately upon creation.
@@ -95,14 +95,14 @@ def loan_batch_fines_detail_view(request, batch_id):
             'loan_items__book__authors',
             'loan_items__fines'
         ),
-        id=batch_id
+        id=loan_id
     )
     
     # Get all loan items with fines
     loan_items_with_fines = loan_batch.loan_items.filter(fines__isnull=False).distinct()
     
     # Calculate totals for this batch
-    all_fines = Fine.objects.filter(loan_item__loan_batch=loan_batch)
+    all_fines = Fine.objects.filter(loan_item__loan=loan_batch)
     total_amount = all_fines.aggregate(Sum('amount'))['amount__sum'] or 0
     
     context = {
@@ -111,4 +111,4 @@ def loan_batch_fines_detail_view(request, batch_id):
         'total_amount': total_amount,
     }
     
-    return render(request, 'fines/batch_detail.html', context)
+    return render(request, 'dashboard/fines/detail.html', context)
