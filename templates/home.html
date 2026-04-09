@@ -4,6 +4,176 @@
 {% endblock title %}
 {% block extra_css %}
     <style>
+    /* Hero Section Styles */
+    .hero-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 1.5rem !important;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .hero-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        background-position: bottom;
+        opacity: 0.3;
+    }
+    
+    .hero-icon {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .hero-title {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 0.8s ease;
+    }
+    
+    .hero-subtitle {
+        animation: fadeInUp 1s ease;
+    }
+    
+    .hero-buttons {
+        animation: fadeIn 1.2s ease;
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .hero-btn {
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .hero-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Features Section Styles */
+    .feature-card {
+        border-radius: 1rem !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: white;
+        border: none !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .feature-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .feature-icon {
+        transition: all 0.4s ease;
+        display: inline-block;
+    }
+    
+    .feature-card:hover .feature-icon {
+        transform: scale(1.15) rotate(5deg);
+    }
+    
+    .feature-card:nth-child(1) .feature-icon {
+        animation: pulse-primary 2s infinite;
+    }
+    
+    .feature-card:nth-child(2) .feature-icon {
+        animation: pulse-success 2s infinite;
+    }
+    
+    .feature-card:nth-child(3) .feature-icon {
+        animation: pulse-info 2s infinite;
+    }
+    
+    @keyframes pulse-primary {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 15px rgba(13, 110, 253, 0);
+        }
+    }
+    
+    @keyframes pulse-success {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 15px rgba(25, 135, 84, 0);
+        }
+    }
+    
+    @keyframes pulse-info {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 15px rgba(13, 202, 240, 0);
+        }
+    }
+    
+    .feature-title {
+        transition: color 0.3s ease;
+    }
+    
+    .feature-card:hover .feature-title {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
     /* Book Slider Styles */
     .book-slider-container {
         position: relative;
@@ -126,27 +296,33 @@
         <!-- Hero Section -->
         <div class="row mb-5">
             <div class="col-12">
-                <div class="card bg-primary text-white shadow-sm border-0">
-                    <div class="card-body text-center py-5">
-                        <div class="mb-4">
-                            <i class="bi bi-book-fill" style="font-size: 4rem;"></i>
+                <div class="card hero-card text-white shadow-lg border-0">
+                    <div class="card-body text-center py-5 position-relative">
+                        <div class="mb-4 hero-icon">
+                            <i class="bi bi-book-fill" style="font-size: 4.5rem;"></i>
                         </div>
-                        <h1 class="display-4 fw-bold mb-3">ยินดีต้อนรับสู่ห้องสมุดดิจิทัล</h1>
-                        <p class="lead mb-4 fs-5">ระบบจัดการห้องสมุดออนไลน์ที่ทันสมัย สะดวก และง่ายต่อการใช้งาน</p>
+                        <h1 class="display-4 fw-bold mb-3 hero-title">ยินดีต้อนรับสู่ห้องสมุดดิจิทัล</h1>
+                        <p class="lead mb-4 fs-5 hero-subtitle"
+                           style="max-width: 700px;
+                                  margin: 0 auto">ระบบจัดการห้องสมุดออนไลน์ที่ทันสมัย สะดวก และง่ายต่อการใช้งาน</p>
                         {% if not user.is_authenticated %}
-                            <div class="d-flex gap-3 justify-content-center flex-wrap">
-                                <a href="{% url 'users:register' %}" class="btn btn-light btn-lg px-4">
-                                    <i class="bi bi-person-plus"></i> ลงทะเบียนเลย
+                            <div class="d-flex gap-3 justify-content-center flex-wrap hero-buttons">
+                                <a href="{% url 'users:register' %}"
+                                   class="btn btn-light btn-lg px-5 hero-btn">
+                                    <i class="bi bi-person-plus me-2"></i>ลงทะเบียนเลย
                                 </a>
                                 <a href="{% url 'users:login' %}"
-                                   class="btn btn-outline-light btn-lg px-4">
-                                    <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
+                                   class="btn btn-outline-light btn-lg px-5 hero-btn">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
                                 </a>
                             </div>
                         {% else %}
-                            <a href="{% url 'books:book_list' %}" class="btn btn-light btn-lg px-4">
-                                <i class="bi bi-search"></i> เริ่มค้นหาหนังสือ
-                            </a>
+                            <div class="hero-buttons">
+                                <a href="{% url 'books:book_list' %}"
+                                   class="btn btn-light btn-lg px-5 hero-btn">
+                                    <i class="bi bi-search me-2"></i>เริ่มค้นหาหนังสือ
+                                </a>
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -155,35 +331,38 @@
         <!-- Features Section -->
         <div class="row g-4 mb-5">
             <div class="col-md-4">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body text-center p-4">
+                <div class="card feature-card h-100 shadow-sm">
+                    <div class="card-body text-center p-5">
                         <div class="mb-4">
-                            <i class="bi bi-search text-primary" style="font-size: 3.5rem;"></i>
+                            <i class="bi bi-search text-primary feature-icon"
+                               style="font-size: 4rem"></i>
                         </div>
-                        <h5 class="card-title fw-semibold mb-3">ค้นหาหนังสือ</h5>
-                        <p class="card-text text-muted">ค้นหาหนังสือที่คุณสนใจได้ง่ายดาย ด้วยระบบค้นหาที่ทรงพลัง</p>
+                        <h5 class="card-title feature-title fw-bold mb-3 fs-4">ค้นหาหนังสือ</h5>
+                        <p class="card-text text-muted lh-lg">ค้นหาหนังสือที่คุณสนใจได้ง่ายดาย ด้วยระบบค้นหาที่ทรงพลังและรวดเร็ว</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body text-center p-4">
+                <div class="card feature-card h-100 shadow-sm">
+                    <div class="card-body text-center p-5">
                         <div class="mb-4">
-                            <i class="bi bi-bookmark-check text-success" style="font-size: 3.5rem;"></i>
+                            <i class="bi bi-bookmark-check text-success feature-icon"
+                               style="font-size: 4rem"></i>
                         </div>
-                        <h5 class="card-title fw-semibold mb-3">จองหนังสือ</h5>
-                        <p class="card-text text-muted">จองหนังสือที่ต้องการได้ทันที และรอการอนุมัติจากระบบ</p>
+                        <h5 class="card-title feature-title fw-bold mb-3 fs-4">จองหนังสือ</h5>
+                        <p class="card-text text-muted lh-lg">จองหนังสือที่ต้องการได้ทันที และรับการอนุมัติจากระบบอัตโนมัติ</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body text-center p-4">
+                <div class="card feature-card h-100 shadow-sm">
+                    <div class="card-body text-center p-5">
                         <div class="mb-4">
-                            <i class="bi bi-clock-history text-info" style="font-size: 3.5rem;"></i>
+                            <i class="bi bi-clock-history text-info feature-icon"
+                               style="font-size: 4rem"></i>
                         </div>
-                        <h5 class="card-title fw-semibold mb-3">ติดตามสถานะ</h5>
-                        <p class="card-text text-muted">ตรวจสอบสถานะการจอง การยืม และค่าปรับได้อย่างสะดวก</p>
+                        <h5 class="card-title feature-title fw-bold mb-3 fs-4">ติดตามสถานะ</h5>
+                        <p class="card-text text-muted lh-lg">ตรวจสอบสถานะการจอง การยืม และค่าปรับได้อย่างสะดวกตลอดเวลา</p>
                     </div>
                 </div>
             </div>
@@ -321,40 +500,6 @@
                                 onclick="scrollSlider('popular', 1)">
                             <i class="bi bi-chevron-right"></i>
                         </button>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-        <!-- User-specific Content -->
-        {% if user.is_authenticated %}
-            <div class="row">
-                <div class="col-12">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body p-4">
-                            <h3 class="mb-3 fw-semibold">
-                                <i class="bi bi-person-circle text-primary"></i>
-                                สวัสดี, {{ user.get_full_name|default:user.username }}!
-                            </h3>
-                            <p class="text-muted mb-3">ยินดีต้อนรับกลับสู่ระบบห้องสมุดดิจิทัล</p>
-                            <a href="{% url 'books:book_list' %}" class="btn btn-primary">
-                                <i class="bi bi-search"></i> เริ่มค้นหาหนังสือที่คุณสนใจ
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% else %}
-            <!-- Call to Action for Guests -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card bg-light shadow-sm border-0">
-                        <div class="card-body text-center p-5">
-                            <h4 class="fw-semibold mb-3">พร้อมเริ่มต้นแล้วหรือยัง?</h4>
-                            <p class="text-muted mb-4">ลงทะเบียนวันนี้เพื่อเริ่มใช้งานระบบห้องสมุดดิจิทัล</p>
-                            <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg px-4">
-                                <i class="bi bi-person-plus"></i> สมัครสมาชิกฟรี
-                            </a>
-                        </div>
                     </div>
                 </div>
             </div>
