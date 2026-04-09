@@ -29,21 +29,21 @@
                                 </div>
                                 <div>
                                     {% if hold.status == 'pending' %}
-                                        <span class="badge bg-info fs-6">
+                                        <span class="badge bg-warning fs-6">
                                             <i class="bi bi-clock"></i> {{ hold.get_status_display }}
                                         </span>
                                     {% elif hold.status == 'confirmed' %}
                                         {% if hold.is_expired %}
-                                            <span class="badge bg-warning text-dark fs-6">
+                                            <span class="badge bg-danger text-dark fs-6">
                                                 <i class="bi bi-exclamation-triangle"></i> {{ hold.get_status_display }}
                                             </span>
                                         {% else %}
-                                            <span class="badge bg-success fs-6">
+                                            <span class="badge bg-info fs-6">
                                                 <i class="bi bi-check-circle"></i> {{ hold.get_status_display }}
                                             </span>
                                         {% endif %}
                                     {% elif hold.status == 'completed' %}
-                                        <span class="badge bg-primary fs-6">
+                                        <span class="badge bg-success fs-6">
                                             <i class="bi bi-book"></i> {{ hold.get_status_display }}
                                         </span>
                                     {% elif hold.status == 'expired' %}
@@ -51,7 +51,7 @@
                                             <i class="bi bi-x-circle"></i> {{ hold.get_status_display }}
                                         </span>
                                     {% elif hold.status == 'cancelled' %}
-                                        <span class="badge bg-secondary fs-6">
+                                        <span class="badge bg-danger fs-6">
                                             <i class="bi bi-x"></i> {{ hold.get_status_display }}
                                         </span>
                                     {% endif %}
