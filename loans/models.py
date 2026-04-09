@@ -11,8 +11,8 @@ from django.db.models import Manager
 class Loan(models.Model):
     """Header/parent record for a single borrowing transaction."""
     STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('completed', 'Completed'),
+        ('active', 'กำลังยืม'),
+        ('completed', 'คืนครบแล้ว'),
     ]
 
     id = models.AutoField(primary_key=True)
@@ -40,7 +40,7 @@ class Loan(models.Model):
 
     def __str__(self):
         return f"Loan #{self.id} - {self.user.username}"
-    
+
     @property
     def is_overdue(self) -> bool:
         """Check if this loan is overdue."""
@@ -51,9 +51,9 @@ class Loan(models.Model):
 class LoanItem(models.Model):
     """Individual borrowed books within a loan."""
     STATUS_CHOICES = [
-        ('borrowed', 'Borrowed'),
-        ('returned', 'Returned'),
-        ('lost', 'Lost'),
+        ('borrowed', 'กำลังยืม'),
+        ('returned', 'คืนแล้ว'),
+        ('lost', 'หาย'),
     ]
 
     id = models.AutoField(primary_key=True)

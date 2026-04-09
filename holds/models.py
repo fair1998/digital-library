@@ -12,11 +12,11 @@ class Hold(models.Model):
     """Header/parent record for a single hold transaction."""
     
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('completed', 'Completed'),
-        ('expired', 'Expired'),
-        ('cancelled', 'Cancelled'),
+        ('pending', 'รอการยืนยัน'),
+        ('confirmed', 'ยืนยันแล้ว'),
+        ('completed', 'เสร็จสิ้น'),
+        ('expired', 'หมดอายุ'),
+        ('cancelled', 'ยกเลิก'),
     ]
     
     id = models.AutoField(primary_key=True)
@@ -37,12 +37,18 @@ class Hold(models.Model):
     def __str__(self):
         return f"Hold #{self.id} - {self.user.username} ({self.status})"
     
+    @property
+    def status_label(self) -> str:
+        return self.get_status_display() # type: ignore[attr-defined]
+    
+    @property
     def is_expired(self):
         """Check if hold has expired."""
         if not self.expires_at:
             return False
         return timezone.now() > self.expires_at
     
+    @property
     def can_be_confirmed(self):
         """Check if hold can be confirmed by admin."""
         if self.status != 'pending':
@@ -50,32 +56,30 @@ class Hold(models.Model):
         # No expiry check here since admin sets expiry when confirming
         # Check if all items in the hold can be confirmed
         for item in self.hold_items.all():
-            if not item.can_be_confirmed():
+            if not item.can_be_confirmed:
                 return False
         return True
-    
+
+    @property    
     def can_be_cancelled(self):
         """Check if hold can be cancelled by admin."""
         # Can cancel if pending or confirmed (but not yet converted to loan)
         return self.status in ['pending', 'confirmed']
     
+    @property       
     def can_be_cancelled_by_user(self):
         """Check if user can cancel this hold."""
         # User can only cancel pending holds
         return self.status == 'pending'
-    
-    def get_status_display(self):
-        """Return human-readable status."""
-        return dict(self.STATUS_CHOICES).get(self.status, 'Unknown')
 
 
 class HoldItem(models.Model):
     """Individual reserved books within a hold."""
     
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('cancelled', 'Cancelled'),
+        ('pending', 'รอการยืนยัน'),
+        ('confirmed', 'ยืนยันแล้ว'),
+        ('cancelled', 'ยกเลิก'),
     ]
     
     id = models.AutoField(primary_key=True)
@@ -92,7 +96,8 @@ class HoldItem(models.Model):
     
     def __str__(self):
         return f"{self.book.title} - Hold #{self.hold.id} ({self.status})"
-    
+
+    @property
     def can_be_confirmed(self):
         """Check if this hold item can be confirmed."""
         if self.status != 'pending':
@@ -101,7 +106,8 @@ class HoldItem(models.Model):
         if self.book.available_quantity <= 0:
             return False
         return True
-    
+
+    @property    
     def can_be_cancelled(self):
         """Check if this hold item can be cancelled."""
         return self.status in ['pending', 'confirmed']

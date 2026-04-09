@@ -60,7 +60,7 @@ def create_loan_view(request, batch_id):
         return redirect('holds:dashboard_holds')
     
     # Check if expired
-    if hold.is_expired():
+    if hold.is_expired:
         messages.error(request, 'การจองนี้หมดอายุแล้ว กรุณายกเลิกการจองและให้ user จองใหม่')
         return redirect('holds:dashboard_holds')
     

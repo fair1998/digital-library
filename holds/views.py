@@ -39,30 +39,30 @@ def cancel_hold_book_action(request, id):
         return redirect('holds:my_holds')
     
     # Get batch and verify ownership
-    batch = get_object_or_404(Hold, id=id, user=request.user)
+    hold = get_object_or_404(Hold, id=id, user=request.user)
     
     # Check if user can cancel
-    if not batch.can_be_cancelled_by_user():
+    if not hold.can_be_cancelled_by_user:
         messages.error(
             request,
-            f'ไม่สามารถยกเลิกการจอง #{batch.id} ได้ (สถานะ: {batch.get_status_display()})'
+            f'ไม่สามารถยกเลิกการจอง #{hold.id} ได้ (สถานะ: {hold.status_label})'
         )
         return redirect('holds:my_holds')
     
     try:
         with transaction.atomic():
             # Update batch status
-            batch.status = 'cancelled'
-            batch.save()
+            hold.status = 'cancelled'
+            hold.save()
             
             # Update all hold items
-            for hold_item in batch.hold_items.all():
+            for hold_item in hold.hold_items.all():
                 hold_item.status = 'cancelled'
                 hold_item.save()
             
             messages.success(
                 request,
-                f'ยกเลิกการจอง #{batch.id} สำเร็จ ({batch.hold_items.count()} เล่ม)'
+                f'ยกเลิกการจอง #{hold.id} สำเร็จ ({hold.hold_items.count()} เล่ม)'
             )
             
     except Exception as e:
@@ -179,13 +179,13 @@ def dashboard_confirm_hold_books_action(request, id):
         messages.error(request, 'Invalid request method.')
         return redirect('holds:dashboard_holds')
     
-    batch = get_object_or_404(Hold, id=id)
+    hold = get_object_or_404(Hold, id=id)
     
     # Check if can be confirmed
-    if batch.status != 'pending':
+    if hold.status != 'pending':
         messages.error(
             request,
-            f'ไม่สามารถยืนยันการจอง #{batch.id} ได้ (สถานะ: {batch.get_status_display()})'
+            f'ไม่สามารถยืนยันการจอง #{hold.id} ได้ (สถานะ: {hold.status_label})'
         )
         return redirect('holds:dashboard_hold_detail', id=id)
     
@@ -194,12 +194,12 @@ def dashboard_confirm_hold_books_action(request, id):
     
     if not selected_ids:
         messages.warning(request, 'กรุณาเลือกหนังสือที่ต้องการยืนยัน')
-        return redirect('holds:dashboard_hold_detail', batch_id=id)
+        return redirect('holds:dashboard_hold_detail', id=id)
     
     try:
         with transaction.atomic():
             # Get all pending hold items
-            all_pending = batch.hold_items.filter(status='pending').select_related('book')
+            all_pending = hold.hold_items.filter(status='pending').select_related('book')
             
             # Get selected hold items to confirm
             selected_hold_items = all_pending.filter(id__in=selected_ids)
@@ -234,18 +234,18 @@ def dashboard_confirm_hold_books_action(request, id):
                 rejected_count += 1
             
             # Update batch status
-            has_confirmed = batch.hold_items.filter(status='confirmed').exists()
-            all_processed = not batch.hold_items.filter(status='pending').exists()
+            has_confirmed = hold.hold_items.filter(status='confirmed').exists()
+            all_processed = not hold.hold_items.filter(status='pending').exists()
             
             if has_confirmed:
-                batch.status = 'confirmed'
+                hold.status = 'confirmed'
                 # Set expiry time for confirmed hold (user must pick up books before this time)
                 expiry_days = getattr(settings, 'HOLD_EXPIRY_DAYS', 3)
-                batch.expires_at = timezone.now() + timedelta(days=expiry_days)
-                batch.save()
+                hold.expires_at = timezone.now() + timedelta(days=expiry_days)
+                hold.save()
             elif all_processed:
-                batch.status = 'cancelled'
-                batch.save()
+                hold.status = 'cancelled'
+                hold.save()
             
             # Build success message
             msg_parts = []
@@ -268,7 +268,7 @@ def dashboard_confirm_hold_books_action(request, id):
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('holds:dashboard_hold_detail', batch_id=id)
+    return redirect('holds:dashboard_hold_detail', id=id)
 
 
 @staff_member_required
@@ -287,7 +287,7 @@ def dashboard_confirm_hold_action(request, id):
     if hold.status != 'pending':
         messages.error(
             request,
-            f'ไม่สามารถยืนยันการจอง #{hold.id} ได้ (สถานะ: {hold.get_status_display()})'
+            f'ไม่สามารถยืนยันการจอง #{hold.id} ได้ (สถานะ: {hold.status_label})'
         )
         return redirect('holds:dashboard_holds')
     
@@ -379,41 +379,41 @@ def dashboard_cancel_hold_action(request, id):
         messages.error(request, 'Invalid request method.')
         return redirect('holds:dashboard_holds')
     
-    batch = get_object_or_404(Hold, id=id)
+    hold = get_object_or_404(Hold, id=id)
     
     # Check if already finalized
-    if batch.status in ['cancelled', 'expired', 'completed']:
-        messages.warning(request, f'การจอง #{batch.id} ถูกจัดการไปแล้ว (สถานะ: {batch.get_status_display()})')
+    if hold.status in ['cancelled', 'expired', 'completed']:
+        messages.warning(request, f'การจอง #{hold.id} ถูกจัดการไปแล้ว (สถานะ: {hold.status_label})')
         return redirect('holds:dashboard_holds')
     
     # Check if this is an expired cancellation
-    is_expired_cancellation = batch.is_expired() and batch.status == 'confirmed'
+    is_expired_cancellation = hold.is_expired and hold.status == 'confirmed'
     
     try:
         with transaction.atomic():
             # Store old status for message
-            old_status = batch.get_status_display()
+            old_status = hold.status_label
             
             # If was confirmed, need to return book quantities
-            if batch.status == 'confirmed':
-                for hold_item in batch.hold_items.filter(status='confirmed'):
+            if hold.status == 'confirmed':
+                for hold_item in hold.hold_items.filter(status='confirmed'):
                     book = hold_item.book
                     book.available_quantity += 1
                     book.save()
             
             # Update batch status based on reason
             if is_expired_cancellation:
-                batch.status = 'expired'
+                hold.status = 'expired'
                 new_status = 'หมดอายุ (ลูกค้าไม่มารับ)'
             else:
-                batch.status = 'cancelled'
+                hold.status = 'cancelled'
                 new_status = 'ยกเลิก'
             
-            batch.save()
+            hold.save()
             
             messages.success(
                 request,
-                f'{new_status}การจอง #{batch.id} สำเร็จ (สถานะเดิม: {old_status}, User: {batch.user.username})'
+                f'{new_status}การจอง #{hold.id} สำเร็จ (สถานะเดิม: {old_status}, User: {hold.user.username})'
             )
             
     except Exception as e:

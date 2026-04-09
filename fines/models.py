@@ -9,11 +9,11 @@ class Fine(models.Model):
     The paid_at timestamp serves as both creation and payment time.
     """
     TYPE_CHOICES = [
-        ('late_return', 'Late Return'),
-        ('lost', 'Lost'),
-        ('damaged', 'Damaged'),
+        ('late_return', 'คืนช้า'),
+        ('lost', 'หาย'),
+        ('damaged', 'เสียหาย'),
     ]
-
+    id = models.AutoField(primary_key=True)
     loan_item = models.ForeignKey(
         LoanItem,
         on_delete=models.CASCADE,
@@ -33,4 +33,5 @@ class Fine(models.Model):
         ordering = ['-paid_at']
 
     def __str__(self):
-        return f"Fine #{self.id} - {self.get_type_display()} - {self.amount} บาท"
+        type_display = dict(self.TYPE_CHOICES).get(self.type, self.type)
+        return f"ค่าปรับ #{self.id} - {type_display} - {self.amount} บาท"

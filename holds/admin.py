@@ -64,7 +64,7 @@ class HoldAdmin(admin.ModelAdmin):
         expiry_days = getattr(settings, 'HOLD_EXPIRY_DAYS', 3)
         
         for batch in queryset:
-            if not batch.can_be_confirmed():
+            if not batch.can_be_confirmed:
                 failed_count += 1
                 self.message_user(
                     request,
@@ -126,11 +126,11 @@ class HoldAdmin(admin.ModelAdmin):
         failed_count = 0
         
         for batch in queryset:
-            if not batch.can_be_cancelled():
+            if not batch.can_be_cancelled:
                 failed_count += 1
                 self.message_user(
                     request,
-                    f'Batch #{batch.id} cannot be cancelled (status: {batch.status})',
+                    f'Batch #{batch.id} cannot be cancelled (status: {batch.status_label})',
                     level=messages.WARNING
                 )
                 continue
