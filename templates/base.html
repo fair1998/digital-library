@@ -73,14 +73,14 @@
                     </ul>
                     <ul class="navbar-nav">
                         {% if user.is_authenticated %}
-                            <!-- Cart Icon -->
+                            <!-- Reservation List -->
                             <li class="nav-item">
                                 <a class="nav-link position-relative" href="{% url 'books:view_cart' %}">
-                                    <i class="bi bi-cart3"></i> ตะกร้า
+                                    <i class="bi bi-list-check"></i> รายการจอง
                                     {% if cart_count > 0 %}
                                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                             {{ cart_count }}
-                                            <span class="visually-hidden">items in cart</span>
+                                            <span class="visually-hidden">จำนวนในรายการจอง</span>
                                         </span>
                                     {% endif %}
                                 </a>

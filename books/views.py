@@ -86,7 +86,7 @@ def reserve_book_view(request, book_id):
     DEPRECATED: This view is replaced by add_to_cart + confirm_cart workflow.
     Kept for backward compatibility but should not be used.
     """
-    messages.warning(request, 'กรุณาใช้ระบบตะกร้าสำหรับการจองหนังสือ')
+    messages.warning(request, 'กรุณาใช้ระบบรายการจองสำหรับการจองหนังสือ')
     return redirect('books:book_detail', book_id=book_id)
 
 
@@ -124,14 +124,14 @@ def add_to_cart_view(request, book_id):
             'success': True,
             'added': was_added,
             'cart_count': cart.count(),
-            'message': f'เพิ่ม "{book.title}" ไปยังตะกร้าแล้ว' if was_added else f'"{book.title}" อยู่ในตะกร้าอยู่แล้ว'
+            'message': f'เพิ่ม "{book.title}" ลงรายการจองแล้ว' if was_added else f'"{book.title}" อยู่ในรายการจองอยู่แล้ว'
         })
     
     # For regular form submissions
     if was_added:
-        messages.success(request, f'เพิ่ม "{book.title}" ไปยังตะกร้าแล้ว')
+        messages.success(request, f'เพิ่ม "{book.title}" ลงรายการจองแล้ว')
     else:
-        messages.info(request, f'"{book.title}" อยู่ในตะกร้าอยู่แล้ว')
+        messages.info(request, f'"{book.title}" อยู่ในรายการจองอยู่แล้ว')
     
     return redirect('books:book_detail', book_id=book_id)
 
@@ -181,9 +181,9 @@ def remove_from_cart_view(request, book_id):
     cart = Cart(request)
     
     if cart.remove(book_id):
-        messages.success(request, f'ลบ "{book.title}" ออกจากตะกร้าแล้ว')
+        messages.success(request, f'ลบ "{book.title}" ออกจากรายการจองแล้ว')
     else:
-        messages.error(request, 'ไม่พบหนังสือในตะกร้า')
+        messages.error(request, 'ไม่พบหนังสือในรายการจอง')
     
     return redirect('books:view_cart')
 
@@ -202,7 +202,7 @@ def confirm_cart_view(request):
     book_ids = cart.get_book_ids()
     
     if not book_ids:
-        messages.warning(request, 'ตะกร้าของคุณว่างเปล่า')
+        messages.warning(request, 'รายการจองของคุณว่างเปล่า')
         return redirect('books:view_cart')
     
     try:
