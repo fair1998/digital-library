@@ -70,9 +70,9 @@ class PublisherAdmin(admin.ModelAdmin):
     list_per_page = 20
 
     def get_queryset(self, request):
-        # Book.publisher uses related_name="book" for reverse relation.
+        # Book.publisher uses related_name="books" for reverse relation.
         return super().get_queryset(request).annotate(
-            books_count=Count("book", distinct=True)
+            books_count=Count("books", distinct=True)
         )
 
     @admin.display(description="Books")

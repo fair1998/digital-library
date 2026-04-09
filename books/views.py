@@ -479,7 +479,7 @@ def dashboard_publishers_view(request):
     """
     Admin dashboard view for managing publishers.
     """
-    publishers = Publisher.objects.annotate(books_count=Count('book', distinct=True))
+    publishers = Publisher.objects.annotate(books_count=Count('books', distinct=True))
 
     search_query = request.GET.get('search', '').strip()
     if search_query:
