@@ -23,7 +23,7 @@ class DashboardBookForm(forms.ModelForm):
             'image_url': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'total_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'available_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
-            'publish_year': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'เช่น 2026'}),
+            'publish_year': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'เช่น 2566'}),
             'publisher': forms.Select(attrs={'class': 'form-select'}),
             'authors': forms.SelectMultiple(attrs={'id': 'id_authors'}),
             'categories': forms.SelectMultiple(attrs={'id': 'id_categories'}),
