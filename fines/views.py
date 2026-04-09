@@ -33,7 +33,7 @@ def my_fines_view(request):
         'total_amount': total_amount,
     }
     
-    return render(request, 'fines/my_fines.html', context)
+    return render(request, 'fines/list.html', context)
 
 
 @login_required
