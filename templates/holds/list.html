@@ -108,7 +108,7 @@
                                 {% if hold.can_be_cancelled_by_user %}
                                     <div class="mt-3">
                                         <form method="post"
-                                              action="{% url 'holds:cancel_hold_book' hold.id %}"
+                                              action="{% url 'holds:cancel_hold' hold.id %}"
                                               class="d-inline"
                                               onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจอง #{{ hold.id }}?');">
                                             {% csrf_token %}

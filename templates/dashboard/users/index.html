@@ -129,7 +129,7 @@
                                 <tr>
                                     <td>{{ user.citizen_id }}</td>
                                     <td>
-                                        <a href="{% url 'users:dashboard_users_detail' user.id %}"
+                                        <a href="{% url 'users:dashboard_user_detail' user.id %}"
                                            class="text-decoration-none">
                                             <strong>{{ user.username }}</strong>
                                         </a>
@@ -179,7 +179,7 @@
                                                        id="status-toggle-{{ user.id }}"
                                                        data-user-id="{{ user.id }}"
                                                        data-username="{{ user.username }}"
-                                                       data-url="{% url 'users:toggle_user_status' user.id %}"
+                                                       data-url="{% url 'users:update_user_status' user.id %}"
                                                        {% if user.is_active %}checked{% endif %}>
                                             </div>
                                         </div>

@@ -142,7 +142,7 @@ def dashboard_users_view(request):
     return render(request, 'dashboard/users/index.html', context)
 
 @staff_member_required
-def dashboard_users_detail_view(request, user_id):
+def dashboard_user_detail_view(request, user_id):
     from django.contrib.auth import get_user_model
     from django.utils import timezone
     from django.db.models import Count
@@ -206,7 +206,7 @@ def dashboard_users_detail_view(request, user_id):
     return render(request, 'dashboard/users/detail.html', context)
 
 @staff_member_required
-def toggle_user_status_api(request, user_id):
+def update_user_status_api(request, user_id):
     """Toggle user active status"""
     from django.contrib.auth import get_user_model
     from django.http import JsonResponse

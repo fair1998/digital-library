@@ -5,7 +5,7 @@ app_name = 'holds'
 
 urlpatterns = [
     path('my-holds/', views.my_holds_view, name='my_holds'),
-    path('my-holds/<int:hold_id>/cancel/', views.cancel_hold_book_action, name='cancel_hold_book'),
+    path('my-holds/<int:hold_id>/cancel/', views.cancel_hold_view, name='cancel_hold'),
 
     path('dashboard/holds/', views.dashboard_holds_view, name='dashboard_holds'),
     path('dashboard/holds/<int:hold_id>/', views.dashboard_hold_detail_view, name='dashboard_hold_detail'),

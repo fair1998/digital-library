@@ -32,7 +32,7 @@ def my_holds_view(request):
 
 
 @login_required
-def cancel_hold_book_action(request, hold_id):
+def cancel_hold_view(request, hold_id):
     """
     Allow user to cancel their own pending hold item batch.
     """
