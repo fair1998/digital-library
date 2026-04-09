@@ -10,7 +10,7 @@
                 <h1 class="fw-bold">
                     <i class="bi bi-cash-coin text-primary"></i> ค่าปรับของฉัน
                 </h1>
-                <p class="text-muted">รายการค่าปรับทั้งหมดของคุณ (ชำระแล้วทั้งหมด)</p>
+                <p class="text-muted">รายการค่าปรับทั้งหมดของคุณ</p>
             </div>
         </div>
         <!-- Summary Card -->
@@ -21,10 +21,9 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <h5 class="card-title mb-1">
-                                    <i class="bi bi-check-circle-fill"></i> ค่าปรับทั้งหมด (ชำระแล้ว)
+                                    <i class="bi bi-check-circle-fill"></i> ค่าปรับทั้งหมด
                                 </h5>
                                 <h2 class="mb-2 fw-bold">฿{{ total_amount|floatformat:2 }}</h2>
-                                <small class="opacity-75">ค่าปรับทุกรายการถูกชำระทันทีหลังคืนหนังสือ</small>
                             </div>
                             <div>
                                 <i class="bi bi-shield-check" style="font-size: 4rem; opacity: 0.3;"></i>
@@ -53,7 +52,7 @@
                                             <th>หนังสือ</th>
                                             <th style="width: 150px;">ประเภท</th>
                                             <th style="width: 120px;" class="text-end">จำนวนเงิน</th>
-                                            <th style="width: 150px;">วันที่ชำระ</th>
+                                            <th style="width: 180px;">วันที่ชำระ</th>
                                             <th style="width: 100px;" class="text-center">เหตุผล</th>
                                         </tr>
                                     </thead>
@@ -79,15 +78,15 @@
                                                 <td>
                                                     {% if fine.type == 'late_return' %}
                                                         <span class="badge bg-warning text-dark">
-                                                            <i class="bi bi-clock-fill"></i> คืนช้า
+                                                            <i class="bi bi-clock-fill"></i> {{ fine.get_type_display }}
                                                         </span>
                                                     {% elif fine.type == 'lost' %}
                                                         <span class="badge bg-danger">
-                                                            <i class="bi bi-x-circle-fill"></i> สูญหาย
+                                                            <i class="bi bi-x-circle-fill"></i> {{ fine.get_type_display }}
                                                         </span>
                                                     {% elif fine.type == 'damaged' %}
                                                         <span class="badge bg-dark">
-                                                            <i class="bi bi-bandaid-fill"></i> ชำรุด
+                                                            <i class="bi bi-bandaid-fill"></i> {{ fine.get_type_display }}
                                                         </span>
                                                     {% endif %}
                                                 </td>

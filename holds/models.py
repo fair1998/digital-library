@@ -13,7 +13,7 @@ class Hold(models.Model):
     
     STATUS_CHOICES = [
         ('pending', 'รอการยืนยัน'),
-        ('confirmed', 'ยืนยันแล้ว'),
+        ('confirmed', 'ยืนยันแล้ว - รอรับหนังสือ'),
         ('completed', 'เสร็จสิ้น'),
         ('expired', 'หมดอายุ'),
         ('cancelled', 'ยกเลิก'),
