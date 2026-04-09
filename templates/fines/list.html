@@ -48,7 +48,6 @@
                                 <table class="table table-hover mb-0 align-middle">
                                     <thead class="table-light">
                                         <tr>
-                                            <th style="width: 80px;">รหัส</th>
                                             <th>หนังสือ</th>
                                             <th style="width: 150px;">ประเภท</th>
                                             <th style="width: 120px;" class="text-end">จำนวนเงิน</th>
@@ -59,21 +58,11 @@
                                     <tbody>
                                         {% for fine in fines %}
                                             <tr>
-                                                <td class="text-muted">#{{ fine.id }}</td>
                                                 <td>
                                                     <a href="{% url 'books:book_detail' fine.loan_item.book.id %}"
                                                        class="text-decoration-none fw-medium d-block">
                                                         {{ fine.loan_item.book.title }}
                                                     </a>
-                                                    <small class="text-muted">
-                                                        {% if fine.loan_item.book.authors.all %}
-                                                            <i class="bi bi-person"></i>
-                                                            {% for author in fine.loan_item.book.authors.all %}
-                                                                {{ author.name }}
-                                                                {% if not forloop.last %},{% endif %}
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </small>
                                                 </td>
                                                 <td>
                                                     {% if fine.type == 'late_return' %}
