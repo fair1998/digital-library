@@ -17,6 +17,10 @@
     .ts-control {
         min-height: 42px;
     }
+    .add-entity-btn {
+        height: 42px;
+        flex-shrink: 0;
+    }
     </style>
 {% endblock extra_css %}
 {% block page_title %}
@@ -48,7 +52,15 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">สำนักพิมพ์</label>
-                    {{ form.publisher }}
+                    <div class="input-group">
+                        {{ form.publisher }}
+                        <button type="button"
+                                class="btn btn-outline-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#publisherModal">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
                     {% for error in form.publisher.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
                 <div class="col-md-12">
@@ -78,14 +90,34 @@
                 <div class="col-md-6">
                     <label class="form-label">ผู้แต่ง</label>
                     <small class="text-muted d-block mb-1">พิมพ์เพื่อค้นหา หรือเลือกจากรายการ</small>
-                    {{ form.authors }}
-                    {% for error in form.authors.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    <div class="d-flex gap-2">
+                        <div class="flex-grow-1">
+                            {{ form.authors }}
+                            {% for error in form.authors.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                        <button type="button"
+                                class="btn btn-outline-primary add-entity-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#authorModal">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">หมวดหมู่</label>
                     <small class="text-muted d-block mb-1">พิมพ์เพื่อค้นหา หรือเลือกจากรายการ</small>
-                    {{ form.categories }}
-                    {% for error in form.categories.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    <div class="d-flex gap-2">
+                        <div class="flex-grow-1">
+                            {{ form.categories }}
+                            {% for error in form.categories.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                        <button type="button"
+                                class="btn btn-outline-primary add-entity-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#categoryModal">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">รูปปกหนังสือ</label>
@@ -112,22 +144,304 @@
             </form>
         </div>
     </div>
+    <!-- Author Modal -->
+    <div class="modal fade"
+         id="authorModal"
+         tabindex="-1"
+         aria-labelledby="authorModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="authorModalLabel">
+                        <i class="bi bi-person-plus"></i> เพิ่มผู้แต่ง
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="authorForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="authorName" class="form-label">
+                                ชื่อผู้แต่ง <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="authorName" name="name" required>
+                            <div class="invalid-feedback" id="authorError"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" id="saveAuthor">
+                        <i class="bi bi-save"></i> บันทึก
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Category Modal -->
+    <div class="modal fade"
+         id="categoryModal"
+         tabindex="-1"
+         aria-labelledby="categoryModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryModalLabel">
+                        <i class="bi bi-tag-plus"></i> เพิ่มหมวดหมู่
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="categoryForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="categoryName" class="form-label">
+                                ชื่อหมวดหมู่ <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="categoryName"
+                                   name="name"
+                                   required>
+                            <div class="invalid-feedback" id="categoryError"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" id="saveCategory">
+                        <i class="bi bi-save"></i> บันทึก
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Publisher Modal -->
+    <div class="modal fade"
+         id="publisherModal"
+         tabindex="-1"
+         aria-labelledby="publisherModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="publisherModalLabel">
+                        <i class="bi bi-building-plus"></i> เพิ่มสำนักพิมพ์
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="publisherForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="publisherName" class="form-label">
+                                ชื่อสำนักพิมพ์ <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="publisherName"
+                                   name="name"
+                                   required>
+                            <div class="invalid-feedback" id="publisherError"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" id="savePublisher">
+                        <i class="bi bi-save"></i> บันทึก
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script>
+    let authorsSelect, categoriesSelect;
+    
     document.addEventListener('DOMContentLoaded', function () {
-        new TomSelect('#id_authors', {
+        authorsSelect = new TomSelect('#id_authors', {
             plugins: ['remove_button'],
             placeholder: 'เลือกหรือค้นหาผู้แต่ง...',
             maxOptions: null,
             create: false,
         });
-        new TomSelect('#id_categories', {
+        categoriesSelect = new TomSelect('#id_categories', {
             plugins: ['remove_button'],
             placeholder: 'เลือกหรือค้นหาหมวดหมู่...',
             maxOptions: null,
             create: false,
+        });
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Save Author
+        document.getElementById('saveAuthor').addEventListener('click', function () {
+            const nameInput = document.getElementById('authorName');
+            const name = nameInput.value.trim();
+            const errorDiv = document.getElementById('authorError');
+
+            if (!name) {
+                nameInput.classList.add('is-invalid');
+                errorDiv.textContent = 'กรุณากรอกชื่อผู้แต่ง';
+                return;
+            }
+
+            fetch('{% url "books:api_create_author" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add new option to TomSelect
+                    authorsSelect.addOption({ value: data.author.id, text: data.author.name });
+                    authorsSelect.addItem(data.author.id);
+                    
+                    // Close modal and reset form
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('authorModal'));
+                    modal.hide();
+                    nameInput.value = '';
+                    nameInput.classList.remove('is-invalid');
+                    errorDiv.textContent = '';
+                } else {
+                    nameInput.classList.add('is-invalid');
+                    errorDiv.textContent = data.error || 'เกิดข้อผิดพลาด';
+                }
+            })
+            .catch(error => {
+                nameInput.classList.add('is-invalid');
+                errorDiv.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+            });
+        });
+
+        // Save Category
+        document.getElementById('saveCategory').addEventListener('click', function () {
+            const nameInput = document.getElementById('categoryName');
+            const name = nameInput.value.trim();
+            const errorDiv = document.getElementById('categoryError');
+
+            if (!name) {
+                nameInput.classList.add('is-invalid');
+                errorDiv.textContent = 'กรุณากรอกชื่อหมวดหมู่';
+                return;
+            }
+
+            fetch('{% url "books:api_create_category" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add new option to TomSelect
+                    categoriesSelect.addOption({ value: data.category.id, text: data.category.name });
+                    categoriesSelect.addItem(data.category.id);
+                    
+                    // Close modal and reset form
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('categoryModal'));
+                    modal.hide();
+                    nameInput.value = '';
+                    nameInput.classList.remove('is-invalid');
+                    errorDiv.textContent = '';
+                } else {
+                    nameInput.classList.add('is-invalid');
+                    errorDiv.textContent = data.error || 'เกิดข้อผิดพลาด';
+                }
+            })
+            .catch(error => {
+                nameInput.classList.add('is-invalid');
+                errorDiv.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+            });
+        });
+
+        // Save Publisher
+        document.getElementById('savePublisher').addEventListener('click', function () {
+            const nameInput = document.getElementById('publisherName');
+            const name = nameInput.value.trim();
+            const errorDiv = document.getElementById('publisherError');
+
+            if (!name) {
+                nameInput.classList.add('is-invalid');
+                errorDiv.textContent = 'กรุณากรอกชื่อสำนักพิมพ์';
+                return;
+            }
+
+            fetch('{% url "books:api_create_publisher" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add new option to select
+                    const publisherSelect = document.getElementById('id_publisher');
+                    const option = new Option(data.publisher.name, data.publisher.id, true, true);
+                    publisherSelect.add(option);
+                    
+                    // Close modal and reset form
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('publisherModal'));
+                    modal.hide();
+                    nameInput.value = '';
+                    nameInput.classList.remove('is-invalid');
+                    errorDiv.textContent = '';
+                } else {
+                    nameInput.classList.add('is-invalid');
+                    errorDiv.textContent = data.error || 'เกิดข้อผิดพลาด';
+                }
+            })
+            .catch(error => {
+                nameInput.classList.add('is-invalid');
+                errorDiv.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+            });
+        });
+
+        // Reset validation on modal close
+        ['authorModal', 'categoryModal', 'publisherModal'].forEach(modalId => {
+            document.getElementById(modalId).addEventListener('hidden.bs.modal', function () {
+                const form = this.querySelector('form');
+                form.reset();
+                form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            });
         });
     });
     </script>

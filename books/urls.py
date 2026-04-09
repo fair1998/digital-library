@@ -35,4 +35,7 @@ urlpatterns = [
     path('dashboard/publishers/delete/<int:publisher_id>/', views.dashboard_publisher_delete_view, name='dashboard_publisher_delete'),
 
     path('api/books/', views.get_books_api, name='get_books'),
+    path('api/authors/create/', views.api_create_author, name='api_create_author'),
+    path('api/categories/create/', views.api_create_category, name='api_create_category'),
+    path('api/publishers/create/', views.api_create_publisher, name='api_create_publisher'),
 ]

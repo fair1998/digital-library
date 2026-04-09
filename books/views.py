@@ -721,3 +721,105 @@ def get_books_api(request):
         })
     
     return JsonResponse({'books': books_data})
+
+
+@staff_member_required
+def api_create_author(request):
+    """
+    API endpoint for creating a new author via modal.
+    """
+    import json
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        
+        if not name:
+            return JsonResponse({'success': False, 'error': 'กรุณากรอกชื่อผู้แต่ง'})
+        
+        # Check if author already exists
+        if Author.objects.filter(name=name).exists():
+            return JsonResponse({'success': False, 'error': 'ผู้แต่งนี้มีอยู่ในระบบแล้ว'})
+        
+        author = Author.objects.create(name=name)
+        
+        return JsonResponse({
+            'success': True,
+            'author': {
+                'id': author.id,
+                'name': author.name
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@staff_member_required
+def api_create_category(request):
+    """
+    API endpoint for creating a new category via modal.
+    """
+    import json
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        
+        if not name:
+            return JsonResponse({'success': False, 'error': 'กรุณากรอกชื่อหมวดหมู่'})
+        
+        # Check if category already exists
+        if Category.objects.filter(name=name).exists():
+            return JsonResponse({'success': False, 'error': 'หมวดหมู่นี้มีอยู่ในระบบแล้ว'})
+        
+        category = Category.objects.create(name=name)
+        
+        return JsonResponse({
+            'success': True,
+            'category': {
+                'id': category.id,
+                'name': category.name
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@staff_member_required
+def api_create_publisher(request):
+    """
+    API endpoint for creating a new publisher via modal.
+    """
+    import json
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        
+        if not name:
+            return JsonResponse({'success': False, 'error': 'กรุณากรอกชื่อสำนักพิมพ์'})
+        
+        # Check if publisher already exists
+        if Publisher.objects.filter(name=name).exists():
+            return JsonResponse({'success': False, 'error': 'สำนักพิมพ์นี้มีอยู่ในระบบแล้ว'})
+        
+        publisher = Publisher.objects.create(name=name)
+        
+        return JsonResponse({
+            'success': True,
+            'publisher': {
+                'id': publisher.id,
+                'name': publisher.name
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
