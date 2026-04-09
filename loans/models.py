@@ -12,7 +12,7 @@ class Loan(models.Model):
     """Header/parent record for a single borrowing transaction."""
     STATUS_CHOICES = [
         ('active', 'กำลังยืม'),
-        ('completed', 'คืนแล้ว'),
+        ('completed', 'เสร็จสิ้น'),
     ]
 
     id = models.AutoField(primary_key=True)
