@@ -12,6 +12,12 @@
         width: 60px;
         height: 80px;
     }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        overflow: hidden;
+    }
     </style>
 {% endblock extra_css %}
 {% block content %}
@@ -56,8 +62,6 @@
                                         <tr>
                                             <th>ปก</th>
                                             <th>ชื่อหนังสือ</th>
-                                            <th>ผู้แต่ง</th>
-                                            <th>สถานะ</th>
                                             <th>จัดการ</th>
                                         </tr>
                                     </thead>
@@ -82,24 +86,7 @@
                                                        class="text-decoration-none">
                                                         <strong>{{ item.book.title }}</strong>
                                                     </a>
-                                                    {% if item.book.publish_year %}
-                                                        <br>
-                                                        <small class="text-muted">({{ item.book.publish_year }})</small>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% for author in item.book.authors.all %}<span class="badge bg-secondary">{{ author.name }}</span>{% endfor %}
-                                                </td>
-                                                <td>
-                                                    {% if item.is_available %}
-                                                        <span class="badge bg-success">
-                                                            <i class="bi bi-check-circle"></i> มีให้ยืม
-                                                        </span>
-                                                    {% else %}
-                                                        <span class="badge bg-danger">
-                                                            <i class="bi bi-x-circle"></i> ไม่มีให้ยืม
-                                                        </span>
-                                                    {% endif %}
+                                                    <p class="line-clamp-3 mb-0 text-muted">{{ item.book.description }}</p>
                                                 </td>
                                                 <td>
                                                     <form method="post"
