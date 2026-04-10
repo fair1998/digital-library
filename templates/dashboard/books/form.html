@@ -27,9 +27,20 @@
     <i class="bi bi-book"></i> {{ form_title|default:'เพิ่มหนังสือ' }}
 {% endblock page_title %}
 {% block content %}
+    <!-- Header with Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'books:dashboard_books' %}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> กลับหน้ารายการหนังสือ
+        </a>
+    </div>
+    <!-- create/edit book form -->
     <div class="card">
         <div class="card-body">
-            <form method="post" enctype="multipart/form-data" class="row g-3">
+            <form novalidate
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="row g-3">
                 {% csrf_token %}
                 {% if form.non_field_errors %}
                     <div class="col-12">
@@ -46,7 +57,9 @@
                     {% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">ISBN</label>
+                    <label class="form-label">
+                        ISBN <span class="text-danger">*</span>
+                    </label>
                     {{ form.isbn }}
                     {% for error in form.isbn.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
@@ -74,21 +87,19 @@
                     {% for error in form.publish_year.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">
-                        จำนวนทั้งหมด <span class="text-danger">*</span>
-                    </label>
+                    <label class="form-label">จำนวนทั้งหมด</label>
                     {{ form.total_quantity }}
                     {% for error in form.total_quantity.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">
-                        พร้อมให้ยืม <span class="text-danger">*</span>
-                    </label>
+                    <label class="form-label">พร้อมให้ยืม</label>
                     {{ form.available_quantity }}
                     {% for error in form.available_quantity.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">ผู้แต่ง</label>
+                    <label class="form-label">
+                        ผู้แต่ง <span class="text-danger">*</span>
+                    </label>
                     <small class="text-muted d-block mb-1">พิมพ์เพื่อค้นหา หรือเลือกจากรายการ</small>
                     <div class="d-flex gap-2">
                         <div class="flex-grow-1">
@@ -104,7 +115,9 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">หมวดหมู่</label>
+                    <label class="form-label">
+                        หมวดหมู่ <span class="text-danger">*</span>
+                    </label>
                     <small class="text-muted d-block mb-1">พิมพ์เพื่อค้นหา หรือเลือกจากรายการ</small>
                     <div class="d-flex gap-2">
                         <div class="flex-grow-1">
@@ -138,8 +151,9 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> บันทึก
                     </button>
-                    <a href="{% url 'books:dashboard_books' %}"
-                       class="btn btn-secondary ms-2">ยกเลิก</a>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="bi bi-x-lg"></i> ล้าง
+                    </button>
                 </div>
             </form>
         </div>
@@ -273,6 +287,12 @@
     let authorsSelect, categoriesSelect;
     
     document.addEventListener('DOMContentLoaded', function () {
+        // Get initial values from HTML select elements before TomSelect initialization
+        const authorsElement = document.getElementById('id_authors');
+        const categoriesElement = document.getElementById('id_categories');
+        const initialAuthors = Array.from(authorsElement.selectedOptions).map(opt => opt.value);
+        const initialCategories = Array.from(categoriesElement.selectedOptions).map(opt => opt.value);
+
         authorsSelect = new TomSelect('#id_authors', {
             plugins: ['remove_button'],
             placeholder: 'เลือกหรือค้นหาผู้แต่ง...',
@@ -284,6 +304,16 @@
             placeholder: 'เลือกหรือค้นหาหมวดหมู่...',
             maxOptions: null,
             create: false,
+        });
+
+        // Reset TomSelect fields when reset button is clicked
+        const mainForm = document.querySelector('form[method="post"]');
+        mainForm.addEventListener('reset', function(e) {
+            // Use setTimeout to ensure reset happens after default reset behavior
+            setTimeout(() => {
+                authorsSelect.setValue(initialAuthors);
+                categoriesSelect.setValue(initialCategories);
+            }, 0);
         });
 
         // Helper function to get CSRF token

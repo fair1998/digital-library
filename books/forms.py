@@ -29,10 +29,20 @@ class DashboardBookForm(forms.ModelForm):
             'categories': forms.SelectMultiple(attrs={'id': 'id_categories'}),
         }
         error_messages = {
-        'isbn': {
-            'unique': 'มี ISBN นี้ในระบบแล้ว'
-        }
-    }
+            'title': {
+                'required': 'กรุณากรอกชื่อหนังสือ',
+            },
+            'isbn': {
+                'required': 'กรุณากรอก ISBN',
+                'unique': 'มี ISBN นี้ในระบบแล้ว'
+            },
+            'authors': {
+                'required': 'กรุณาเลือกผู้แต่ง',
+            },
+            'categories': {
+                'required': 'กรุณาเลือกหมวดหมู่',
+            },
+        }   
 
 
     def clean(self):
