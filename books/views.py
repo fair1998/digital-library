@@ -684,9 +684,6 @@ def dashboard_publisher_delete_view(request, publisher_id):
         return redirect('books:dashboard_publishers')
 
     publisher = get_object_or_404(Publisher, id=publisher_id)
-    if publisher.books.exists():
-        messages.error(request, f'ไม่สามารถลบสำนักพิมพ์ "{publisher.name}" ได้ เพราะมีหนังสือผูกอยู่')
-        return redirect('books:dashboard_publishers')
 
     name = publisher.name
     publisher.delete()
