@@ -113,15 +113,17 @@
                                         <a href="{% url edit_url_name item.id %}"
                                            class="btn btn-sm btn-primary"
                                            title="แก้ไข"><i class="bi bi-pencil"></i></a>
-                                        <form method="post"
-                                              action="{% url delete_url_name item.id %}"
-                                              class="d-inline"
-                                              onsubmit="return confirm('ต้องการลบ &quot;{{ item.name }}&quot; หรือไม่?');">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-danger" title="ลบ">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteEntityModal"
+                                                data-entity-id="{{ item.id }}"
+                                                data-entity-name="{{ item.name }}"
+                                                data-entity-books-count="{{ item.books_count }}"
+                                                data-delete-url="{% url delete_url_name item.id %}"
+                                                title="ลบ">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -173,4 +175,95 @@
             </ul>
         </nav>
     {% endif %}
+    <!-- Delete Confirmation Modal (Reusable) -->
+    <div class="modal fade"
+         id="deleteEntityModal"
+         tabindex="-1"
+         aria-labelledby="deleteEntityModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteEntityModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill"></i> ยืนยันการลบ<span id="deleteEntityType"></span>
+                    </h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>คำเตือน:</strong> การลบ<span id="deleteEntityTypeInline"></span>นี้จะไม่สามารถยกเลิกได้
+                    </div>
+                    <p class="mb-2">
+                        <strong>คุณต้องการลบ<span id="deleteEntityTypeInline2"></span>นี้หรือไม่?</strong>
+                    </p>
+                    <div class="bg-light p-3 rounded">
+                        <p class="mb-2">
+                            <strong><i class="bi {{ entity_icon }}"></i> ชื่อ<span id="deleteEntityTypeInline3"></span>:</strong> <span id="deleteEntityName"></span>
+                        </p>
+                        <p class="mb-0">
+                            <strong><i class="bi bi-book"></i> จำนวนหนังสือที่เกี่ยวข้อง:</strong> <span id="deleteEntityBooksCount"></span> เล่ม
+                        </p>
+                        <div id="deleteEntityWarning" class="mt-3" style="display: none;">
+                            <div class="alert alert-danger mb-0">
+                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                                <strong>หมายเหตุ:</strong> หนังสือที่เกี่ยวข้องจะถูกอัพเดทข้อมูล
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> ยกเลิก
+                    </button>
+                    <form method="post" id="deleteEntityForm" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> ยืนยันการลบ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
+{% block extra_js %}
+    <script>
+        // Handle delete entity modal
+        const deleteEntityModal = document.getElementById('deleteEntityModal');
+        const entityLabel = '{{ entity_label }}';
+        
+        if (deleteEntityModal) {
+            deleteEntityModal.addEventListener('show.bs.modal', function (event) {
+                // Button that triggered the modal
+                const button = event.relatedTarget;
+                
+                // Extract info from data-* attributes
+                const entityId = button.getAttribute('data-entity-id');
+                const entityName = button.getAttribute('data-entity-name');
+                const booksCount = button.getAttribute('data-entity-books-count');
+                const deleteUrl = button.getAttribute('data-delete-url');
+                
+                // Update the modal's content
+                document.getElementById('deleteEntityType').textContent = entityLabel;
+                document.getElementById('deleteEntityTypeInline').textContent = entityLabel;
+                document.getElementById('deleteEntityTypeInline2').textContent = entityLabel;
+                document.getElementById('deleteEntityTypeInline3').textContent = entityLabel;
+                document.getElementById('deleteEntityName').textContent = entityName;
+                document.getElementById('deleteEntityBooksCount').textContent = booksCount;
+                document.getElementById('deleteEntityForm').action = deleteUrl;
+                
+                // Show warning if entity has related books
+                const warningDiv = document.getElementById('deleteEntityWarning');
+                if (parseInt(booksCount) > 0) {
+                    warningDiv.style.display = 'block';
+                } else {
+                    warningDiv.style.display = 'none';
+                }
+            });
+        }
+    </script>
+{% endblock extra_js %}
