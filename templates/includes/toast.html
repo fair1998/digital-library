@@ -1,19 +1,22 @@
 <!-- Toast Notification Component -->
-<div class="toast-container position-fixed top-0 end-0 p-3">
+<div class="toast-container position-fixed top-0 end-0 p-3"
+     style="z-index: 9999">
     <div id="liveToast"
-         class="toast"
+         class="toast custom-toast shadow-lg"
          role="alert"
          aria-live="assertive"
          aria-atomic="true">
-        <div class="toast-header">
-            <i id="toastIcon" class="bi bi-info-circle-fill text-primary me-2"></i>
+        <div class="toast-header custom-toast-header border-0">
+            <div class="toast-icon-wrapper me-2">
+                <i id="toastIcon" class="bi bi-info-circle-fill"></i>
+            </div>
             <strong class="me-auto" id="toastTitle"></strong>
             <button type="button"
-                    class="btn-close"
+                    class="btn-close btn-close-white"
                     data-bs-dismiss="toast"
                     aria-label="Close"></button>
         </div>
-        <div class="toast-body" id="toastMessage"></div>
+        <div class="toast-body custom-toast-body" id="toastMessage"></div>
     </div>
 </div>
 <script>
@@ -23,38 +26,52 @@ function showToast(message = 'ข้อความแจ้งเตือน',
     const toastTitle = document.getElementById('toastTitle');
     const toastMessage = document.getElementById('toastMessage');
     const toastIcon = document.getElementById('toastIcon');
+    const toastHeader = toastElement.querySelector('.toast-header');
     
     if (toastElement) {
         // Update content
         toastTitle.textContent = title;
         toastMessage.textContent = message;
         
+        // Remove all existing type classes
+        toastElement.classList.remove('toast-success', 'toast-error', 'toast-warning', 'toast-info');
+        
         // Update icon and color based on type
         if (toastIcon) {
-            // Remove all existing color classes
-            toastIcon.classList.remove('text-primary', 'text-success', 'text-danger', 'text-warning');
+            // Remove all existing icon classes
             toastIcon.classList.remove('bi-info-circle-fill', 'bi-check-circle-fill', 'bi-x-circle-fill', 'bi-exclamation-triangle-fill');
             
             switch(type) {
                 case 'success':
-                    toastIcon.classList.add('bi-check-circle-fill', 'text-success');
+                    toastIcon.classList.add('bi-check-circle-fill');
+                    toastElement.classList.add('toast-success');
                     break;
                 case 'error':
-                    toastIcon.classList.add('bi-x-circle-fill', 'text-danger');
+                    toastIcon.classList.add('bi-x-circle-fill');
+                    toastElement.classList.add('toast-error');
                     break;
                 case 'warning':
-                    toastIcon.classList.add('bi-exclamation-triangle-fill', 'text-warning');
+                    toastIcon.classList.add('bi-exclamation-triangle-fill');
+                    toastElement.classList.add('toast-warning');
                     break;
                 default: // info
-                    toastIcon.classList.add('bi-info-circle-fill', 'text-primary');
+                    toastIcon.classList.add('bi-info-circle-fill');
+                    toastElement.classList.add('toast-info');
             }
         }
         
-        // Show toast
-         const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastElement, {
-            delay: 3000,
-         })
-            toastBootstrap.show();
+        // Show toast with slide animation
+        toastElement.classList.add('toast-slide-in');
+        const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastElement, {
+            delay: 4000,
+            animation: true
+        });
+        toastBootstrap.show();
+        
+        // Remove animation class after it's done
+        setTimeout(() => {
+            toastElement.classList.remove('toast-slide-in');
+        }, 500);
     }
 };
 </script>
