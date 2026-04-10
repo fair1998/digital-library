@@ -28,6 +28,12 @@ class DashboardBookForm(forms.ModelForm):
             'authors': forms.SelectMultiple(attrs={'id': 'id_authors'}),
             'categories': forms.SelectMultiple(attrs={'id': 'id_categories'}),
         }
+        error_messages = {
+        'isbn': {
+            'unique': 'มี ISBN นี้ในระบบแล้ว'
+        }
+    }
+
 
     def clean(self):
         cleaned_data = super().clean()
