@@ -332,6 +332,35 @@
             return cookieValue;
         }
 
+        // Prevent form submission on Enter key in modals
+        ['authorForm', 'categoryForm', 'publisherForm'].forEach(formId => {
+            document.getElementById(formId).addEventListener('submit', function(e) {
+                e.preventDefault();
+            });
+        });
+
+        // Allow Enter key to trigger save in modal inputs
+        document.getElementById('authorName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('saveAuthor').click();
+            }
+        });
+
+        document.getElementById('categoryName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('saveCategory').click();
+            }
+        });
+
+        document.getElementById('publisherName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('savePublisher').click();
+            }
+        });
+
         // Save Author
         document.getElementById('saveAuthor').addEventListener('click', function () {
             const nameInput = document.getElementById('authorName');
