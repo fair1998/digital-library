@@ -172,7 +172,13 @@
                                         <button type="button"
                                                 class="btn btn-sm btn-danger"
                                                 data-bs-toggle="modal"
-                                                data-bs-target="#deleteBookModal{{ book.id }}"
+                                                data-bs-target="#deleteBookModal"
+                                                data-book-id="{{ book.id }}"
+                                                data-book-title="{{ book.title }}"
+                                                data-book-isbn="{{ book.isbn|default:'-' }}"
+                                                data-book-quantity="{{ book.total_quantity }}"
+                                                data-book-image="{% if book.image_url %}{{ book.image_url.url }}{% endif %}"
+                                                data-delete-url="{% url 'books:dashboard_book_delete' book.id %}"
                                                 title="ลบ">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -293,74 +299,64 @@
             </div>
         </div>
     {% endfor %}
-    <!-- Delete Confirmation Modals -->
-    {% for book in page_obj %}
-        <div class="modal fade"
-             id="deleteBookModal{{ book.id }}"
-             tabindex="-1"
-             aria-labelledby="deleteBookModalLabel{{ book.id }}"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title" id="deleteBookModalLabel{{ book.id }}">
-                            <i class="bi bi-exclamation-triangle-fill"></i> ยืนยันการลบหนังสือ
-                        </h5>
-                        <button type="button"
-                                class="btn-close btn-close-white"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+    <!-- Delete Confirmation Modal (Reusable) -->
+    <div class="modal fade"
+         id="deleteBookModal"
+         tabindex="-1"
+         aria-labelledby="deleteBookModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteBookModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill"></i> ยืนยันการลบหนังสือ
+                    </h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3" id="deleteBookImageContainer">
+                        <div class="bg-light rounded d-inline-flex align-items-center justify-content-center"
+                             style="width: 100px;
+                                    height: 150px">
+                            <i class="bi bi-image fs-1 text-muted"></i>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <div class="text-center mb-3">
-                            {% if book.image_url %}
-                                <img src="{{ book.image_url.url }}"
-                                     alt="{{ book.title }}"
-                                     class="img-fluid rounded shadow-sm"
-                                     style="max-height: 150px;">
-                            {% else %}
-                                <div class="bg-light rounded d-inline-flex align-items-center justify-content-center"
-                                     style="width: 100px; height: 150px;">
-                                    <i class="bi bi-image fs-1 text-muted"></i>
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <strong>คำเตือน:</strong> การลบหนังสือนี้จะไม่สามารถยกเลิกได้
-                        </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>คำเตือน:</strong> การลบหนังสือนี้จะไม่สามารถยกเลิกได้
+                    </div>
+                    <p class="mb-2">
+                        <strong>คุณต้องการลบหนังสือนี้หรือไม่?</strong>
+                    </p>
+                    <div class="bg-light p-3 rounded">
                         <p class="mb-2">
-                            <strong>คุณต้องการลบหนังสือนี้หรือไม่?</strong>
+                            <strong><i class="bi bi-book"></i> ชื่อหนังสือ:</strong> <span id="deleteBookTitle"></span>
                         </p>
-                        <div class="bg-light p-3 rounded">
-                            <p class="mb-2">
-                                <strong><i class="bi bi-book"></i> ชื่อหนังสือ:</strong> {{ book.title }}
-                            </p>
-                            <p class="mb-2">
-                                <strong><i class="bi bi-upc-scan"></i> ISBN:</strong> {{ book.isbn|default:'-' }}
-                            </p>
-                            <p class="mb-0">
-                                <strong><i class="bi bi-box"></i> จำนวนทั้งหมด:</strong> {{ book.total_quantity }} เล่ม
-                            </p>
-                        </div>
+                        <p class="mb-2">
+                            <strong><i class="bi bi-upc-scan"></i> ISBN:</strong> <span id="deleteBookIsbn"></span>
+                        </p>
+                        <p class="mb-0">
+                            <strong><i class="bi bi-box"></i> จำนวนทั้งหมด:</strong> <span id="deleteBookQuantity"></span> เล่ม
+                        </p>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle"></i> ยกเลิก
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> ยกเลิก
+                    </button>
+                    <form method="post" id="deleteBookForm" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> ยืนยันการลบ
                         </button>
-                        <form method="post"
-                              action="{% url 'books:dashboard_book_delete' book.id %}"
-                              class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash"></i> ยืนยันการลบ
-                            </button>
-                        </form>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
-    {% endfor %}
+    </div>
     {% if page_obj.has_other_pages %}
         <nav aria-label="Page navigation" class="mt-4">
             <ul class="pagination justify-content-center">
@@ -399,3 +395,44 @@
         </nav>
     {% endif %}
 {% endblock content %}
+{% block extra_js %}
+    <script>
+        // Handle delete book modal
+        const deleteBookModal = document.getElementById('deleteBookModal');
+        
+        if (deleteBookModal) {
+            deleteBookModal.addEventListener('show.bs.modal', function (event) {
+                // Button that triggered the modal
+                const button = event.relatedTarget;
+                
+                // Extract info from data-* attributes
+                const bookId = button.getAttribute('data-book-id');
+                const bookTitle = button.getAttribute('data-book-title');
+                const bookIsbn = button.getAttribute('data-book-isbn');
+                const bookQuantity = button.getAttribute('data-book-quantity');
+                const bookImage = button.getAttribute('data-book-image');
+                const deleteUrl = button.getAttribute('data-delete-url');
+                
+                // Update the modal's content
+                document.getElementById('deleteBookTitle').textContent = bookTitle;
+                document.getElementById('deleteBookIsbn').textContent = bookIsbn;
+                document.getElementById('deleteBookQuantity').textContent = bookQuantity;
+                document.getElementById('deleteBookForm').action = deleteUrl;
+                
+                // Update the image
+                const imageContainer = document.getElementById('deleteBookImageContainer');
+                if (bookImage) {
+                    imageContainer.innerHTML = `
+                        <img src="${bookImage}" alt="${bookTitle}" class="img-fluid rounded shadow-sm" style="max-height: 150px;">
+                    `;
+                } else {
+                    imageContainer.innerHTML = `
+                        <div class="bg-light rounded d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 150px;">
+                            <i class="bi bi-image fs-1 text-muted"></i>
+                        </div>
+                    `;
+                }
+            });
+        }
+    </script>
+{% endblock extra_js %}
