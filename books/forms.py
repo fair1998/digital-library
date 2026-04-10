@@ -38,12 +38,6 @@ class DashboardBookForm(forms.ModelForm):
                 'unique': 'มี ISBN นี้ในระบบแล้ว',
                 'invalid': 'ISBN ต้องเป็นตัวเลขเท่านั้น'
             },
-            'authors': {
-                'required': 'กรุณาเลือกผู้แต่ง',
-            },
-            'categories': {
-                'required': 'กรุณาเลือกหมวดหมู่',
-            },
         }   
 
     def clean_isbn(self):

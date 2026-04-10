@@ -91,11 +91,13 @@ class Book(models.Model):
 
     authors = models.ManyToManyField(
         Author,
+        blank=True,
         through="BookAuthor",
         related_name="books",
     )
     categories = models.ManyToManyField(
         Category,
+        blank=True,
         through="BookCategory",
         related_name="books",
     )
