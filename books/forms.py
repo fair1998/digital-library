@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import RegexValidator
 from books.models import Author, Book, Category, Publisher
 
 class DashboardBookForm(forms.ModelForm):
@@ -18,7 +19,7 @@ class DashboardBookForm(forms.ModelForm):
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ชื่อหนังสือ'}),
-            'isbn': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'เช่น 9786160000000'}),
+            'isbn': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'เช่น 9786160000000', 'pattern': '[0-9]*', 'inputmode': 'numeric'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'รายละเอียดหนังสือ'}),
             'image_url': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'total_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
@@ -34,7 +35,8 @@ class DashboardBookForm(forms.ModelForm):
             },
             'isbn': {
                 'required': 'กรุณากรอก ISBN',
-                'unique': 'มี ISBN นี้ในระบบแล้ว'
+                'unique': 'มี ISBN นี้ในระบบแล้ว',
+                'invalid': 'ISBN ต้องเป็นตัวเลขเท่านั้น'
             },
             'authors': {
                 'required': 'กรุณาเลือกผู้แต่ง',
@@ -44,6 +46,11 @@ class DashboardBookForm(forms.ModelForm):
             },
         }   
 
+    def clean_isbn(self):
+        isbn = self.cleaned_data.get('isbn')
+        if isbn and not isbn.isdigit():
+            raise forms.ValidationError('ISBN ต้องเป็นตัวเลขเท่านั้น')
+        return isbn
 
     def clean(self):
         cleaned_data = super().clean()
