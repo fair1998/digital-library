@@ -169,15 +169,13 @@
                                         <a href="{% url 'books:dashboard_book_form_id' book.id %}"
                                            class="btn btn-sm btn-primary"
                                            title="แก้ไข"><i class="bi bi-pencil"></i></a>
-                                        <form method="post"
-                                              action="{% url 'books:dashboard_book_delete' book.id %}"
-                                              class="d-inline"
-                                              onsubmit="return confirm('ต้องการลบหนังสือ &quot;{{ book.title }}&quot; หรือไม่?');">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-danger" title="ลบ">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteBookModal{{ book.id }}"
+                                                title="ลบ">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -290,6 +288,74 @@
                            class="btn btn-primary">
                             <i class="bi bi-pencil"></i> แก้ไขหนังสือ
                         </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <!-- Delete Confirmation Modals -->
+    {% for book in page_obj %}
+        <div class="modal fade"
+             id="deleteBookModal{{ book.id }}"
+             tabindex="-1"
+             aria-labelledby="deleteBookModalLabel{{ book.id }}"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="deleteBookModalLabel{{ book.id }}">
+                            <i class="bi bi-exclamation-triangle-fill"></i> ยืนยันการลบหนังสือ
+                        </h5>
+                        <button type="button"
+                                class="btn-close btn-close-white"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-3">
+                            {% if book.image_url %}
+                                <img src="{{ book.image_url.url }}"
+                                     alt="{{ book.title }}"
+                                     class="img-fluid rounded shadow-sm"
+                                     style="max-height: 150px;">
+                            {% else %}
+                                <div class="bg-light rounded d-inline-flex align-items-center justify-content-center"
+                                     style="width: 100px; height: 150px;">
+                                    <i class="bi bi-image fs-1 text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>คำเตือน:</strong> การลบหนังสือนี้จะไม่สามารถยกเลิกได้
+                        </div>
+                        <p class="mb-2">
+                            <strong>คุณต้องการลบหนังสือนี้หรือไม่?</strong>
+                        </p>
+                        <div class="bg-light p-3 rounded">
+                            <p class="mb-2">
+                                <strong><i class="bi bi-book"></i> ชื่อหนังสือ:</strong> {{ book.title }}
+                            </p>
+                            <p class="mb-2">
+                                <strong><i class="bi bi-upc-scan"></i> ISBN:</strong> {{ book.isbn|default:'-' }}
+                            </p>
+                            <p class="mb-0">
+                                <strong><i class="bi bi-box"></i> จำนวนทั้งหมด:</strong> {{ book.total_quantity }} เล่ม
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> ยกเลิก
+                        </button>
+                        <form method="post"
+                              action="{% url 'books:dashboard_book_delete' book.id %}"
+                              class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> ยืนยันการลบ
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
