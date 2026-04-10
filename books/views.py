@@ -568,9 +568,6 @@ def dashboard_author_delete_view(request, author_id):
         return redirect('books:dashboard_authors')
 
     author = get_object_or_404(Author, id=author_id)
-    if author.books.exists():
-        messages.error(request, f'ไม่สามารถลบผู้แต่ง "{author.name}" ได้ เพราะมีหนังสือผูกอยู่')
-        return redirect('books:dashboard_authors')
 
     name = author.name
     author.delete()
@@ -626,9 +623,6 @@ def dashboard_category_delete_view(request, category_id):
         return redirect('books:dashboard_categories')
 
     category = get_object_or_404(Category, id=category_id)
-    if category.books.exists():
-        messages.error(request, f'ไม่สามารถลบหมวดหมู่ "{category.name}" ได้ เพราะมีหนังสือผูกอยู่')
-        return redirect('books:dashboard_categories')
 
     name = category.name
     category.delete()
