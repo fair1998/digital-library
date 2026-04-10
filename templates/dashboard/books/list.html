@@ -121,15 +121,12 @@
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 80px;">ปก</th>
-                                <th style="width: 300px;">ชื่อหนังสือ</th>
-                                <th style="width: 140px;">ISBN</th>
-                                <th style="width: 120px;">ผู้แต่ง</th>
-                                <th style="width: 120px;">หมวดหมู่</th>
-                                <th style="width: 120px;">สำนักพิมพ์</th>
+                                <th style="width: 400px;">ชื่อหนังสือ</th>
+                                <th style="width: 160px;">ISBN</th>
                                 <th style="width: 120px;" class="text-center">จำนวนทั้งหมด</th>
                                 <th style="width: 120px;" class="text-center">พร้อมให้ยืม</th>
                                 <th style="width: 160px;">วันที่สร้าง</th>
-                                <th style="width: 120px;" class="text-center">จัดการ</th>
+                                <th style="width: 180px;" class="text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -150,19 +147,6 @@
                                         <strong>{{ book.title }}</strong>
                                     </td>
                                     <td>{{ book.isbn|default:'-' }}</td>
-                                    <td>
-                                        {% for author in book.authors.all %}
-                                            <span class="badge bg-secondary">{{ author.name }}</span>
-                                            {% empty %}<span class="text-muted">-</span>
-                                        {% endfor %}
-                                    </td>
-                                    <td>
-                                        {% for category in book.categories.all %}
-                                            <span class="badge bg-info text-dark">{{ category.name }}</span>
-                                            {% empty %}<span class="text-muted">-</span>
-                                        {% endfor %}
-                                    </td>
-                                    <td>{{ book.publisher.name|default:'-' }}</td>
                                     <td class="text-center">{{ book.total_quantity }}</td>
                                     <td class="text-center">
                                         {% if book.available_quantity > 0 %}
@@ -175,6 +159,13 @@
                                         <small class="text-muted">{{ book.created_at|date:"d/m/Y H:i" }}</small>
                                     </td>
                                     <td class="text-center">
+                                        <button type="button"
+                                                class="btn btn-sm btn-info"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#bookDetailModal{{ book.id }}"
+                                                title="ดูรายละเอียด">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
                                         <a href="{% url 'books:dashboard_book_form_id' book.id %}"
                                            class="btn btn-sm btn-primary"
                                            title="แก้ไข"><i class="bi bi-pencil"></i></a>
@@ -201,6 +192,109 @@
             {% endif %}
         </div>
     </div>
+    <!-- Book Detail Modals -->
+    {% for book in page_obj %}
+        <div class="modal fade"
+             id="bookDetailModal{{ book.id }}"
+             tabindex="-1"
+             aria-labelledby="bookDetailModalLabel{{ book.id }}"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bookDetailModalLabel{{ book.id }}">
+                            <i class="bi bi-book"></i> รายละเอียดหนังสือ
+                        </h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                {% if book.image_url %}
+                                    <img src="{{ book.image_url.url }}"
+                                         alt="{{ book.title }}"
+                                         class="img-fluid rounded shadow-sm"
+                                         style="max-height: 300px">
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                         style="height: 300px">
+                                        <i class="bi bi-image fs-1 text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <h4 class="mb-3">{{ book.title }}</h4>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-upc-scan"></i> ISBN:</strong>
+                                    <span class="ms-2">{{ book.isbn|default:'-' }}</span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-person"></i> ผู้แต่ง:</strong>
+                                    <div class="mt-1">
+                                        {% for author in book.authors.all %}
+                                            <span class="badge bg-secondary me-1">{{ author.name }}</span>
+                                            {% empty %}<span class="text-muted">-</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-tags"></i> หมวดหมู่:</strong>
+                                    <div class="mt-1">
+                                        {% for category in book.categories.all %}
+                                            <span class="badge bg-info text-dark me-1">{{ category.name }}</span>
+                                            {% empty %}<span class="text-muted">-</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-building"></i> สำนักพิมพ์:</strong>
+                                    <span class="ms-2">{{ book.publisher.name|default:'-' }}</span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-calendar"></i> ปีที่พิมพ์:</strong>
+                                    <span class="ms-2">{{ book.published_year|default:'-' }}</span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-box"></i> จำนวนทั้งหมด:</strong>
+                                    <span class="ms-2 badge bg-primary">{{ book.total_quantity }}</span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-check-circle"></i> พร้อมให้ยืม:</strong>
+                                    {% if book.available_quantity > 0 %}
+                                        <span class="ms-2 badge bg-success">{{ book.available_quantity }}</span>
+                                    {% else %}
+                                        <span class="ms-2 badge bg-danger">0</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-clock-history"></i> วันที่สร้าง:</strong>
+                                    <span class="ms-2">{{ book.created_at|date:"d/m/Y H:i" }}</span>
+                                </div>
+                                {% if book.description %}
+                                    <div class="mb-3">
+                                        <strong><i class="bi bi-text-paragraph"></i> คำอธิบาย:</strong>
+                                        <p class="mt-2 text-muted">{{ book.description|linebreaks }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> ปิด
+                        </button>
+                        <a href="{% url 'books:dashboard_book_form_id' book.id %}"
+                           class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> แก้ไขหนังสือ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
     {% if page_obj.has_other_pages %}
         <nav aria-label="Page navigation" class="mt-4">
             <ul class="pagination justify-content-center">
