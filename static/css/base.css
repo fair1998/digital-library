@@ -25,9 +25,9 @@ body {
   padding: 0.5rem 0;
 }
 
-.navbar-brand:hover {
+/* .navbar-brand:hover {
   transform: scale(1.05);
-}
+} */
 
 .navbar-brand i {
   font-size: 1.5rem;
