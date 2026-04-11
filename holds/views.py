@@ -115,9 +115,13 @@ def dashboard_holds_view(request):
         # Collect only CONFIRMED batches that expired (customer didn't pick up)
         if batch.is_expired and batch.status == 'confirmed':
             expired_batches.append(batch)
+
+    
+    status_choices = Hold.STATUS_CHOICES
     
     # Count stats for dashboard
     stats = {
+        "status_choices": status_choices,
         'total': Hold.objects.count(),
         'pending': Hold.objects.filter(status='pending').count(),
         'confirmed': Hold.objects.filter(status='confirmed').count(),

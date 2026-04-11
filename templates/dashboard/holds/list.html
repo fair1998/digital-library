@@ -94,31 +94,31 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for batch in expired_batches %}
+                        {% for hold in expired_batches %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'holds:dashboard_hold_detail' batch.id %}"
-                                       class="btn btn-sm btn-outline-primary">#{{ batch.id }}</a>
+                                    <a href="{% url 'holds:dashboard_hold_detail' hold.id %}"
+                                       class="btn btn-sm btn-outline-primary">#{{ hold.id }}</a>
                                 </td>
                                 <td>
-                                    <strong>{{ batch.user.username }}</strong>
-                                    {% if batch.user.get_full_name %}
+                                    <strong>{{ hold.user.username }}</strong>
+                                    {% if hold.user.get_full_name %}
                                         <br>
-                                        <small>{{ batch.user.get_full_name }}</small>
+                                        <small>{{ hold.user.get_full_name }}</small>
                                     {% endif %}
                                 </td>
-                                <td>{{ batch.hold_items.count }} เล่ม</td>
+                                <td>{{ hold.hold_items.count }} เล่ม</td>
                                 <td>
-                                    <small>{{ batch.created_at|date:"d M Y H:i" }}</small>
+                                    <small>{{ hold.created_at|date:"d M Y H:i" }}</small>
                                 </td>
                                 <td>
-                                    <small class="text-danger fw-bold">{{ batch.expires_at|date:"d M Y H:i" }}</small>
+                                    <small class="text-danger fw-bold">{{ hold.expires_at|date:"d M Y H:i" }}</small>
                                 </td>
                                 <td>
                                     <form method="post"
-                                          action="{% url 'holds:dashboard_cancel_hold' batch.id %}"
+                                          action="{% url 'holds:dashboard_cancel_hold' hold.id %}"
                                           class="d-inline"
-                                          onsubmit="return confirm('ยืนยันการยกเลิกการจอง #{{ batch.id }} ของ {{ batch.user.username }}?');">
+                                          onsubmit="return confirm('ยืนยันการยกเลิกการจอง #{{ hold.id }} ของ {{ hold.user.username }}?');">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-danger">
                                             <i class="bi bi-x-circle"></i> ยกเลิก
@@ -166,17 +166,11 @@
                 <div class="col-md-3">
                     <label for="status" class="form-label">Status</label>
                     <select name="status" id="status" class="form-select">
-                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
-                        <option value="pending"
-                                {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="confirmed"
-                                {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
-                        <option value="completed"
-                                {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
-                        <option value="expired"
-                                {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
-                        <option value="cancelled"
-                                {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>ทั้งหมด</option>
+                        {% for value, label in stats.status_choices %}
+                            <option value="{{ value }}"
+                                    {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
@@ -285,42 +279,36 @@
                                 </div>
                             </td>
                             <td>
-                                {% if batch.status == 'pending' %}
+                                {% if hold.status == 'pending' %}
                                     <span class="badge bg-warning text-dark">
-                                        <i class="bi bi-clock"></i> Pending
+                                        <i class="bi bi-clock"></i> {{ hold.get_status_display }}
                                     </span>
-                                {% elif batch.status == 'confirmed' %}
+                                {% elif hold.status == 'confirmed' %}
                                     <span class="badge bg-success">
-                                        <i class="bi bi-check-circle"></i> Confirmed
+                                        <i class="bi bi-check-circle"></i> {{ hold.get_status_display }}
                                     </span>
-                                    {% if not batch.is_expired %}
-                                        <a href="{% url 'holds:dashboard_create_loan_from_hold' batch.id %}"
-                                           class="btn btn-sm btn-outline-primary mt-2">
-                                            <i class="bi bi-box-seam"></i> Mark Picked Up
-                                        </a>
-                                    {% endif %}
-                                {% elif batch.status == 'completed' %}
+                                {% elif hold.status == 'completed' %}
                                     <span class="badge bg-primary">
-                                        <i class="bi bi-box-seam"></i> Completed
+                                        <i class="bi bi-box-seam"></i> {{ hold.get_status_display }}
                                     </span>
-                                {% elif batch.status == 'expired' %}
+                                {% elif hold.status == 'expired' %}
                                     <span class="badge bg-danger">
-                                        <i class="bi bi-exclamation-triangle-fill"></i> Expired
+                                        <i class="bi bi-exclamation-triangle-fill"></i> {{ hold.get_status_display }}
                                     </span>
-                                {% elif batch.status == 'cancelled' %}
+                                {% elif hold.status == 'cancelled' %}
                                     <span class="badge bg-secondary">
-                                        <i class="bi bi-x-circle"></i> Cancelled
+                                        <i class="bi bi-x-circle"></i> {{ hold.get_status_display }}
                                     </span>
                                 {% endif %}
                             </td>
                             <td>
-                                <small>{{ batch.created_at|date:"d M Y H:i" }}</small>
+                                <small>{{ hold.created_at|date:"d M Y H:i" }}</small>
                             </td>
                             <td>
-                                {% if batch.expires_at %}
-                                    <small class="{% if batch.status == 'confirmed' and batch.is_expired %}text-danger fw-bold{% endif %}">
-                                        {{ batch.expires_at|date:"d M Y H:i" }}
-                                        {% if batch.status == 'confirmed' and batch.is_expired %}
+                                {% if hold.expires_at %}
+                                    <small class="{% if hold.status == 'confirmed' and hold.is_expired %}text-danger fw-bold{% endif %}">
+                                        {{ hold.expires_at|date:"d M Y H:i" }}
+                                        {% if hold.status == 'confirmed' and hold.is_expired %}
                                             <br>
                                             <span class="badge bg-danger">หมดเวลารับแล้ว!</span>
                                         {% endif %}
