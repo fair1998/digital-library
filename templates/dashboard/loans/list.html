@@ -84,10 +84,14 @@
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-sm mb-0">
+                                    <colgroup>
+                                        <col style="width: 50%;">
+                                        <col style="width: 20%;">
+                                        <col style="width: 30%;">
+                                    </colgroup>
                                     <thead>
                                         <tr>
                                             <th>หนังสือ</th>
-                                            <th>ผู้แต่ง</th>
                                             <th>สถานะ</th>
                                             <th>วันที่คืน</th>
                                         </tr>
@@ -99,25 +103,18 @@
                                                     <strong>{{ item.book.title }}</strong>
                                                 </td>
                                                 <td>
-                                                    {% if item.book.authors.exists %}
-                                                        {{ item.book.authors.all|join:", " }}
-                                                    {% else %}
-                                                        -
-                                                    {% endif %}
-                                                </td>
-                                                <td>
                                                     {% if item.status == 'borrowed' %}
                                                         <span class="badge bg-warning text-dark">
-                                                            <i class="bi bi-clock me-1"></i>กำลังยืม
+                                                            <i class="bi bi-clock me-1"></i>{{ item.get_status_display }}
                                                         </span>
                                                         {% if item.is_overdue %}<span class="badge bg-danger ms-1">เกินกำหนด</span>{% endif %}
                                                     {% elif item.status == 'returned' %}
                                                         <span class="badge bg-success">
-                                                            <i class="bi bi-check-circle me-1"></i>คืนแล้ว
+                                                            <i class="bi bi-check-circle me-1"></i>{{ item.get_status_display }}
                                                         </span>
                                                     {% elif item.status == 'lost' %}
                                                         <span class="badge bg-danger">
-                                                            <i class="bi bi-x-circle me-1"></i>หาย
+                                                            <i class="bi bi-x-circle me-1"></i>{{ item.get_status_display }}
                                                         </span>
                                                     {% endif %}
                                                 </td>
