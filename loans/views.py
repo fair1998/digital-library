@@ -97,6 +97,7 @@ def dashboard_loans_view(request):
     loan_batches = loan_batches.order_by('-created_at')
     
     context = {
+        'status_choices': Loan.STATUS_CHOICES,
         'loan_batches': loan_batches,
         'status_filter': status_filter,
         'search_id': search_id,

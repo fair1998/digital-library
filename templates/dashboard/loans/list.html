@@ -41,11 +41,10 @@
                     <label for="status" class="form-label">สถานะ</label>
                     <select name="status" id="status" class="form-select">
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>ทั้งหมด</option>
-                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>กำลังดำเนินการ (Active)</option>
-                        <option value="completed"
-                                {% if status_filter == 'completed' %}selected{% endif %}>
-                            เสร็จสิ้นแล้ว (Completed)
-                        </option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}"
+                                    {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -89,7 +88,7 @@
                             <td>{{ batch.user.get_full_name|default:batch.user.username }}</td>
                             <td>
                                 {% if batch.status == 'active' %}
-                                    <span class="badge bg-primary">
+                                    <span class="badge bg-warning text-dark">
                                         <i class="bi bi-clock"></i> {{ batch.status_label }}
                                     </span>
                                     {% if batch.is_overdue %}
