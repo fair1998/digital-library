@@ -150,3 +150,7 @@ FINE_LOST_BOOK = 500  # ค่าปรับหนังสือหาย (บ
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+
+# Timezone Settings
+TIME_ZONE = 'Asia/Bangkok'
+USE_TZ = True

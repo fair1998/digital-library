@@ -356,6 +356,13 @@ def dashboard_create_loan_from_hold_view(request, hold_id):
         # Get loan period from settings or default 7 days
         loan_days = getattr(settings, 'LOAN_PERIOD_DAYS', 7)
         
+        # Calculate due date (end of day in Bangkok timezone)
+        # Django will convert to UTC automatically when saving to DB
+        local_now = timezone.localtime(timezone.now())
+        due_date = (local_now + timedelta(days=loan_days)).replace(
+            hour=23, minute=59, second=59, microsecond=0
+        )
+        
         # Get additional books from POST data
         additional_book_ids = request.POST.getlist('additional_books')
         
@@ -364,7 +371,7 @@ def dashboard_create_loan_from_hold_view(request, hold_id):
                 # Create loan batch
                 loan_batch = Loan.objects.create(
                     user=hold.user,
-                    due_date=timezone.now() + timedelta(days=loan_days)
+                    due_date=due_date
                 )
                 
                 # Create loan items from confirmed hold items

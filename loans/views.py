@@ -103,11 +103,13 @@ def dashboard_create_loan_view(request):
                     messages.error(request, 'กรุณาเลือกหนังสืออย่างน้อย 1 เล่ม')
                     return redirect('loans:dashboard_create_loan')
                 
-                # Calculate due date from settings
+                # Calculate due date from settings (end of day in Bangkok timezone)
+                # Django will convert to UTC automatically when saving to DB
                 loan_period_days = getattr(settings, 'LOAN_PERIOD_DAYS', 7)
-                due_date = timezone.now() + timedelta(days=loan_period_days)
-                # Set to end of day
-                due_date = due_date.replace(hour=23, minute=59, second=59, microsecond=0)
+                local_now = timezone.localtime(timezone.now())
+                due_date = (local_now + timedelta(days=loan_period_days)).replace(
+                    hour=23, minute=59, second=59, microsecond=0
+                )
                 
                 # Get books and validate availability
                 books = Book.objects.filter(id__in=book_ids)
