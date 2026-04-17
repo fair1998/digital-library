@@ -84,7 +84,7 @@ def cancel_hold_view(request, hold_id):
     except Exception as e:
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
-    return redirect('holds:my_hold_list')
+    return redirect('holds:my_holds')
 
 
 @staff_member_required
