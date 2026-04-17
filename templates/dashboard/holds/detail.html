@@ -174,7 +174,8 @@
                                 </button>
                                 <button type="button"
                                         class="btn btn-danger"
-                                        onclick="if(confirm('ยกเลิกการจองทั้งหมด?')) { document.getElementById('cancelForm').submit(); }">
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#cancelAllModal">
                                     <i class="bi bi-x-circle"></i> ยกเลิกทั้งหมด
                                 </button>
                             </div>
@@ -211,6 +212,59 @@
                   class="d-none">
                 {% csrf_token %}
             </form>
+        </div>
+    </div>
+    <!-- Cancel All Modal (for pending status) -->
+    <div class="modal fade"
+         id="cancelAllModal"
+         tabindex="-1"
+         aria-labelledby="cancelAllModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="cancelAllModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill"></i> ยืนยันการยกเลิกการจองทั้งหมด
+                    </h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">
+                        <strong>รายละเอียดการจอง:</strong>
+                    </p>
+                    <ul class="list-unstyled mb-3">
+                        <li>
+                            <strong>รหัสการจอง:</strong> #{{ batch.id }}
+                        </li>
+                        <li>
+                            <strong>ผู้จอง:</strong> {{ batch.user.get_full_name|default:batch.user.username }}
+                        </li>
+                        <li>
+                            <strong>จำนวนหนังสือ:</strong> {{ batch.hold_items.count }} เล่ม
+                        </li>
+                        <li>
+                            <strong>สถานะ:</strong> <span class="badge bg-warning">{{ batch.get_status_display }}</span>
+                        </li>
+                    </ul>
+                    <p class="text-danger mb-0">
+                        <strong>
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                        </strong>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> ยกเลิก
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmCancelAllBtn">
+                        <i class="bi bi-check-circle"></i> ยืนยันการยกเลิกทั้งหมด
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Cancel Hold Modal -->
@@ -373,10 +427,17 @@
         
         // Handle cancel hold modal
         const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const confirmCancelAllBtn = document.getElementById('confirmCancelAllBtn');
         const cancelForm = document.getElementById('cancelForm');
         
         if (confirmCancelBtn && cancelForm) {
             confirmCancelBtn.addEventListener('click', function() {
+                cancelForm.submit();
+            });
+        }
+        
+        if (confirmCancelAllBtn && cancelForm) {
+            confirmCancelAllBtn.addEventListener('click', function() {
                 cancelForm.submit();
             });
         }
