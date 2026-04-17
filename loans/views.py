@@ -1,15 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
 from django.conf import settings
-from django.http import JsonResponse
-from datetime import timedelta, datetime
+from datetime import timedelta
 from decimal import Decimal
 from .models import Loan, LoanItem
-from holds.models import Hold
 from books.models import Book
 from fines.models import Fine
 from django.contrib.auth import get_user_model
@@ -36,13 +35,8 @@ def my_loans_view(request):
     return render(request, 'loans/my_loans.html', context)
 
 
-# Admin views
-def is_staff(user):
-    """Check if user is staff/admin."""
-    return user.is_staff
-
 @login_required
-@user_passes_test(is_staff)
+@staff_member_required
 def dashboard_loans_view(request):
     """
     Display all active loans (borrowed status).
@@ -80,7 +74,7 @@ def dashboard_loans_view(request):
 
 
 @login_required
-@user_passes_test(is_staff)
+@staff_member_required
 def dashboard_create_loan_view(request):
     """
     Create a new loan directly (without hold).
@@ -163,7 +157,7 @@ def dashboard_create_loan_view(request):
 
 
 @login_required
-@user_passes_test(is_staff)
+@staff_member_required
 def dashboard_loan_detail_view(request, loan_id):
     """
     Display loan batch details with actions to mark items as returned or lost.
@@ -188,7 +182,7 @@ def dashboard_loan_detail_view(request, loan_id):
     return render(request, 'dashboard/loans/detail.html', context)
 
 @login_required
-@user_passes_test(is_staff)
+@staff_member_required
 def dashboard_return_loan_view(request, loan_id):
     """
     Process batch return/lost with immediate fine payment.
