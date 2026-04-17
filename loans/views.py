@@ -324,6 +324,7 @@ def dashboard_return_loan_view(request, loan_id):
                     elif action == 'lost':
                         # Process lost
                         item.status = 'lost'
+                        item.returned_at = now
                         item.save()
                         
                         # Decrease total quantity since book is lost
