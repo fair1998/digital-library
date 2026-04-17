@@ -101,6 +101,9 @@
                         <a class="nav-link {% if 'holds' in request.path %}active{% endif %}"
                            href="{% url 'holds:dashboard_holds' %}">
                             <i class="bi bi-calendar-check"></i> รายการจอง
+                            {% if pending_holds_count > 0 %}
+                                <span class="badge bg-warning text-dark rounded-pill ms-2">{{ pending_holds_count }}</span>
+                            {% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
