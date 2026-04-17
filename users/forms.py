@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from .models import User
 
 
@@ -80,6 +82,35 @@ class UserRegistrationForm(UserCreationForm):
         if not citizen_id.isdigit() or len(citizen_id) != 13:
             raise forms.ValidationError('เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก')
         return citizen_id
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+
+        if password1 and password2:
+            if password1 != password2:
+                raise forms.ValidationError('รหัสผ่านทั้งสองช่องไม่ตรงกัน')
+            
+            # Custom validation with Thai error messages
+            try:
+                validate_password(password2, self.instance)
+            except ValidationError as error:
+                # Translate error messages to Thai
+                thai_errors = []
+                for err in error.messages:
+                    if 'too similar' in err.lower():
+                        thai_errors.append('รหัสผ่านมีความคล้ายคลึงกับชื่อผู้ใช้มากเกินไป')
+                    elif 'too short' in err.lower() or 'at least 8 characters' in err.lower():
+                        thai_errors.append('รหัสผ่านสั้นเกินไป ต้องมีอย่างน้อย 8 ตัวอักษร')
+                    elif 'too common' in err.lower():
+                        thai_errors.append('รหัสผ่านนี้ใช้กันทั่วไปเกินไป กรุณาเลือกรหัสผ่านที่ปลอดภัยกว่านี้')
+                    elif 'entirely numeric' in err.lower():
+                        thai_errors.append('รหัสผ่านต้องไม่เป็นตัวเลขล้วน')
+                    else:
+                        thai_errors.append(err)
+                raise forms.ValidationError(thai_errors)
+        
+        return password2
 
     def save(self, commit=True):
         user = super().save(commit=False)
