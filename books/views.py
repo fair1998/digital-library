@@ -131,7 +131,7 @@ def add_to_cart_view(request, book_id):
     if was_added:
         messages.success(request, f'เพิ่ม "{book.title}" ลงรายการจองแล้ว')
     else:
-        messages.info(request, f'"{book.title}" อยู่ในรายการจองอยู่แล้ว')
+        messages.warning(request, f'"{book.title}" อยู่ในรายการจองอยู่แล้ว')
     
     return redirect('books:book_detail', book_id=book_id)
 
