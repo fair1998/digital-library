@@ -9,7 +9,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import timedelta
 
 from loans.models import Loan, LoanItem
-from .models import Hold, HoldItem
+from .models import Hold
 from books.models import Book
 
 
@@ -260,8 +260,12 @@ def dashboard_confirm_hold_books_view(request, hold_id):
             if has_confirmed:
                 hold.status = 'confirmed'
                 # Set expiry time for confirmed hold (user must pick up books before this time)
+                
                 expiry_days = getattr(settings, 'HOLD_EXPIRY_DAYS', 3)
-                hold.expires_at = timezone.now() + timedelta(days=expiry_days)
+                local_now = timezone.localtime(timezone.now())
+                hold.expires_at = (local_now + timedelta(days=expiry_days)).replace(
+                    hour=23, minute=59, second=59, microsecond=0
+                )
                 hold.save()
             elif all_processed:
                 hold.status = 'cancelled'
@@ -289,6 +293,7 @@ def dashboard_confirm_hold_books_view(request, hold_id):
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
     return redirect('holds:dashboard_hold_detail', hold_id=hold_id)
+
 
 @staff_member_required
 def dashboard_cancel_hold_view(request, hold_id):
@@ -341,6 +346,7 @@ def dashboard_cancel_hold_view(request, hold_id):
         messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
     
     return redirect('holds:dashboard_holds')
+
 
 @staff_member_required
 def dashboard_create_loan_from_hold_view(request, hold_id):
