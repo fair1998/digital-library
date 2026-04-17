@@ -1,199 +1,406 @@
 {% extends "base_admin.html" %}
 {% block title %}
-    Dashboard Overview
+    ภาพรวมระบบ
 {% endblock title %}
 {% block page_title %}
-    Dashboard Overview
+    <i class="bi bi-speedometer2"></i> ภาพรวมระบบห้องสมุด
 {% endblock page_title %}
+{% block extra_css %}
+    <style>
+    .stat-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        overflow: hidden;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .stat-card .card-body {
+        padding: 1.5rem;
+    }
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+    .chart-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: none;
+    }
+    .badge-stat {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+    }
+    </style>
+{% endblock extra_css %}
 {% block content %}
-    <!-- Statistics Cards -->
+    <!-- Main Statistics Cards -->
     <div class="row g-4 mb-4">
-        <!-- Books Stats -->
-        <div class="col-md-3">
-            <div class="card border-primary">
+        <!-- Total Books -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card card h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <h6 class="text-muted mb-2">Total Books</h6>
-                            <h2 class="mb-0">{{ total_books }}</h2>
-                            <small class="text-success">{{ available_books }} available</small>
+                            <p class="text-muted mb-1 small">จำนวนหนังสือทั้งหมด</p>
+                            <h2 class="mb-0 fw-bold">{{ total_books }}</h2>
+                            <small class="text-muted">{{ total_book_copies }} เล่มทั้งหมด</small>
                         </div>
-                        <div class="fs-1 text-primary">
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                             <i class="bi bi-book"></i>
                         </div>
                     </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge badge-stat bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-check-circle"></i> {{ available_books }} พร้อมให้บริการ
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Hold Items Stats -->
-        <div class="col-md-3">
-            <div class="card border-warning">
+        <!-- Total Members -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card card h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <h6 class="text-muted mb-2">การจองที่รอดำเนินการ</h6>
-                            <h2 class="mb-0">{{ pending_hold_items }}</h2>
-                            {% if expired_hold_items > 0 %}
-                                <small class="text-danger">{{ expired_hold_items }} หมดอายุ</small>
-                            {% else %}
-                                <small class="text-muted">{{ confirmed_hold_items }} ยืนยันแล้ว</small>
-                            {% endif %}
+                            <p class="text-muted mb-1 small">สมาชิกทั้งหมด</p>
+                            <h2 class="mb-0 fw-bold">{{ total_users }}</h2>
+                            <small class="text-muted">ผู้ใช้งานที่ใช้งานอยู่</small>
                         </div>
-                        <div class="fs-1 text-warning">
+                        <div class="stat-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge badge-stat bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-shield-check"></i> {{ total_staff }} เจ้าหน้าที่
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Pending Holds -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-muted mb-1 small">การจองรอยืนยัน</p>
+                            <h2 class="mb-0 fw-bold">{{ pending_hold_items }}</h2>
+                            <small class="text-muted">รอดำเนินการ</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
                             <i class="bi bi-calendar-check"></i>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <!-- Loans Stats -->
-        <div class="col-md-3">
-            <div class="card border-info">
-                <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Active Loans</h6>
-                            <h2 class="mb-0">{{ active_loans }}</h2>
-                            {% if overdue_loans > 0 %}
-                                <small class="text-danger">{{ overdue_loans }} overdue</small>
-                            {% else %}
-                                <small class="text-success">All on time</small>
-                            {% endif %}
-                        </div>
-                        <div class="fs-1 text-info">
-                            <i class="bi bi-book-half"></i>
-                        </div>
+                        {% if expired_hold_items > 0 %}
+                            <span class="badge badge-stat bg-danger bg-opacity-10 text-danger">
+                                <i class="bi bi-exclamation-circle"></i> {{ expired_hold_items }} หมดอายุ
+                            </span>
+                        {% else %}
+                            <span class="badge badge-stat bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-check"></i> {{ confirmed_hold_items }} ยืนยันแล้ว
+                            </span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Fines Stats -->
-        <div class="col-md-3">
-            <div class="card border-success">
+        <!-- Active Loans -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card card h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <h6 class="text-muted mb-2">Total Fines (Paid)</h6>
-                            <h2 class="mb-0">{{ total_fines }}</h2>
-                            <small class="text-muted">฿{{ total_fines_amount|floatformat:2 }}</small>
+                            <p class="text-muted mb-1 small">กำลังยืมอยู่</p>
+                            <h2 class="mb-0 fw-bold">{{ active_loans }}</h2>
+                            <small class="text-muted">หนังสือที่ยืมไป</small>
                         </div>
-                        <div class="fs-1 text-success">
-                            <i class="bi bi-cash-coin"></i>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-book-half"></i>
                         </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        {% if overdue_loans > 0 %}
+                            <span class="badge badge-stat bg-danger bg-opacity-10 text-danger">
+                                <i class="bi bi-exclamation-triangle"></i> {{ overdue_loans }} เกินกำหนด
+                            </span>
+                        {% else %}
+                            <span class="badge badge-stat bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-check-circle"></i> ทุกรายการตรงเวลา
+                            </span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Additional Stats Row -->
+    <!-- Secondary Statistics -->
     <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="bi bi-check-circle text-success fs-1"></i>
-                    <h3 class="mt-2">{{ returned_loans }}</h3>
-                    <p class="text-muted mb-0">คืนหนังสือ</p>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card card">
+                <div class="card-body text-center py-4">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <h3 class="mb-1 fw-bold">{{ returned_loans }}</h3>
+                    <p class="text-muted mb-0">หนังสือที่คืนแล้ว</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="bi bi-exclamation-triangle text-warning fs-1"></i>
-                    <h3 class="mt-2">{{ lost_books }}</h3>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card card">
+                <div class="card-body text-center py-4">
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger mx-auto mb-3">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="mb-1 fw-bold">{{ lost_books }}</h3>
                     <p class="text-muted mb-0">หนังสือสูญหาย</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="bi bi-calendar-x text-danger fs-1"></i>
-                    <h3 class="mt-2">{{ expired_hold_items }}</h3>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card card">
+                <div class="card-body text-center py-4">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                        <i class="bi bi-cash-coin"></i>
+                    </div>
+                    <h3 class="mb-1 fw-bold">฿{{ total_fines_amount|floatformat:2 }}</h3>
+                    <p class="text-muted mb-0">ค่าปรับทั้งหมด ({{ total_fines }} รายการ)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card card">
+                <div class="card-body text-center py-4">
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger mx-auto mb-3">
+                        <i class="bi bi-calendar-x"></i>
+                    </div>
+                    <h3 class="mb-1 fw-bold">{{ expired_hold_items }}</h3>
                     <p class="text-muted mb-0">การจองหมดอายุ</p>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Recent Activities -->
-    <div class="row">
-        <!-- Recent Hold Items -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-white">
+    <!-- Charts Section -->
+    <div class="row g-4 mb-4">
+        <!-- Monthly Loans Chart -->
+        <div class="col-lg-8">
+            <div class="chart-card card">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
                     <h5 class="mb-0">
-                        <i class="bi bi-calendar-check text-warning"></i> การจองล่าสุด
+                        <i class="bi bi-bar-chart-line text-primary"></i> สถิติการยืมหนังสือรายเดือน
                     </h5>
+                    <small class="text-muted">ข้อมูล 12 เดือนที่ผ่านมา</small>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyLoansChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- Top Borrowed Books -->
+        <div class="col-lg-4">
+            <div class="chart-card card">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy text-warning"></i> หนังสือยอดนิยม
+                    </h5>
+                    <small class="text-muted">5 อันดับที่ถูกยืมมากที่สุด</small>
+                </div>
+                <div class="card-body">
+                    {% if top_borrowed_books %}
+                        <div class="list-group list-group-flush">
+                            {% for book in top_borrowed_books %}
+                                <div class="list-group-item px-0 border-0 py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 small">{{ book.title|truncatewords:5 }}</h6>
+                                            <small class="text-muted">{{ book.authors.first.name }}</small>
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill">{{ book.borrow_count }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">ยังไม่มีข้อมูล</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Recent Activities -->
+    <div class="row g-4">
+        <!-- Recent Holds -->
+        <div class="col-lg-6">
+            <div class="chart-card card">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-calendar-check text-warning"></i> การจองล่าสุด
+                        </h5>
+                        <a href="{% url 'holds:dashboard_holds' %}"
+                           class="btn btn-sm btn-outline-primary">
+                            ดูทั้งหมด <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if recent_hold_items %}
                         <div class="list-group list-group-flush">
                             {% for hold_item in recent_hold_items %}
-                                <div class="list-group-item">
+                                <div class="list-group-item px-0">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <h6 class="mb-1">
-                                                <i class="bi bi-person"></i> {{ hold_item.user.username }}
+                                                <i class="bi bi-person-circle"></i> {{ hold_item.user.username }}
                                             </h6>
-                                            <small class="text-muted">Batch #{{ hold_item.id }} - {{ hold_item.hold_items.count }} books</small>
+                                            <small class="text-muted">Batch #{{ hold_item.id }} - {{ hold_item.hold_items.count }} เล่ม</small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i> {{ hold_item.created_at|date:"d M Y H:i" }}
+                                            </small>
                                         </div>
                                         <span class="badge bg-{% if hold_item.status == 'pending' %}warning{% elif hold_item.status == 'confirmed' %}success{% elif hold_item.status == 'completed' %}primary{% elif hold_item.status == 'expired' %}danger{% else %}secondary{% endif %}">
                                             {{ hold_item.get_status_display }}
                                         </span>
                                     </div>
-                                    <small class="text-muted">{{ hold_item.created_at|date:"d M Y H:i" }}</small>
                                 </div>
                             {% endfor %}
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="{% url 'holds:dashboard_holds' %}"
-                               class="btn btn-sm btn-outline-primary">
-                                ดูการจองทั้งหมด <i class="bi bi-arrow-right"></i>
-                            </a>
-                        </div>
                     {% else %}
-                        <p class="text-muted text-center">ไม่มีการจองล่าสุด</p>
+                        <p class="text-muted text-center py-4">ไม่มีการจองล่าสุด</p>
                     {% endif %}
                 </div>
             </div>
         </div>
         <!-- Recent Loans -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-book-half text-info"></i> การยืมล่าสุด
-                    </h5>
+        <div class="col-lg-6">
+            <div class="chart-card card">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-book-half text-info"></i> การยืมล่าสุด
+                        </h5>
+                        <a href="{% url 'loans:dashboard_loans' %}"
+                           class="btn btn-sm btn-outline-primary">
+                            ดูทั้งหมด <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if recent_loans %}
                         <div class="list-group list-group-flush">
                             {% for loan in recent_loans %}
-                                <div class="list-group-item">
+                                <div class="list-group-item px-0">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <h6 class="mb-1">
-                                                <i class="bi bi-person"></i> {{ loan.user.username }}
+                                                <i class="bi bi-person-circle"></i> {{ loan.user.username }}
                                             </h6>
-                                            <small class="text-muted">Batch #{{ loan.id }} - {{ loan.loan_items.count }} books</small>
+                                            <small class="text-muted">Batch #{{ loan.id }} - {{ loan.loan_items.count }} เล่ม</small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i> {{ loan.created_at|date:"d M Y H:i" }}
+                                            </small>
                                         </div>
-                                        <small class="text-muted">Due: {{ loan.due_date|date:"d M Y" }}</small>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">กำหนดคืน</small>
+                                            <small class="fw-bold">{{ loan.due_date|date:"d M Y" }}</small>
+                                        </div>
                                     </div>
-                                    <small class="text-muted">{{ loan.created_at|date:"d M Y H:i" }}</small>
                                 </div>
                             {% endfor %}
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="{% url 'loans:dashboard_loans' %}"
-                               class="btn btn-sm btn-outline-primary">
-                                ดูการยืมทั้งหมด <i class="bi bi-arrow-right"></i>
-                            </a>
-                        </div>
                     {% else %}
-                        <p class="text-muted text-center">ไม่มีการยืมล่าสุด</p>
+                        <p class="text-muted text-center py-4">ไม่มีการยืมล่าสุด</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 {% endblock content %}
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    // Monthly Loans Chart
+    const ctx = document.getElementById('monthlyLoansChart').getContext('2d');
+    const monthlyLoansChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ monthly_labels|safe }},
+            datasets: [{
+                label: 'จำนวนการยืม',
+                data: {{ monthly_loans|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        family: 'Prompt'
+                    },
+                    bodyFont: {
+                        size: 13,
+                        family: 'Prompt'
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            return 'จำนวนการยืม: ' + context.parsed.y + ' รายการ';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        font: {
+                            family: 'Prompt'
+                        }
+                    },
+                    grid: {
+                        display: true,
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            family: 'Prompt'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    </script>
+{% endblock extra_js %}
