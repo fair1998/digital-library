@@ -126,8 +126,24 @@ def dashboard_return_loan_view(request, loan_id):
                 # Get all loan items that are still borrowed
                 borrowed_items = loan.loan_items.filter(status='borrowed')
                 
+                # Check if at least one action is selected (not skip)
+                has_action = False
                 for item in borrowed_items:
                     action = request.POST.get(f'action_{item.id}')
+                    if action and action != 'skip':
+                        has_action = True
+                        break
+                
+                if not has_action:
+                    messages.warning(request, 'กรุณาเลือกการดำเนินการอย่างน้อย 1 รายการ (คืน หรือ หาย)')
+                    return redirect('loans:dashboard_loan_detail', loan_id=loan.id)
+                
+                for item in borrowed_items:
+                    action = request.POST.get(f'action_{item.id}')
+                    
+                    # Skip items marked as "skip"
+                    if action == 'skip' or not action:
+                        continue
                     
                     if action == 'return':
                         # Process return

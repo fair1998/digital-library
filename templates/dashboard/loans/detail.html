@@ -133,11 +133,19 @@
                                                             <input type="radio"
                                                                    class="btn-check"
                                                                    name="action_{{ item.id }}"
-                                                                   id="return_{{ item.id }}"
-                                                                   value="return"
+                                                                   id="skip_{{ item.id }}"
+                                                                   value="skip"
                                                                    autocomplete="off"
                                                                    onchange="handleActionChange({{ item.id }})"
                                                                    checked>
+                                                            <label class="btn btn-outline-secondary" for="skip_{{ item.id }}">ข้าม</label>
+                                                            <input type="radio"
+                                                                   class="btn-check"
+                                                                   name="action_{{ item.id }}"
+                                                                   id="return_{{ item.id }}"
+                                                                   value="return"
+                                                                   autocomplete="off"
+                                                                   onchange="handleActionChange({{ item.id }})">
                                                             <label class="btn btn-outline-success" for="return_{{ item.id }}">คืน</label>
                                                             <input type="radio"
                                                                    class="btn-check"
@@ -266,6 +274,7 @@
 {% block extra_js %}
     <script>
         function handleActionChange(itemId) {
+            const skipRadio = document.getElementById('skip_' + itemId);
             const returnRadio = document.getElementById('return_' + itemId);
             const lostRadio = document.getElementById('lost_' + itemId);
             const damageCheckbox = document.getElementById('damaged_' + itemId);
@@ -281,6 +290,13 @@
                 // If "return" is selected, enable damage checkbox
                 if (damageCheckbox) {
                     damageCheckbox.disabled = false;
+                }
+            } else if (skipRadio && skipRadio.checked) {
+                // If "skip" is selected, uncheck and disable damage checkbox
+                if (damageCheckbox) {
+                    damageCheckbox.checked = false;
+                    damageCheckbox.disabled = true;
+                    toggleDamageFields(itemId);
                 }
             }
         }
@@ -336,6 +352,11 @@
                 const action = radio.value;
                 let itemFines = [];
                 let itemTotal = 0;
+                
+                // Skip items marked as "skip"
+                if (action === 'skip') {
+                    return;
+                }
                 
                 if (action === 'return') {
                     // Late return fine
@@ -482,6 +503,16 @@
         
         function validateAndShowModal() {
             let isValid = true;
+            
+            // Check if at least one action is selected (not skip)
+            const hasAction = Array.from(document.querySelectorAll('input[name^="action_"]:checked')).some(
+                radio => radio.value !== 'skip'
+            );
+            
+            if (!hasAction) {
+                alert('กรุณาเลือกการดำเนินการอย่างน้อย 1 รายการ (คืน หรือ หาย)');
+                return false;
+            }
             
             // Validate damage fields
             document.querySelectorAll('.damage-checkbox:checked:not([disabled])').forEach(checkbox => {
