@@ -1,9 +1,9 @@
 {% extends "base_admin.html" %}
 {% block title %}
-    รายการยืมทั้งหมด
+    รายการยืม
 {% endblock title %}
 {% block page_title %}
-    รายการยืมทั้งหมด
+    รายการยืม
 {% endblock page_title %}
 {% block content %}
     <!-- Header with New Loan Button -->
@@ -57,106 +57,76 @@
             </form>
         </div>
     </div>
+    <!-- Loan items List -->
     {% if loan_batches %}
-        <div class="row">
-            <div class="col">
-                {% for batch in loan_batches %}
-                    <div class="card shadow-sm mb-3">
-                        <div class="card-header bg-light">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h5 class="mb-0">
-                                        <i class="bi bi-person-circle me-2"></i>
-                                        #{{ batch.id }} - {{ batch.user.get_full_name|default:batch.user.username }}
-                                        {% if batch.status == 'active' %}
-                                            <span class="badge bg-primary ms-2">{{ batch.status_label }}</span>
-                                        {% elif batch.status == 'completed' %}
-                                            <span class="badge bg-success ms-2">{{ batch.status_label }}</span>
-                                        {% endif %}
-                                    </h5>
-                                    <small>
-                                        <i class="bi bi-calendar me-1"></i>
-                                        วันที่ยืม: {{ batch.created_at|date:"d/m/Y H:i" }}
-                                        {% if batch.due_date %}
-                                            | กำหนดคืน: {{ batch.due_date|date:"d/m/Y H:i" }}
-                                            {% if batch.is_overdue %}
-                                                <span class="badge bg-white text-danger ms-2">
-                                                    <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด!
-                                                </span>
-                                            {% endif %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <colgroup>
+                        <col style="width: 15%;">
+                        <col style="width: 25%;">
+                        <col style="width: 20%;">
+                        <col style="width: 20%;">
+                        <col style="width: 20%;">
+                    </colgroup>
+                    <tr>
+                        <th>ID</th>
+                        <th>ชื่อ - นามสกุล</th>
+                        <th>สถานะ</th>
+                        <th>วันที่ยืม</th>
+                        <th>กำหนดคืน</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for batch in loan_batches %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'loans:dashboard_loan_detail' batch.id %}"
+                                   class="text-decoration-none">
+                                    <strong>#{{ batch.id }}</strong>
+                                </a>
+                            </td>
+                            <td>{{ batch.user.get_full_name|default:batch.user.username }}</td>
+                            <td>
+                                {% if batch.status == 'active' %}
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-clock"></i> {{ batch.status_label }}
+                                    </span>
+                                    {% if batch.is_overdue %}
+                                        <span class="badge bg-danger ms-1">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด
+                                        </span>
+                                    {% endif %}
+                                {% elif batch.status == 'completed' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> {{ batch.status_label }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ batch.created_at|date:"d/m/Y H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if batch.due_date %}
+                                    <small class="{% if batch.is_overdue %}text-danger fw-bold{% endif %}">
+                                        {{ batch.due_date|date:"d/m/Y H:i" }}
+                                        {% if batch.is_overdue %}
+                                            <br>
+                                            <span class="badge bg-danger">เกินกำหนดแล้ว!</span>
                                         {% endif %}
                                     </small>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <a href="{% url 'loans:dashboard_loan_detail' batch.id %}"
-                                       class="btn btn-sm btn-primary">
-                                        <i class="bi bi-eye me-1"></i>ดูรายละเอียด
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
-                                    <colgroup>
-                                        <col style="width: 50%;">
-                                        <col style="width: 20%;">
-                                        <col style="width: 30%;">
-                                    </colgroup>
-                                    <thead>
-                                        <tr>
-                                            <th>หนังสือ</th>
-                                            <th>สถานะ</th>
-                                            <th>วันที่คืน</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for item in batch.loan_items.all %}
-                                            <tr>
-                                                <td>
-                                                    <strong>{{ item.book.title }}</strong>
-                                                </td>
-                                                <td>
-                                                    {% if item.status == 'borrowed' %}
-                                                        <span class="badge bg-warning text-dark">
-                                                            <i class="bi bi-clock me-1"></i>{{ item.get_status_display }}
-                                                        </span>
-                                                        {% if item.is_overdue %}<span class="badge bg-danger ms-1">เกินกำหนด</span>{% endif %}
-                                                    {% elif item.status == 'returned' %}
-                                                        <span class="badge bg-success">
-                                                            <i class="bi bi-check-circle me-1"></i>{{ item.get_status_display }}
-                                                        </span>
-                                                    {% elif item.status == 'lost' %}
-                                                        <span class="badge bg-danger">
-                                                            <i class="bi bi-x-circle me-1"></i>{{ item.get_status_display }}
-                                                        </span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if item.returned_at %}
-                                                        {{ item.returned_at|date:"d/m/Y H:i" }}
-                                                    {% else %}
-                                                        <span class="text-muted">-</span>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
+                                {% else %}
+                                    <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     {% else %}
-        <div class="row">
-            <div class="col">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>
-                    ไม่พบรายการยืมตามเงื่อนไขที่กำหนด
-                </div>
-            </div>
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> ไม่พบรายการยืมตามเงื่อนไขที่กำหนด
         </div>
     {% endif %}
 {% endblock content %}
