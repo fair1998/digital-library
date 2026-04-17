@@ -1,19 +1,20 @@
 {% extends "base_admin.html" %}
 {% block title %}
-    รายการยืม
+    จัดการการยืม
 {% endblock title %}
 {% block page_title %}
-    รายการยืม
+    <i class="bi bi-book-half"></i> จัดการการยืม
 {% endblock page_title %}
 {% block content %}
     <!-- Header with New Loan Button -->
-    <div class="row mb-3">
-        <div class="col">
-            <a href="{% url 'loans:dashboard_create_loan' %}"
-               class="btn btn-success">
-                <i class="bi bi-plus-circle me-1"></i>ยืมหนังสือใหม่
-            </a>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">
+            <i class="bi bi-book-half"></i> รายการยืม
+        </h3>
+        <a href="{% url 'loans:dashboard_create_loan' %}"
+           class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i>ยืมหนังสือใหม่
+        </a>
     </div>
     <!-- Filters -->
     <div class="card mb-4">
