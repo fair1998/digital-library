@@ -157,10 +157,7 @@ def dashboard_hold_detail_view(request, hold_id):
     Display detailed view of a hold batch with ability to manage individual items.
     """
     hold = get_object_or_404(
-        Hold.objects.select_related('user').prefetch_related(
-            'hold_items__book__authors',
-            'hold_items__book__publisher'
-        ),
+        Hold.objects.select_related('user').prefetch_related('hold_items__book'),
         id=hold_id
     )
     

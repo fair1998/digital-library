@@ -17,8 +17,8 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <a href="{% url 'holds:dashboard_holds' %}"
-               class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> Back to List
+               class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> กลับไปหน้ารายการ
             </a>
         </div>
         <div>
@@ -31,35 +31,41 @@
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
-                <i class="bi bi-person-circle"></i> User Information
+                <i class="bi bi-person-circle"></i> ข้อมูลผู้ใช้
             </h5>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <p>
-                        <strong>Username:</strong> {{ batch.user.username }}
+                        <strong>ชื่อผู้ใช้:</strong> {{ batch.user.username }}
                     </p>
                     <p>
-                        <strong>Full Name:</strong> {{ batch.user.get_full_name|default:"-" }}
+                        <strong>ชื่อ-นามสกุล:</strong> {{ batch.user.get_full_name|default:"-" }}
                     </p>
                     <p>
-                        <strong>Email:</strong> {{ batch.user.email|default:"-" }}
+                        <strong>รหัสบัตรประชาชน:</strong> {{ batch.user.citizen_id|default:"-" }}
+                    </p>
+                    <p>
+                        <strong>เบอร์โทรศัพท์:</strong> {{ batch.user.phone_number|default:"-" }}
                     </p>
                 </div>
                 <div class="col-md-6">
                     <p>
-                        <strong>Created:</strong> {{ batch.created_at|date:"d M Y H:i" }}
+                        <strong>อีเมล:</strong> {{ batch.user.email|default:"-" }}
                     </p>
                     <p>
-                        <strong>Expires:</strong>
+                        <strong>วันที่สร้าง:</strong> {{ batch.created_at|date:"d-m-Y H:i" }}
+                    </p>
+                    <p>
+                        <strong>วันหมดอายุ:</strong>
                         <span class="{% if batch.is_expired and batch.status == 'pending' %}text-danger fw-bold{% endif %}">
-                            {{ batch.expires_at|date:"d M Y H:i" }}
-                            {% if batch.is_expired and batch.status == 'pending' %}<span class="badge bg-danger">Expired</span>{% endif %}
+                            {{ batch.expires_at|date:"d-m-Y H:i" }}
+                            {% if batch.is_expired and batch.status == 'pending' %}<span class="badge bg-danger">หมดอายุ</span>{% endif %}
                         </span>
                     </p>
                     <p>
-                        <strong>Total Books:</strong> {{ batch.hold_items.count }}
+                        <strong>จำนวนหนังสือทั้งหมด:</strong> {{ batch.hold_items.count }} เล่ม
                     </p>
                 </div>
             </div>
@@ -69,14 +75,14 @@
     <div class="card">
         <div class="card-header bg-white">
             <h5 class="mb-0">
-                <i class="bi bi-book"></i> Reserved Books
+                <i class="bi bi-book"></i> หนังสือที่จอง
             </h5>
         </div>
         <div class="card-body">
             {% if has_out_of_stock %}
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle"></i>
-                    <strong>Warning!</strong> Some books are out of stock and cannot be confirmed.
+                    <strong>คำเตือน!</strong> มีหนังสือบางเล่มที่สต็อคหมดและไม่สามารถยืนยันได้
                 </div>
             {% endif %}
             <form method="post"
@@ -96,8 +102,6 @@
                                     </th>
                                 {% endif %}
                                 <th>ชื่อหนังสือ</th>
-                                <th>ผู้แต่ง</th>
-                                <th>สำนักพิมพ์</th>
                                 <th>สถานะสต็อก</th>
                                 <th>สถานะการจอง</th>
                             </tr>
@@ -123,23 +127,15 @@
                                         <small class="text-muted">ISBN: {{ hold_item.book.isbn|default:"-" }}</small>
                                     </td>
                                     <td>
-                                        {% for author in hold_item.book.authors.all %}
-                                            <span class="badge bg-secondary">{{ author.name }}</span>
-                                        {% empty %}
-                                            -
-                                        {% endfor %}
-                                    </td>
-                                    <td>{{ hold_item.book.publisher.name|default:"-" }}</td>
-                                    <td>
                                         {% if hold_item.book.available_quantity > 0 %}
                                             <span class="badge bg-success fs-6">
                                                 <i class="bi bi-check-circle"></i>
-                                                {{ hold_item.book.available_quantity }}/{{ hold_item.book.total_quantity }} available
+                                                มีในสต็อก {{ hold_item.book.available_quantity }}/{{ hold_item.book.total_quantity }}
                                             </span>
                                         {% else %}
                                             <span class="badge bg-danger fs-6">
                                                 <i class="bi bi-x-circle"></i>
-                                                Out of Stock (0/{{ hold_item.book.total_quantity }})
+                                                สต็อคหมด (0/{{ hold_item.book.total_quantity }})
                                             </span>
                                         {% endif %}
                                     </td>
@@ -160,11 +156,12 @@
                                 <span id="selectedCount" class="text-muted">0 หนังสือที่เลือก</span>
                             </div>
                             <div class="btn-group">
-                                <button type="submit"
+                                <button type="button"
                                         class="btn btn-success"
                                         id="confirmBtn"
                                         disabled
-                                        onclick="return confirm('ยืนยันการจองหนังสือที่เลือก?')">
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmModal">
                                     <i class="bi bi-check-circle"></i> ยืนยันการจองหนังสือที่เลือก
                                 </button>
                                 <button type="button"
@@ -200,6 +197,58 @@
             </form>
         </div>
     </div>
+    <!-- Confirmation Modal -->
+    <div class="modal fade"
+         id="confirmModal"
+         tabindex="-1"
+         aria-labelledby="confirmModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="confirmModalLabel">
+                        <i class="bi bi-exclamation-triangle"></i> ยืนยันการจองหนังสือ
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-3">
+                        <strong><i class="bi bi-info-circle"></i> คำเตือน:</strong>
+                        <p class="mb-0 mt-2">หนังสือที่ไม่ได้เลือกจะถูกยกเลิกการจองโดยอัตโนมัติ</p>
+                    </div>
+                    <div class="mb-3">
+                        <p class="mb-2">
+                            <strong>สรุปการดำเนินการ:</strong>
+                        </p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                <strong>จะยืนยันการจอง:</strong> <span id="modalSelectedCount" class="text-success">0</span> เล่ม
+                            </li>
+                            <li>
+                                <i class="bi bi-x-circle text-danger"></i>
+                                <strong>จะยกเลิกการจอง:</strong> <span id="modalCancelledCount" class="text-danger">0</span> เล่ม
+                            </li>
+                        </ul>
+                    </div>
+                    <p class="text-muted mb-0">
+                        <small>กรุณาตรวจสอบรายการก่อนยืนยัน</small>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> ยกเลิก
+                    </button>
+                    <button type="button" class="btn btn-success" id="modalConfirmBtn">
+                        <i class="bi bi-check-circle"></i> ยืนยันการจอง
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
 {% block extra_js %}
     <script>
@@ -208,6 +257,10 @@
         const checkboxes = document.querySelectorAll('.hold-item-checkbox');
         const confirmBtn = document.getElementById('confirmBtn');
         const selectedCount = document.getElementById('selectedCount');
+        const modalSelectedCount = document.getElementById('modalSelectedCount');
+        const modalCancelledCount = document.getElementById('modalCancelledCount');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const confirmForm = document.getElementById('confirmForm');
         
         if (selectAll) {
             selectAll.addEventListener('change', function() {
@@ -222,9 +275,29 @@
             cb.addEventListener('change', updateSelectedCount);
         });
         
+        // Update modal counts when modal is shown
+        const confirmModal = document.getElementById('confirmModal');
+        if (confirmModal) {
+            confirmModal.addEventListener('show.bs.modal', function() {
+                const checkedCount = document.querySelectorAll('.hold-item-checkbox:checked').length;
+                const totalCount = checkboxes.length;
+                const cancelledCount = totalCount - checkedCount;
+                
+                modalSelectedCount.textContent = checkedCount;
+                modalCancelledCount.textContent = cancelledCount;
+            });
+        }
+        
+        // Submit form when modal confirm button is clicked
+        if (modalConfirmBtn) {
+            modalConfirmBtn.addEventListener('click', function() {
+                confirmForm.submit();
+            });
+        }
+        
         function updateSelectedCount() {
             const checkedCount = document.querySelectorAll('.hold-item-checkbox:checked').length;
-            selectedCount.textContent = checkedCount + ' book' + (checkedCount !== 1 ? 's' : '') + ' selected';
+            selectedCount.textContent = checkedCount + ' หนังสือที่เลือก';
             confirmBtn.disabled = checkedCount === 0;
             
             if (selectAll) {
