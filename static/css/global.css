@@ -192,3 +192,9 @@
     max-width: calc(100vw - 2rem);
   }
 }
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
