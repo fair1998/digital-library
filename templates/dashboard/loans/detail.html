@@ -88,120 +88,120 @@
                     </div>
                 </div>
             </div>
-            <!-- Batch Return/Lost Form -->
-            {% if has_borrowed_items %}
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-book me-2"></i>จัดการคืน/หาย พร้อมชำระค่าปรับ
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="post"
-                              action="{% url 'loans:dashboard_return_loan' loan.id %}"
-                              id="batchReturnForm">
-                            {% csrf_token %}
-                            <div class="table-responsive">
-                                <table class="table" style="table-layout: fixed;">
-                                    <colgroup>
-                                        <col style="width: 35%;">
-                                        <col style="width: 12%;">
-                                        <col style="width: 18%;">
-                                        <col style="width: 35%;">
-                                    </colgroup>
-                                    <thead>
+            <!--  Return/Lost Form -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-book me-2"></i>จัดการคืน/หาย พร้อมชำระค่าปรับ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post"
+                          action="{% url 'loans:dashboard_return_loan' loan.id %}"
+                          id="batchReturnForm">
+                        {% csrf_token %}
+                        <div class="table-responsive">
+                            <table class="table" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 35%;">
+                                    <col style="width: 12%;">
+                                    <col style="width: 18%;">
+                                    <col style="width: 35%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>หนังสือ</th>
+                                        <th>สถานะ</th>
+                                        <th>การดำเนินการ</th>
+                                        <th>ความเสียหาย</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="vertical-align: top;">
+                                    {% for item in loan.loan_items.all %}
                                         <tr>
-                                            <th>หนังสือ</th>
-                                            <th>สถานะ</th>
-                                            <th>การดำเนินการ</th>
-                                            <th>ความเสียหาย</th>
+                                            <td>
+                                                <strong>{{ item.book.title }}</strong>
+                                            </td>
+                                            <td>
+                                                {% if item.status == 'borrowed' %}
+                                                    <span class="badge bg-warning text-dark">กำลังยืม</span>
+                                                {% elif item.status == 'returned' %}
+                                                    <span class="badge bg-success">คืนแล้ว</span>
+                                                {% elif item.status == 'lost' %}
+                                                    <span class="badge bg-danger">หาย</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.status == 'borrowed' %}
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <input type="radio"
+                                                               class="btn-check"
+                                                               name="action_{{ item.id }}"
+                                                               id="return_{{ item.id }}"
+                                                               value="return"
+                                                               autocomplete="off"
+                                                               onchange="handleActionChange({{ item.id }})"
+                                                               checked>
+                                                        <label class="btn btn-outline-success" for="return_{{ item.id }}">คืน</label>
+                                                        <input type="radio"
+                                                               class="btn-check"
+                                                               name="action_{{ item.id }}"
+                                                               id="lost_{{ item.id }}"
+                                                               value="lost"
+                                                               autocomplete="off"
+                                                               onchange="handleActionChange({{ item.id }})">
+                                                        <label class="btn btn-outline-danger" for="lost_{{ item.id }}">หาย</label>
+                                                        <input type="radio"
+                                                               class="btn-check"
+                                                               name="action_{{ item.id }}"
+                                                               id="skip_{{ item.id }}"
+                                                               value="skip"
+                                                               autocomplete="off"
+                                                               onchange="handleActionChange({{ item.id }})">
+                                                        <label class="btn btn-outline-secondary" for="skip_{{ item.id }}">ข้าม</label>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.status == 'borrowed' %}
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input damage-checkbox"
+                                                               type="checkbox"
+                                                               id="damaged_{{ item.id }}"
+                                                               name="damaged_{{ item.id }}"
+                                                               value="true"
+                                                               onchange="toggleDamageFields({{ item.id }})">
+                                                        <label class="form-check-label" for="damaged_{{ item.id }}">มีความเสียหาย</label>
+                                                    </div>
+                                                    <div id="damageFields_{{ item.id }}"
+                                                         class="mt-2 d-none"
+                                                         style="width: 100%">
+                                                        <input type="number"
+                                                               class="form-control form-control-sm mb-1 damage-amount-input"
+                                                               name="damage_amount_{{ item.id }}"
+                                                               placeholder="จำนวนเงิน (บาท)"
+                                                               step="0.01"
+                                                               min="0"
+                                                               style="width: 100%">
+                                                        <textarea class="form-control form-control-sm damage-reason-input"
+                                                                  name="damage_reason_{{ item.id }}"
+                                                                  placeholder="เหตุผล/รายละเอียด"
+                                                                  rows="2"
+                                                                  style="width: 100%;
+                                                                         resize: vertical"></textarea>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody style="vertical-align: top;">
-                                        {% for item in loan.loan_items.all %}
-                                            <tr>
-                                                <td>
-                                                    <strong>{{ item.book.title }}</strong>
-                                                </td>
-                                                <td>
-                                                    {% if item.status == 'borrowed' %}
-                                                        <span class="badge bg-warning text-dark">กำลังยืม</span>
-                                                    {% elif item.status == 'returned' %}
-                                                        <span class="badge bg-success">คืนแล้ว</span>
-                                                    {% elif item.status == 'lost' %}
-                                                        <span class="badge bg-danger">หาย</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if item.status == 'borrowed' %}
-                                                        <div class="btn-group btn-group-sm" role="group">
-                                                            <input type="radio"
-                                                                   class="btn-check"
-                                                                   name="action_{{ item.id }}"
-                                                                   id="return_{{ item.id }}"
-                                                                   value="return"
-                                                                   autocomplete="off"
-                                                                   onchange="handleActionChange({{ item.id }})"
-                                                                   checked>
-                                                            <label class="btn btn-outline-success" for="return_{{ item.id }}">คืน</label>
-                                                            <input type="radio"
-                                                                   class="btn-check"
-                                                                   name="action_{{ item.id }}"
-                                                                   id="lost_{{ item.id }}"
-                                                                   value="lost"
-                                                                   autocomplete="off"
-                                                                   onchange="handleActionChange({{ item.id }})">
-                                                            <label class="btn btn-outline-danger" for="lost_{{ item.id }}">หาย</label>
-                                                            <input type="radio"
-                                                                   class="btn-check"
-                                                                   name="action_{{ item.id }}"
-                                                                   id="skip_{{ item.id }}"
-                                                                   value="skip"
-                                                                   autocomplete="off"
-                                                                   onchange="handleActionChange({{ item.id }})">
-                                                            <label class="btn btn-outline-secondary" for="skip_{{ item.id }}">ข้าม</label>
-                                                        </div>
-                                                    {% else %}
-                                                        <span class="text-muted">-</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if item.status == 'borrowed' %}
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input damage-checkbox"
-                                                                   type="checkbox"
-                                                                   id="damaged_{{ item.id }}"
-                                                                   name="damaged_{{ item.id }}"
-                                                                   value="true"
-                                                                   onchange="toggleDamageFields({{ item.id }})">
-                                                            <label class="form-check-label" for="damaged_{{ item.id }}">มีความเสียหาย</label>
-                                                        </div>
-                                                        <div id="damageFields_{{ item.id }}"
-                                                             class="mt-2 d-none"
-                                                             style="width: 100%">
-                                                            <input type="number"
-                                                                   class="form-control form-control-sm mb-1 damage-amount-input"
-                                                                   name="damage_amount_{{ item.id }}"
-                                                                   placeholder="จำนวนเงิน (บาท)"
-                                                                   step="0.01"
-                                                                   min="0"
-                                                                   style="width: 100%">
-                                                            <textarea class="form-control form-control-sm damage-reason-input"
-                                                                      name="damage_reason_{{ item.id }}"
-                                                                      placeholder="เหตุผล/รายละเอียด"
-                                                                      rows="2"
-                                                                      style="width: 100%;
-                                                                             resize: vertical"></textarea>
-                                                        </div>
-                                                    {% else %}
-                                                        <span class="text-muted">-</span>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if has_borrowed_items %}
                             <div class="d-flex justify-content-end mt-3">
                                 <button type="button"
                                         class="btn btn-success"
@@ -210,18 +210,10 @@
                                     <i class="bi bi-check-circle me-1"></i>ยืนยันการคืนหนังสือ
                                 </button>
                             </div>
-                        </form>
-                    </div>
+                        {% endif %}
+                    </form>
                 </div>
-            {% else %}
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body text-center py-5">
-                        <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
-                        <h5 class="mt-3">คืนหนังสือครบแล้ว</h5>
-                        <p class="text-muted">ไม่มีหนังสือที่รอดำเนินการ</p>
-                    </div>
-                </div>
-            {% endif %}
+            </div>
         </div>
     </div>
     <!-- Confirmation Modal -->
