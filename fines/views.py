@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum, Q, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.conf import settings
 from .models import Fine
 from loans.models import Loan
 
@@ -42,6 +43,8 @@ def my_fines_view(request):
     context = {
         'fines': fines,
         'total_amount': total_amount,
+        'fine_late_return_per_day': settings.FINE_LATE_RETURN_PER_DAY,
+        'fine_lost_book': settings.FINE_LOST_BOOK,
     }
     
     return render(request, 'fines/list.html', context)

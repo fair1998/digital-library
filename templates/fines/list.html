@@ -13,6 +13,30 @@
                 <p class="text-muted">รายการค่าปรับทั้งหมดของคุณ</p>
             </div>
         </div>
+        <!-- Fine Information Card -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="alert alert-info border-0 shadow-sm">
+                    <h5 class="alert-heading mb-3">
+                        <i class="bi bi-info-circle-fill"></i> ข้อมูลค่าปรับ
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <strong><i class="bi bi-clock-fill text-warning"></i> คืนช้า:</strong>
+                            <span class="ms-2">{{ fine_late_return_per_day }} บาท/วัน/เล่ม</span>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <strong><i class="bi bi-x-circle-fill text-danger"></i> หนังสือหาย:</strong>
+                            <span class="ms-2">{{ fine_lost_book }} บาท/เล่ม</span>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <strong><i class="bi bi-bandaid-fill text-dark"></i> หนังสือชำรุด:</strong>
+                            <span class="ms-2">ตามความเสียหาย</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Summary Card -->
         <div class="row mb-4">
             <div class="col-md-12">
@@ -21,7 +45,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <h5 class="card-title mb-1">
-                                    <i class="bi bi-check-circle-fill"></i> ค่าปรับทั้งหมด
+                                    <i class="bi bi-check-circle-fill"></i> ค่าปรับที่ชำระแล้ว
                                 </h5>
                                 <h2 class="mb-2 fw-bold">฿{{ total_amount|floatformat:2 }}</h2>
                             </div>
