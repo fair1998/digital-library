@@ -284,18 +284,18 @@
                 .then(data => {
                     if (data.success) {
                         // Show success message
-                        showToast(data.message, 'success');
+                        showToast(data.message, 'อัพเดตสถานะผู้ใช้', 'success');
                         // Update toggle state to match server response
                         toggleElement.checked = data.is_active;
                     } else {
                         // Show error and revert toggle
-                        showToast(data.error || 'เกิดข้อผิดพลาด', 'error');
+                        showToast(data.error || 'เกิดข้อผิดพลาด', 'อัพเดตสถานะผู้ใช้', 'error');
                         toggleElement.checked = !isActive;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                    showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'อัพเดตสถานะผู้ใช้', 'error');
                     // Revert toggle on error
                     toggleElement.checked = !isActive;
                 })
@@ -320,25 +320,6 @@
                 }
             }
             return cookieValue;
-        }
-        
-        // Show toast notification
-        function showToast(message, type = 'info') {
-            // Create toast element
-            const toast = document.createElement('div');
-            toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
-            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            toast.innerHTML = `
-                ${message}
-                <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\"></button>
-            `;
-            
-            document.body.appendChild(toast);
-            
-            // Auto-remove after 3 seconds
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
         }
     });
     </script>
