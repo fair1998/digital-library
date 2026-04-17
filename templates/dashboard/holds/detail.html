@@ -91,6 +91,12 @@
                 {% csrf_token %}
                 <div class="table-responsive">
                     <table class="table table-hover">
+                        <colgroup>
+                            {% if batch.status == 'pending' %}<col style="width: 50px;">{% endif %}
+                            <col>
+                            {% if batch.status == 'pending' %}<col style="width: 250px;">{% endif %}
+                            <col style="width: 150px;">
+                        </colgroup>
                         <thead>
                             <tr>
                                 {% if batch.status == 'pending' %}
@@ -102,7 +108,7 @@
                                     </th>
                                 {% endif %}
                                 <th>ชื่อหนังสือ</th>
-                                <th>สถานะสต็อก</th>
+                                {% if batch.status == 'pending' %}<th>สถานะสต็อก</th>{% endif %}
                                 <th>สถานะการจอง</th>
                             </tr>
                         </thead>
@@ -126,19 +132,21 @@
                                         <br>
                                         <small class="text-muted">ISBN: {{ hold_item.book.isbn|default:"-" }}</small>
                                     </td>
-                                    <td>
-                                        {% if hold_item.book.available_quantity > 0 %}
-                                            <span class="badge bg-success fs-6">
-                                                <i class="bi bi-check-circle"></i>
-                                                มีในสต็อก {{ hold_item.book.available_quantity }}/{{ hold_item.book.total_quantity }}
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-danger fs-6">
-                                                <i class="bi bi-x-circle"></i>
-                                                สต็อคหมด (0/{{ hold_item.book.total_quantity }})
-                                            </span>
-                                        {% endif %}
-                                    </td>
+                                    {% if batch.status == 'pending' %}
+                                        <td>
+                                            {% if hold_item.book.available_quantity > 0 %}
+                                                <span class="badge bg-success fs-6">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    มีในสต็อก {{ hold_item.book.available_quantity }}/{{ hold_item.book.total_quantity }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger fs-6">
+                                                    <i class="bi bi-x-circle"></i>
+                                                    สต็อคหมด (0/{{ hold_item.book.total_quantity }})
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    {% endif %}
                                     <td>
                                         <span class="badge bg-{% if hold_item.status == 'pending' %}warning{% elif hold_item.status == 'confirmed' %}success{% else %}secondary{% endif %} fs-6">
                                             {{ hold_item.get_status_display }}
