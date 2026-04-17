@@ -76,9 +76,9 @@
                                     </h5>
                                     <small>
                                         <i class="bi bi-calendar me-1"></i>
-                                        วันที่ยืม: {{ batch.created_at|date:"d/m/Y" }}
+                                        วันที่ยืม: {{ batch.created_at|date:"d/m/Y H:i" }}
                                         {% if batch.due_date %}
-                                            | กำหนดคืน: {{ batch.due_date|date:"d/m/Y" }}
+                                            | กำหนดคืน: {{ batch.due_date|date:"d/m/Y H:i" }}
                                             {% if batch.is_overdue %}
                                                 <span class="badge bg-white text-danger ms-2">
                                                     <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด!

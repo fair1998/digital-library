@@ -297,10 +297,10 @@
                                                     </td>
                                                     <td>{{ loan_item.loan.user.username }}</td>
                                                     <td>
-                                                        <small class="text-muted">{{ loan_item.loan.created_at|date:"d/m/Y" }}</small>
+                                                        <small class="text-muted">{{ loan_item.loan.created_at|date:"d/m/Y H:i" }}</small>
                                                     </td>
                                                     <td>
-                                                        <small class="text-muted">{{ loan_item.loan.due_date|date:"d/m/Y" }}</small>
+                                                        <small class="text-muted">{{ loan_item.loan.due_date|date:"d/m/Y H:i" }}</small>
                                                     </td>
                                                     <td>
                                                         {% if loan_item.loan.is_overdue %}
@@ -341,10 +341,10 @@
                                                     </td>
                                                     <td>{{ loan_item.loan.user.username }}</td>
                                                     <td>
-                                                        <small class="text-muted">{{ loan_item.loan.created_at|date:"d/m/Y" }}</small>
+                                                        <small class="text-muted">{{ loan_item.loan.created_at|date:"d/m/Y H:i" }}</small>
                                                     </td>
                                                     <td>
-                                                        <small class="text-muted">{{ loan_item.updated_at|date:"d/m/Y" }}</small>
+                                                        <small class="text-muted">{{ loan_item.updated_at|date:"d/m/Y H:i" }}</small>
                                                     </td>
                                                 </tr>
                                             {% endfor %}

@@ -55,12 +55,12 @@
                         <strong>อีเมล:</strong> {{ batch.user.email|default:"-" }}
                     </p>
                     <p>
-                        <strong>วันที่สร้าง:</strong> {{ batch.created_at|date:"d-m-Y H:i" }}
+                        <strong>วันที่สร้าง:</strong> {{ batch.created_at|date:"d/m/Y H:i" }}
                     </p>
                     <p>
                         <strong>วันหมดอายุ:</strong>
                         <span class="{% if batch.is_expired and batch.status == 'pending' %}text-danger fw-bold{% endif %}">
-                            {{ batch.expires_at|date:"d-m-Y H:i" }}
+                            {{ batch.expires_at|date:"d/m/Y H:i" }}
                             {% if batch.is_expired and batch.status == 'pending' %}<span class="badge bg-danger">หมดอายุ</span>{% endif %}
                         </span>
                     </p>
