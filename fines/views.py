@@ -25,7 +25,7 @@ def my_fines_view(request):
     ).order_by('-paid_at')
     
     # Calculate total (from all fines, not just current page)
-    total_amount = fines_list.aggregate(Sum('amount'))['amount__sum'] or 0
+    # total_amount = fines_list.aggregate(Sum('amount'))['amount__sum'] or 0
     
     # Pagination
     paginator = Paginator(fines_list, 20)  # Show 20 fines per page
@@ -42,7 +42,7 @@ def my_fines_view(request):
     
     context = {
         'fines': fines,
-        'total_amount': total_amount,
+        # 'total_amount': total_amount,
         'fine_late_return_per_day': settings.FINE_LATE_RETURN_PER_DAY,
         'fine_lost_book': settings.FINE_LOST_BOOK,
     }
