@@ -85,7 +85,7 @@
                 <table class="table table-sm table-bordered bg-white">
                     <thead>
                         <tr>
-                            <th>Batch ID</th>
+                            <th>ID</th>
                             <th>ผู้ใช้</th>
                             <th>หนังสือ</th>
                             <th>วันที่ยืนยัน</th>
@@ -145,26 +145,17 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label for="batch_id" class="form-label">Batch ID</label>
+                <div class="col-md-6">
+                    <label for="search" class="form-label">ค้นหา</label>
                     <input type="text"
-                           name="batch_id"
-                           id="batch_id"
+                           name="search"
+                           id="search"
                            class="form-control"
-                           placeholder="Search by Batch ID"
-                           value="{{ batch_id_filter }}">
+                           placeholder="ค้นหาจาก ID, Username หรือ ชื่อ-นามสกุล"
+                           value="{{ search_query }}">
                 </div>
-                <div class="col-md-3">
-                    <label for="user" class="form-label">User</label>
-                    <input type="text"
-                           name="user"
-                           id="user"
-                           class="form-control"
-                           placeholder="Search by username or name"
-                           value="{{ user_filter }}">
-                </div>
-                <div class="col-md-3">
-                    <label for="status" class="form-label">Status</label>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">สถานะ</label>
                     <select name="status" id="status" class="form-select">
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>ทั้งหมด</option>
                         {% for value, label in stats.status_choices %}
@@ -173,13 +164,11 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="bi bi-search"></i> Search
+                <div class="col-md-2">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> ค้นหา
                     </button>
-                    <a href="{% url 'holds:dashboard_holds' %}" class="btn btn-secondary">
-                        <i class="bi bi-x-circle"></i> Clear
-                    </a>
                 </div>
             </form>
         </div>
@@ -189,13 +178,19 @@
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
+                    <colgroup>
+                        <col style="width: 20%;">
+                        <col style="width: 20%;">
+                        <col style="width: 20%;">
+                        <col style="width: 20%;">
+                        <col style="width: 20%;">
+                    </colgroup>
                     <tr>
-                        <th>Batch ID</th>
-                        <th>User</th>
-                        <th>Books</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Expires</th>
+                        <th>ID</th>
+                        <th>ผู้ใช้</th>
+                        <th>สถานะ</th>
+                        <th>วันที่จอง</th>
+                        <th>หมดอายุ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -203,80 +198,12 @@
                         <tr>
                             <td>
                                 <a href="{% url 'holds:dashboard_hold_detail' hold.id %}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i> #{{ hold.id }}
+                                   class="text-decoration-none">
+                                    <strong>#{{ hold.id }}</strong>
                                 </a>
                             </td>
                             <td>
                                 <i class="bi bi-person"></i> {{ hold.user.username }}
-                                {% if hold.user.get_full_name %}
-                                    <br>
-                                    <small class="text-muted">{{ hold.user.get_full_name }}</small>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary"
-                                        type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#books-{{ hold.id }}"
-                                        aria-expanded="false">
-                                    <i class="bi bi-book"></i> {{ hold.hold_items.count }} books
-                                </button>
-                                <div class="collapse mt-2" id="books-{{ hold.id }}">
-                                    <div class="table-responsive">
-                                        <table class="table table-sm mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Book</th>
-                                                    <th>Stock</th>
-                                                    <th>Status</th>
-                                                    {% if hold.status == 'pending' %}<th>Action</th>{% endif %}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for hold_item in hold.hold_items.all %}
-                                                    <tr>
-                                                        <td>
-                                                            <strong>{{ hold_item.book.title }}</strong>
-                                                            <br>
-                                                            <small class="text-muted">
-                                                                {% for author in hold_item.book.authors.all %}
-                                                                    {{ author.name }}
-                                                                    {% if not forloop.last %},{% endif %}
-                                                                {% endfor %}
-                                                            </small>
-                                                        </td>
-                                                        <td>
-                                                            {% if hold_item.book.available_quantity > 0 %}
-                                                                <span class="badge bg-success">{{ hold_item.book.available_quantity }}/{{ hold_item.book.total_quantity }}</span>
-                                                            {% else %}
-                                                                <span class="badge bg-danger">0/{{ hold_item.book.total_quantity }}</span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge bg-{% if hold_item.status == 'pending' %}warning{% elif hold_item.status == 'confirmed' %}success{% else %}secondary{% endif %}">
-                                                                {{ hold_item.get_status_display }}
-                                                            </span>
-                                                        </td>
-                                                        {% if hold.status == 'pending' %}
-                                                            <td>
-                                                                {% if hold_item.book.available_quantity > 0 %}
-                                                                    <small class="text-success">
-                                                                        <i class="bi bi-check-circle"></i> Ready
-                                                                    </small>
-                                                                {% else %}
-                                                                    <small class="text-danger">
-                                                                        <i class="bi bi-x-circle"></i> Out of stock
-                                                                    </small>
-                                                                {% endif %}
-                                                            </td>
-                                                        {% endif %}
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
                             </td>
                             <td>
                                 {% if hold.status == 'pending' %}
@@ -302,7 +229,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <small>{{ hold.created_at|date:"d M Y H:i" }}</small>
+                                <small>{{ hold.created_at|date:"d-m-Y H:i" }}</small>
                             </td>
                             <td>
                                 {% if hold.expires_at %}

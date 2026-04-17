@@ -95,8 +95,7 @@ def dashboard_holds_view(request):
     """
     # Get filter parameters
     status_filter = request.GET.get('status', 'all')
-    batch_id_filter = request.GET.get('batch_id', '').strip()
-    user_filter = request.GET.get('user', '').strip()
+    search_query = request.GET.get('search', '').strip()
     
     # Base queryset
     holds = Hold.objects.select_related(
@@ -106,18 +105,24 @@ def dashboard_holds_view(request):
         'hold_items__book__publisher'
     ).order_by('-created_at')
     
-    # Apply batch ID filter
-    if batch_id_filter:
-        holds = holds.filter(id=batch_id_filter)
-    
-    # Apply user filter (search by username, first name, or last name)
-    if user_filter:
+    # Apply unified search filter (ID, username, first name, or last name)
+    if search_query:
         from django.db.models import Q
-        holds = holds.filter(
-            Q(user__username__icontains=user_filter) |
-            Q(user__first_name__icontains=user_filter) |
-            Q(user__last_name__icontains=user_filter)
-        )
+        # Try to search by ID if the query is numeric
+        if search_query.isdigit():
+            holds = holds.filter(
+                Q(id=search_query) |
+                Q(user__username__icontains=search_query) |
+                Q(user__first_name__icontains=search_query) |
+                Q(user__last_name__icontains=search_query)
+            )
+        else:
+            # Search by username or name only
+            holds = holds.filter(
+                Q(user__username__icontains=search_query) |
+                Q(user__first_name__icontains=search_query) |
+                Q(user__last_name__icontains=search_query)
+            )
     
     # Apply status filter
     if status_filter and status_filter != 'all':
@@ -148,8 +153,7 @@ def dashboard_holds_view(request):
     context = {
         'holds': holds,
         'status_filter': status_filter,
-        'batch_id_filter': batch_id_filter,
-        'user_filter': user_filter,
+        'search_query': search_query,
         'stats': stats,
         'expired_batches': expired_batches,
     }
