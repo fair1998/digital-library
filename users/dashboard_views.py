@@ -31,7 +31,7 @@ def dashboard_home_view(request):
     pending_hold_items = Hold.objects.filter(status='pending').count()
     confirmed_hold_items = Hold.objects.filter(status='confirmed').count()
     expired_hold_items = Hold.objects.filter(
-        status='pending',
+        status='confirmed',
         expires_at__lt=timezone.now()
     ).count()
     
@@ -41,7 +41,7 @@ def dashboard_home_view(request):
         status='borrowed',
         loan__due_date__lt=timezone.now()
     ).count()
-    returned_loans = LoanItem.objects.filter(status='returned').count()
+    # returned_loans = LoanItem.objects.filter(status='returned').count()
     lost_books = LoanItem.objects.filter(status='lost').count()
     
     # Fines statistics (all fines are paid immediately)
@@ -99,7 +99,7 @@ def dashboard_home_view(request):
         # Loans
         'active_loans': active_loans,
         'overdue_loans': overdue_loans,
-        'returned_loans': returned_loans,
+        # 'returned_loans': returned_loans,
         'lost_books': lost_books,
         
         # Fines (all paid)
