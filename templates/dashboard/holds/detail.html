@@ -3,7 +3,7 @@
     รายละเอียดการจอง #{{ batch.id }}
 {% endblock title %}
 {% block page_title %}
-    รายละเอียดการจอง #{{ batch.id }} - {{ batch.user.username }}
+    รายละเอียดการจอง #{{ batch.id }}
 {% endblock page_title %}
 {% block extra_css %}
     <style>
@@ -14,7 +14,7 @@
 {% endblock extra_css %}
 {% block content %}
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <a href="{% url 'holds:dashboard_holds' %}"
                class="btn btn-outline-secondary">
