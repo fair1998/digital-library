@@ -132,12 +132,21 @@ def dashboard_holds_view(request):
     if status_filter and status_filter != 'all':
         holds = holds.filter(status=status_filter)
     
-    # Collect expired confirmed batches for alert
-    expired_batches = []
-    for batch in holds:
-        # Collect only CONFIRMED batches that expired (customer didn't pick up)
-        if batch.is_expired and batch.status == 'confirmed':
-            expired_batches.append(batch)
+    # Count expired confirmed holds for badge
+    expired_count = holds.filter(status='confirmed').filter(
+        expires_at__lt=timezone.now()
+    ).count()
+    
+    # Prioritize expired confirmed holds in ordering
+    # Order by: 1) expired confirmed first, 2) then by creation date desc
+    from django.db.models import Case, When, Value, IntegerField
+    holds = holds.annotate(
+        is_expired_confirmed=Case(
+            When(status='confirmed', expires_at__lt=timezone.now(), then=Value(0)),
+            default=Value(1),
+            output_field=IntegerField()
+        )
+    ).order_by('is_expired_confirmed', '-created_at')
     
     context = {
         'holds': holds,
@@ -145,7 +154,7 @@ def dashboard_holds_view(request):
         'search_id': search_id,
         'search_user': search_user,
         'status_choices': Hold.STATUS_CHOICES,
-        'expired_batches': expired_batches,
+        'expired_count': expired_count,
     }
     
     return render(request, 'dashboard/holds/list.html', context)

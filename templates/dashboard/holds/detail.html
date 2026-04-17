@@ -22,7 +22,7 @@
             </a>
         </div>
         <div>
-            <span class="badge bg-{% if batch.status == 'pending' %}warning{% elif batch.status == 'confirmed' %}success{% elif batch.status == 'completed' %}primary{% elif batch.status == 'expired' %}danger{% else %}secondary{% endif %} fs-6">
+            <span class="badge bg-{% if batch.status == 'pending' %}warning{% elif batch.status == 'confirmed' %}primary{% elif batch.status == 'completed' %}success{% elif batch.status == 'expired' %}danger{% else %}secondary{% endif %} fs-6">
                 {{ batch.get_status_display }}
             </span>
         </div>
@@ -59,9 +59,9 @@
                     </p>
                     <p>
                         <strong>วันหมดอายุ:</strong>
-                        <span class="{% if batch.is_expired and batch.status == 'pending' %}text-danger fw-bold{% endif %}">
+                        <span class="{% if batch.is_expired and batch.status == 'confirmed' %}text-danger fw-bold{% endif %}">
                             {{ batch.expires_at|date:"d/m/Y H:i" }}
-                            {% if batch.is_expired and batch.status == 'pending' %}<span class="badge bg-danger">หมดอายุ</span>{% endif %}
+                            {% if batch.is_expired and batch.status == 'confirmed' %}<span class="badge bg-danger">หมดอายุ</span>{% endif %}
                         </span>
                     </p>
                     <p>
@@ -182,14 +182,22 @@
                     </div>
                 {% elif batch.status == 'confirmed' %}
                     <div class="mt-4">
+                        {% if batch.is_expired %}
+                            <div class="alert alert-danger mb-3">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <strong>การจองนี้หมดอายุแล้ว</strong> - ไม่สามารถสร้างรายการยืมได้ กรุณายกเลิกการจองและให้ลูกค้าจองใหม่
+                            </div>
+                        {% endif %}
                         <div class="btn-group">
                             <a href="{% url 'holds:dashboard_create_loan_from_hold' batch.id %}"
-                               class="btn btn-primary">
-                                <i class="bi bi-box-seam"></i> รับหนังสือ
+                               class="btn btn-primary {% if batch.is_expired %}disabled{% endif %}"
+                               {% if batch.is_expired %}aria-disabled="true" tabindex="-1"{% endif %}>
+                                <i class="bi bi-box-arrow-right"></i> สร้างรายการยืม
                             </a>
                             <button type="button"
                                     class="btn btn-outline-danger"
-                                    onclick="if(confirm('ยกเลิกการจองที่ยืนยันแล้ว?\n(จะคืนจำนวนหนังสือกลับ)')) { document.getElementById('cancelForm').submit(); }">
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#cancelHoldModal">
                                 <i class="bi bi-x-circle"></i> ยกเลิกการจอง
                             </button>
                         </div>
@@ -203,6 +211,66 @@
                   class="d-none">
                 {% csrf_token %}
             </form>
+        </div>
+    </div>
+    <!-- Cancel Hold Modal -->
+    <div class="modal fade"
+         id="cancelHoldModal"
+         tabindex="-1"
+         aria-labelledby="cancelHoldModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="cancelHoldModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill"></i> ยืนยันการยกเลิกการจอง
+                    </h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>คำเตือน:</strong> การยกเลิกการจองนี้จะคืนจำนวนหนังสือทั้งหมดกลับสู่สต็อค
+                    </div>
+                    <p class="mb-3">
+                        <strong>รายละเอียดการจอง:</strong>
+                    </p>
+                    <ul class="list-unstyled mb-3">
+                        <li>
+                            <strong>รหัสการจอง:</strong> #{{ batch.id }}
+                        </li>
+                        <li>
+                            <strong>ผู้จอง:</strong> {{ batch.user.get_full_name|default:batch.user.username }}
+                        </li>
+                        <li>
+                            <strong>จำนวนหนังสือ:</strong> {{ batch.hold_items.count }} เล่ม
+                        </li>
+                        <li>
+                            <strong>สถานะ:</strong> <span class="badge bg-primary">{{ batch.get_status_display }}</span>
+                        </li>
+                        {% if batch.is_expired %}
+                            <li class="text-danger">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <strong>การจองนี้หมดอายุแล้ว</strong>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <p class="text-muted">
+                        <small>กรุณายืนยันว่าต้องการยกเลิกการจองนี้</small>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> ยกเลิก
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmCancelBtn">
+                        <i class="bi bi-check-circle"></i> ยืนยันการยกเลิก
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Confirmation Modal -->
@@ -300,6 +368,16 @@
         if (modalConfirmBtn) {
             modalConfirmBtn.addEventListener('click', function() {
                 confirmForm.submit();
+            });
+        }
+        
+        // Handle cancel hold modal
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const cancelForm = document.getElementById('cancelForm');
+        
+        if (confirmCancelBtn && cancelForm) {
+            confirmCancelBtn.addEventListener('click', function() {
+                cancelForm.submit();
             });
         }
         

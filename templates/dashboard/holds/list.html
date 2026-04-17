@@ -7,69 +7,6 @@
     รายการรจอง
 {% endblock page_title %}
 {% block content %}
-    <!-- Expired Hold items Alert -->
-    {% if expired_batches %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <h5 class="alert-heading">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>พบการจองที่หมดอายุ {{ expired_batches|length }} รายการ
-            </h5>
-            <p class="mb-3">
-                การจองเหล่านี้ได้รับการยืนยันแล้ว แต่ลูกค้าไม่มารับหนังสือภายในเวลาที่กำหนด กรุณายกเลิกเพื่อปล่อยสต็อคหนังสือ:
-            </p>
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered bg-white">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>ชื่อ - นามสกุล</th>
-                            <th>หนังสือ</th>
-                            <th>วันที่ยืนยัน</th>
-                            <th>หมดอายุเมื่อ</th>
-                            <th>การดำเนินการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for hold in expired_batches %}
-                            <tr>
-                                <td>
-                                    <a href="{% url 'holds:dashboard_hold_detail' hold.id %}"
-                                       class="btn btn-sm btn-outline-primary">#{{ hold.id }}</a>
-                                </td>
-                                <td>{{ hold.user.get_full_name|default:hold.user.username }}</td>
-                                <td>{{ hold.hold_items.count }} เล่ม</td>
-                                <td>
-                                    <small>{{ hold.created_at|date:"d/m/Y H:i" }}</small>
-                                </td>
-                                <td>
-                                    <small class="text-danger fw-bold">{{ hold.expires_at|date:"d/m/Y H:i" }}</small>
-                                </td>
-                                <td>
-                                    <form method="post"
-                                          action="{% url 'holds:dashboard_cancel_hold' hold.id %}"
-                                          class="d-inline"
-                                          onsubmit="return confirm('ยืนยันการยกเลิกการจอง #{{ hold.id }} ของ {{ hold.user.username }}?');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="bi bi-x-circle"></i> ยกเลิก
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <hr>
-            <p class="mb-0">
-                <i class="bi bi-info-circle me-1"></i>
-                <small>การจองที่หมดอายุควรถูกยกเลิกเพื่อปล่อยสต็อคหนังสือให้ผู้ใช้คนอื่น (เฉพาะการจองที่ยืนยันแล้วแต่ลูกค้าไม่มารับภายในเวลา)</small>
-            </p>
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"></button>
-        </div>
-    {% endif %}
     <!-- Filter -->
     <div class="card mb-4">
         <div class="card-body">
@@ -173,7 +110,9 @@
                                         {{ hold.expires_at|date:"d/m/Y H:i" }}
                                         {% if hold.status == 'confirmed' and hold.is_expired %}
                                             <br>
-                                            <span class="badge bg-danger">หมดเวลารับแล้ว!</span>
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> หมดเวลารับแล้ว!
+                                            </span>
                                         {% endif %}
                                     </small>
                                 {% else %}
