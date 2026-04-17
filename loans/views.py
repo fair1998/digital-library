@@ -343,7 +343,7 @@ def dashboard_return_loan_view(request, loan_id):
                                     loan_item=item,
                                     type='lost',
                                     amount=lost_fine_amount,
-                                    reason=f'ทำหนังสือหาย: {item.book.title}',
+                                    reason=f'ทำหนังสือหาย',
                                     paid_at=now
                                 )
                                 total_fine_amount += lost_fine_amount
