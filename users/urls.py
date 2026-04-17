@@ -11,5 +11,6 @@ urlpatterns = [
     path('dashboard/users/', views.dashboard_users_view, name='dashboard_users'),
     path('dashboard/users/<int:user_id>/', views.dashboard_user_detail_view, name='dashboard_user_detail'),
 
-    path('api/users/<int:user_id>/status/', views.update_user_status_api , name='update_user_status'),
+    path('api/users/', views.get_users_api, name='api_get_users'),
+    path('api/users/<int:user_id>/status/', views.put_user_status_api , name='api_put_user_status'),
 ]

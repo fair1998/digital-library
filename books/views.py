@@ -694,21 +694,19 @@ def get_books_api(request):
     if len(query) < 2:
         return JsonResponse({'books': []})
     
-    # Search books by title or authors
+    # Search books by title or ISBN
     books = Book.objects.filter(
         Q(title__icontains=query) |
-        Q(authors__name__icontains=query)
-    ).select_related('publisher').prefetch_related('authors').distinct()[:10]
+        Q(isbn__icontains=query)
+    ).distinct()[:10]
     
     books_data = []
     for book in books:
-        authors_str = ', '.join([author.name for author in book.authors.all()])
         books_data.append({
             'id': book.id,
             'title': book.title,
-            'authors': authors_str,
-            'publisher': book.publisher.name if book.publisher else '',
-            'available_quantity': book.available_quantity,
+            'isbn': book.isbn,
+            'image_url': book.image_url.url if book.image_url else '',
         })
     
     return JsonResponse({'books': books_data})

@@ -80,7 +80,7 @@
                                    role="switch"
                                    id="member-status-toggle"
                                    data-username="{{ member.username }}"
-                                   data-url="{% url 'users:update_user_status' member.id %}"
+                                   data-url="{% url 'users:api_put_user_status' member.id %}"
                                    {% if member.is_active %}checked{% endif %}>
                             <label class="form-check-label" for="member-status-toggle">เปิดใช้งานบัญชี</label>
                         </div>

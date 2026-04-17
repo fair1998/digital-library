@@ -6,12 +6,15 @@ from django.db import transaction
 from django.db.models import Q
 from django.conf import settings
 from django.http import JsonResponse
-from datetime import timedelta
+from datetime import timedelta, datetime
 from decimal import Decimal
 from .models import Loan, LoanItem
 from holds.models import Hold
 from books.models import Book
 from fines.models import Fine
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 @login_required
@@ -74,6 +77,87 @@ def dashboard_loans_view(request):
     }
     
     return render(request, 'dashboard/loans/list.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
+def dashboard_create_loan_view(request):
+    """
+    Create a new loan directly (without hold).
+    Admin can select user and books to create a loan.
+    """
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Get user
+                user_id = request.POST.get('user_id')
+                if not user_id:
+                    messages.error(request, 'กรุณาเลือกผู้ใช้')
+                    return redirect('loans:dashboard_create_loan')
+                
+                user = get_object_or_404(User, id=user_id)
+                
+                # Get book IDs
+                book_ids = request.POST.getlist('book_ids')
+                if not book_ids:
+                    messages.error(request, 'กรุณาเลือกหนังสืออย่างน้อย 1 เล่ม')
+                    return redirect('loans:dashboard_create_loan')
+                
+                # Calculate due date from settings
+                loan_period_days = getattr(settings, 'LOAN_PERIOD_DAYS', 7)
+                due_date = timezone.now() + timedelta(days=loan_period_days)
+                # Set to end of day
+                due_date = due_date.replace(hour=23, minute=59, second=59, microsecond=0)
+                
+                # Get books and validate availability
+                books = Book.objects.filter(id__in=book_ids)
+                
+                if books.count() != len(book_ids):
+                    messages.error(request, 'พบหนังสือที่ไม่ถูกต้อง')
+                    return redirect('loans:dashboard_create_loan')
+                
+                # Check availability
+                unavailable_books = []
+                for book in books:
+                    if book.available_quantity <= 0:
+                        unavailable_books.append(book.title)
+                
+                if unavailable_books:
+                    messages.error(request, f'หนังสือต่อไปนี้ไม่ว่าง: {", ".join(unavailable_books)}')
+                    return redirect('loans:dashboard_create_loan')
+                
+                # Create Loan
+                loan = Loan.objects.create(
+                    user=user,
+                    status='active',
+                    due_date=due_date
+                )
+                
+                # Create LoanItems and update book quantities
+                for book in books:
+                    LoanItem.objects.create(
+                        loan=loan,
+                        book=book,
+                        status='borrowed',
+                        hold_item=None  # No hold item for direct loan
+                    )
+                    
+                    # Decrease available quantity
+                    book.available_quantity -= 1
+                    book.save()
+                
+                messages.success(request, f'สร้างรายการยืมสำเร็จ (Loan #{loan.id}) - {books.count()} เล่ม')
+                return redirect('loans:dashboard_loan_detail', loan_id=loan.id)
+                
+        except Exception as e:
+            messages.error(request, f'เกิดข้อผิดพลาด: {str(e)}')
+            return redirect('loans:dashboard_create_loan')
+    
+    # GET request - show form
+    context = {
+        'LOAN_PERIOD_DAYS': getattr(settings, 'LOAN_PERIOD_DAYS', 7),
+    }
+    return render(request, 'dashboard/loans/create_loan.html', context)
 
 
 @login_required

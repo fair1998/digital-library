@@ -1,0 +1,408 @@
+{% extends "base_admin.html" %}
+{% block title %}
+    ยืมหนังสือใหม่
+{% endblock title %}
+{% block page_title %}
+    ยืมหนังสือใหม่
+{% endblock page_title %}
+{% block extra_css %}
+    <style>
+.search-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.search-item:hover {
+    background-color: #f8f9fa;
+}
+.selected-book-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+.selected-book-item img {
+    width: 80px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+}
+.selected-book-item .book-info {
+    flex: 1;
+}
+.remove-book-btn {
+    cursor: pointer;
+    color: #dc3545;
+    transition: color 0.2s;
+}
+.remove-book-btn:hover {
+    color: #bd2130;
+}
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+.search-results-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+}
+.user-info-card {
+    background-color: #e7f3ff;
+    border: 1px solid #b8daff;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+    </style>
+{% endblock extra_css %}
+{% block content %}
+    <div class="mb-3">
+        <a href="{% url 'loans:dashboard_loans' %}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> กลับหน้ารายการยืม
+        </a>
+    </div>
+    <form method="post" id="createLoanForm">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- User Selection -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person-circle me-2"></i>ค้นหาผู้ใช้
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="userSearch" class="form-label">ค้นหาผู้ใช้ (ชื่อผู้ใช้, ชื่อ, อีเมล, หรือรหัสประชาชน)</label>
+                            <div class="input-group">
+                                <input type="text"
+                                       class="form-control"
+                                       id="userSearch"
+                                       placeholder="พิมพ์เพื่อค้นหาผู้ใช้...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearUserSearch">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <div id="userSearchResults" class="list-group mt-2 search-results-scroll"></div>
+                        </div>
+                        <div id="selectedUserContainer" class="d-none">
+                            <h6 class="text-muted mb-2">ผู้ใช้ที่เลือก:</h6>
+                            <div id="selectedUserInfo" class="user-info-card"></div>
+                            <input type="hidden" name="user_id" id="selectedUserId">
+                        </div>
+                    </div>
+                </div>
+                <!-- Book Selection -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-book me-2"></i>เลือกหนังสือที่จะยืม
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="bookSearch" class="form-label">ค้นหาหนังสือ (ชื่อหนังสือ, ISBN)</label>
+                            <div class="input-group">
+                                <input type="text"
+                                       class="form-control"
+                                       id="bookSearch"
+                                       placeholder="พิมพ์ชื่อหนังสือ, ISBN เพื่อค้นหา...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearBookSearch">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <div id="bookSearchResults" class="list-group mt-2 search-results-scroll"></div>
+                        </div>
+                        <div id="selectedBooksContainer" class="mt-3">
+                            <h6 class="text-muted">หนังสือที่เลือก:</h6>
+                            <div id="selectedBooksList"></div>
+                            <p id="noSelectedBooks" class="text-muted small">ยังไม่ได้เลือกหนังสือ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <!-- Summary Card -->
+                <div class="card shadow-sm mb-3 sticky-top" style="top: 1rem;">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clipboard-check me-2"></i>สรุป
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>ผู้ยืม:</strong>
+                            <p id="summaryUser" class="text-muted mb-0 small">ยังไม่ได้เลือกผู้ใช้</p>
+                        </div>
+                        <div class="mb-3">
+                            <strong>จำนวนหนังสือ:</strong>
+                            <p id="summaryBookCount" class="text-muted mb-0 small">0 เล่ม</p>
+                        </div>
+                        <div class="mb-3">
+                            <strong>กำหนดคืน:</strong>
+                            <p id="summaryDueDate" class="mb-0 text-muted">-</p>
+                        </div>
+                        <hr>
+                        <button type="submit" class="btn btn-primary w-100" id="submitBtn" disabled>
+                            <i class="bi bi-check-circle me-1"></i>สร้างรายการยืม
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock content %}
+{% block extra_js %}
+    <script>
+        let selectedUser = null;
+        let selectedBooks = [];
+        let searchTimeout = null;
+
+        // Set default due date (from setting) - display only
+        document.addEventListener('DOMContentLoaded', function() {
+            const summaryDueDate = document.getElementById('summaryDueDate');
+            const today = new Date();
+            today.setDate(today.getDate() + {{ LOAN_PERIOD_DAYS|default:7 }});
+            
+            // Format date for display in Thai
+            const thaiDate = today.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            summaryDueDate.textContent = thaiDate;
+            summaryDueDate.classList.remove('text-muted');
+        });
+
+        // User Search
+        document.getElementById('userSearch').addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                document.getElementById('userSearchResults').innerHTML = '';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                searchUsers(query);
+            }, 300);
+        });
+
+        async function searchUsers(query) {
+            const resultsDiv = document.getElementById('userSearchResults');
+            resultsDiv.innerHTML = '<div class="list-group-item"><div class="spinner-border spinner-border-sm me-2"></div>กำลังค้นหา...</div>';
+            
+            try {
+                const response = await fetch(`/api/users/?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.users && data.users.length > 0) {
+                    resultsDiv.innerHTML = data.users.map(user => `
+                        <div class="list-group-item list-group-item-action search-item" onclick="selectUser(${user.id}, '${user.username}', '${user.full_name}', '${user.email}')">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${user.full_name || user.username}</h6>
+                                <small class="text-muted">${user.username}</small>
+                            </div>
+                            <p class="mb-1 small text-muted">${user.email}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    resultsDiv.innerHTML = '<div class="list-group-item text-muted">ไม่พบผู้ใช้</div>';
+                }
+            } catch (error) {
+                console.error('Error searching users:', error);
+                resultsDiv.innerHTML = '<div class="list-group-item text-danger">เกิดข้อผิดพลาดในการค้นหา</div>';
+            }
+        }
+
+        function selectUser(id, username, fullName, email) {
+            selectedUser = { id, username, fullName, email };
+            
+            document.getElementById('selectedUserId').value = id;
+            document.getElementById('selectedUserInfo').innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">${fullName || username}</h6>
+                        <p class="mb-0 small text-muted">
+                            <i class="bi bi-person me-1"></i>${username}<br>
+                            <i class="bi bi-envelope me-1"></i>${email}
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearSelectedUser()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('selectedUserContainer').classList.remove('d-none');
+            document.getElementById('userSearch').value = '';
+            document.getElementById('userSearchResults').innerHTML = '';
+            
+            updateSummary();
+            validateForm();
+        }
+
+        function clearSelectedUser() {
+            selectedUser = null;
+            document.getElementById('selectedUserId').value = '';
+            document.getElementById('selectedUserContainer').classList.add('d-none');
+            updateSummary();
+            validateForm();
+        }
+
+        document.getElementById('clearUserSearch').addEventListener('click', function() {
+            document.getElementById('userSearch').value = '';
+            document.getElementById('userSearchResults').innerHTML = '';
+        });
+
+        // Book Search
+        document.getElementById('bookSearch').addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                document.getElementById('bookSearchResults').innerHTML = '';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                searchBooks(query);
+            }, 300);
+        });
+
+        async function searchBooks(query) {
+            const resultsDiv = document.getElementById('bookSearchResults');
+            resultsDiv.innerHTML = '<div class="list-group-item"><div class="spinner-border spinner-border-sm me-2"></div>กำลังค้นหา...</div>';
+            
+            try {
+                const response = await fetch(`{% url 'books:get_books' %}?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.books && data.books.length > 0) {
+                    resultsDiv.innerHTML = data.books.map(book => {
+                        const isSelected = selectedBooks.some(b => b.id === book.id);
+                        
+                        return `
+                            <div class="list-group-item list-group-item-action search-item" 
+                                 onclick="${!isSelected ? `selectBook(${book.id}, '${book.title.replace(/'/g, "\\'")}', '${book.isbn}', '${book.image_url}')` : ''}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div>
+                                        <h6 class="mb-1">${book.title}</h6>
+                                        <p class="mb-0 small text-muted">ISBN: ${book.isbn}</p>
+                                    </div>
+                                    ${isSelected ? '<span class="badge bg-success">เลือกแล้ว</span>' : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    resultsDiv.innerHTML = '<div class="list-group-item text-muted">ไม่พบหนังสือ</div>';
+                }
+            } catch (error) {
+                console.error('Error searching books:', error);
+                resultsDiv.innerHTML = '<div class="list-group-item text-danger">เกิดข้อผิดพลาดในการค้นหา</div>';
+            }
+        }
+
+        function selectBook(id, title, isbn, imageUrl) {
+            if (selectedBooks.some(b => b.id === id)) {
+                return; // Already selected
+            }
+            
+            selectedBooks.push({ id, title, isbn, imageUrl });
+            renderSelectedBooks();
+            updateSummary();
+            validateForm();
+            
+            // Clear search
+            document.getElementById('bookSearch').value = '';
+            document.getElementById('bookSearchResults').innerHTML = '';
+        }
+
+        function removeBook(id) {
+            selectedBooks = selectedBooks.filter(b => b.id !== id);
+            renderSelectedBooks();
+            updateSummary();
+            validateForm();
+        }
+
+        function renderSelectedBooks() {
+            const container = document.getElementById('selectedBooksList');
+            const noBooks = document.getElementById('noSelectedBooks');
+            
+            if (selectedBooks.length === 0) {
+                container.innerHTML = '';
+                noBooks.classList.remove('d-none');
+                return;
+            }
+            
+            noBooks.classList.add('d-none');
+            container.innerHTML = selectedBooks.map(book => `
+                <div class="selected-book-item">
+                    <input type="hidden" name="book_ids" value="${book.id}">
+                    ${book.imageUrl ? `<img src="${book.imageUrl}" alt="${book.title}">` : '<div style="width:80px;height:120px;background:#e9ecef;display:flex;align-items:center;justify-content:center;border-radius:0.25rem;"><i class="bi bi-book" style="font-size:2rem;color:#6c757d;"></i></div>'}
+                    <div class="book-info">
+                        <h6 class="mb-1">${book.title}</h6>
+                        <p class="mb-0 small text-muted">
+                            <strong>ISBN:</strong> ${book.isbn}
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeBook(${book.id})">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            `).join('');  
+        }
+
+        document.getElementById('clearBookSearch').addEventListener('click', function() {
+            document.getElementById('bookSearch').value = '';
+            document.getElementById('bookSearchResults').innerHTML = '';
+        });
+
+        // Update Summary
+        function updateSummary() {
+            const summaryUser = document.getElementById('summaryUser');
+            const summaryBookCount = document.getElementById('summaryBookCount');
+            
+            if (selectedUser) {
+                summaryUser.innerHTML = `${selectedUser.fullName || selectedUser.username}`;
+                summaryUser.classList.remove('text-muted');
+            } else {
+                summaryUser.innerHTML = 'ยังไม่ได้เลือกผู้ใช้';
+                summaryUser.classList.add('text-muted');
+            }
+            
+            summaryBookCount.innerHTML = `${selectedBooks.length} เล่ม`;
+            summaryBookCount.classList.toggle('text-muted', selectedBooks.length === 0);
+        }
+
+        // Form Validation
+        function validateForm() {
+            const submitBtn = document.getElementById('submitBtn');
+            const isValid = selectedUser !== null && selectedBooks.length > 0;
+            submitBtn.disabled = !isValid;
+        }
+
+        // Form Submission
+        document.getElementById('createLoanForm').addEventListener('submit', function(e) {
+            if (selectedUser === null) {
+                e.preventDefault();
+                alert('กรุณาเลือกผู้ใช้');
+                return;
+            }
+            
+            if (selectedBooks.length === 0) {
+                e.preventDefault();
+                alert('กรุณาเลือกหนังสืออย่างน้อย 1 เล่ม');
+                return;
+            }
+        });
+    </script>
+{% endblock extra_js %}

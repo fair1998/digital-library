@@ -181,7 +181,7 @@
                                                        id="status-toggle-{{ user.id }}"
                                                        data-user-id="{{ user.id }}"
                                                        data-username="{{ user.username }}"
-                                                       data-url="{% url 'users:update_user_status' user.id %}"
+                                                       data-url="{% url 'users:api_put_user_status' user.id %}"
                                                        {% if user.is_active %}checked{% endif %}>
                                             </div>
                                         </div>

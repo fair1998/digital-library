@@ -231,7 +231,7 @@ def dashboard_user_detail_view(request, user_id):
     return render(request, 'dashboard/users/detail.html', context)
 
 @staff_member_required
-def update_user_status_api(request, user_id):
+def put_user_status_api(request, user_id):
     """Toggle user active status"""
     from django.contrib.auth import get_user_model
     from django.http import JsonResponse
@@ -263,3 +263,43 @@ def update_user_status_api(request, user_id):
         return JsonResponse({'error': 'ไม่พบผู้ใช้'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@staff_member_required
+def get_users_api(request):
+    """API endpoint for searching users"""
+    from django.contrib.auth import get_user_model
+    from django.http import JsonResponse
+    from django.db.models import Q, Value, CharField
+    from django.db.models.functions import Concat
+    
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'users': []})
+    
+    User = get_user_model()
+
+    # Search users by username, name, email, citizen_id
+    users = User.objects.annotate(
+        full_name=Concat('first_name', Value(' '), 'last_name', output_field=CharField())
+    ).filter(
+        Q(username__icontains=query) |
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query) |
+        Q(full_name__icontains=query) |
+        Q(email__icontains=query) |
+        Q(citizen_id__icontains=query)
+    ).filter(is_active=True)[:10]  # Only active users, limit to 10 results
+    
+    users_data = []
+    for user in users:
+
+        users_data.append({
+            'id': user.id,
+            'username': user.username,
+            'full_name': user.get_full_name() or user.username,
+            'email': user.email or '-',
+        })
+    
+    return JsonResponse({'users': users_data})
