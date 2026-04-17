@@ -25,3 +25,11 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.username
+    
+    def get_current_borrowed_count(self) -> int:
+        """Get the number of books currently borrowed by this user."""
+        from loans.models import LoanItem
+        return LoanItem.objects.filter(
+            loan__user=self,
+            status='borrowed'
+        ).count()

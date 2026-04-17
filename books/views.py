@@ -205,6 +205,21 @@ def confirm_cart_view(request):
         messages.warning(request, 'รายการจองของคุณว่างเปล่า')
         return redirect('books:view_cart')
     
+    # Check maximum books per user limit
+    from django.conf import settings
+    max_books = getattr(settings, 'MAX_BOOKS_PER_USER', 10)
+    current_borrowed = request.user.get_current_borrowed_count()
+    new_books_count = len(book_ids)
+    
+    if current_borrowed + new_books_count > max_books:
+        messages.error(
+            request,
+            f'ไม่สามารถจองได้ คุณกำลังยืมหนังสืออยู่ {current_borrowed} เล่ม '
+            f'และพยายามจองเพิ่ม {new_books_count} เล่ม '
+            f'ซึ่งจะเกินจำนวนสูงสุด {max_books} เล่มที่สามารถยืมพร้อมกันได้'
+        )
+        return redirect('books:view_cart')
+    
     try:
         with transaction.atomic():
             # Get all books and check availability

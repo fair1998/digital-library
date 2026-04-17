@@ -366,6 +366,20 @@ def dashboard_create_loan_from_hold_view(request, hold_id):
         # Get additional books from POST data
         additional_book_ids = request.POST.getlist('additional_books')
         
+        # Check maximum books per user limit
+        max_books = getattr(settings, 'MAX_BOOKS_PER_USER', 10)
+        current_borrowed = hold.user.get_current_borrowed_count()
+        confirmed_hold_items_count = hold.hold_items.filter(status='confirmed').count()
+        new_books_count = confirmed_hold_items_count + len(additional_book_ids)
+        
+        if current_borrowed + new_books_count > max_books:
+            messages.error(
+                request,
+                f'ไม่สามารถยืมได้ ผู้ใช้ {hold.user.username} กำลังยืมหนังสืออยู่ {current_borrowed} เล่ม '
+                f'และจะยืมเพิ่ม {new_books_count} เล่ม ซึ่งจะเกินจำนวนสูงสุด {max_books} เล่ม'
+            )
+            return redirect('holds:dashboard_hold_detail', hold_id=hold.id)
+        
         try:
             with transaction.atomic():
                 # Create loan batch

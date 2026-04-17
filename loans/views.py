@@ -97,6 +97,19 @@ def dashboard_create_loan_view(request):
                     messages.error(request, 'กรุณาเลือกหนังสืออย่างน้อย 1 เล่ม')
                     return redirect('loans:dashboard_create_loan')
                 
+                # Check maximum books per user limit
+                max_books = getattr(settings, 'MAX_BOOKS_PER_USER', 10)
+                current_borrowed = user.get_current_borrowed_count()
+                new_books_count = len(book_ids)
+                
+                if current_borrowed + new_books_count > max_books:
+                    messages.error(
+                        request,
+                        f'ไม่สามารถยืมได้ ผู้ใช้ {user.username} กำลังยืมหนังสืออยู่ {current_borrowed} เล่ม '
+                        f'และจะยืมเพิ่ม {new_books_count} เล่ม ซึ่งจะเกินจำนวนสูงสุด {max_books} เล่ม'
+                    )
+                    return redirect('loans:dashboard_create_loan')
+                
                 # Calculate due date from settings (end of day in Bangkok timezone)
                 # Django will convert to UTC automatically when saving to DB
                 loan_period_days = getattr(settings, 'LOAN_PERIOD_DAYS', 7)
