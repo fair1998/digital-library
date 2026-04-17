@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db.models import Sum
-from .forms import UserRegistrationForm, UserLoginForm
+from .forms import UserRegistrationForm, UserLoginForm, UserProfileForm
 
 def register_view(request):
     """View for user registration"""
@@ -57,6 +57,23 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'ออกจากระบบสำเร็จ')
     return redirect('home')
+
+
+@login_required
+def profile_edit_view(request):
+    """View for user to edit their own profile"""
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'แก้ไขข้อมูลส่วนตัวสำเร็จ')
+            return redirect('users:profile_edit')
+        else:
+            messages.error(request, 'กรุณาตรวจสอบข้อมูลที่กรอกและลองใหม่อีกครั้ง')
+    else:
+        form = UserProfileForm(instance=request.user)
+    
+    return render(request, 'users/profile_edit.html', {'form': form})
 
 
 def home_view(request):
