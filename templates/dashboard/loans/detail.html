@@ -133,19 +133,11 @@
                                                             <input type="radio"
                                                                    class="btn-check"
                                                                    name="action_{{ item.id }}"
-                                                                   id="skip_{{ item.id }}"
-                                                                   value="skip"
-                                                                   autocomplete="off"
-                                                                   onchange="handleActionChange({{ item.id }})"
-                                                                   checked>
-                                                            <label class="btn btn-outline-secondary" for="skip_{{ item.id }}">ข้าม</label>
-                                                            <input type="radio"
-                                                                   class="btn-check"
-                                                                   name="action_{{ item.id }}"
                                                                    id="return_{{ item.id }}"
                                                                    value="return"
                                                                    autocomplete="off"
-                                                                   onchange="handleActionChange({{ item.id }})">
+                                                                   onchange="handleActionChange({{ item.id }})"
+                                                                   checked>
                                                             <label class="btn btn-outline-success" for="return_{{ item.id }}">คืน</label>
                                                             <input type="radio"
                                                                    class="btn-check"
@@ -155,6 +147,14 @@
                                                                    autocomplete="off"
                                                                    onchange="handleActionChange({{ item.id }})">
                                                             <label class="btn btn-outline-danger" for="lost_{{ item.id }}">หาย</label>
+                                                            <input type="radio"
+                                                                   class="btn-check"
+                                                                   name="action_{{ item.id }}"
+                                                                   id="skip_{{ item.id }}"
+                                                                   value="skip"
+                                                                   autocomplete="off"
+                                                                   onchange="handleActionChange({{ item.id }})">
+                                                            <label class="btn btn-outline-secondary" for="skip_{{ item.id }}">ข้าม</label>
                                                         </div>
                                                     {% else %}
                                                         <span class="text-muted">-</span>
