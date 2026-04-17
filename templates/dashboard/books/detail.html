@@ -200,19 +200,6 @@
                                 <small class="text-muted">เล่ม</small>
                             </div>
                         </div>
-                        {% if lost_loans_count > 0 %}
-                            <div class="col-md-12 mt-2">
-                                <div class="alert alert-danger mb-0" role="alert">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
-                                        <div>
-                                            <strong>มีหนังสือหาย {{ lost_loans_count }} เล่ม</strong>
-                                            <p class="mb-0 small">หนังสือที่หายไม่ได้นับรวมในการกระจายข้างต้น เนื่องจากถูกตัดออกจากจำนวนทั้งหมดแล้ว</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
                     </div>
                     {% if accounted_books != book.total_quantity %}
                         <div class="alert alert-warning mt-3 mb-0">
@@ -320,7 +307,7 @@
                         {% if lost_loans %}
                             <div class="mb-3">
                                 <h6 class="text-muted mb-3">
-                                    <i class="bi bi-exclamation-triangle text-danger"></i> รายการหนังสือหาย
+                                    <i class="bi bi-exclamation-triangle text-danger"></i> หนังสือหาย
                                     <span class="badge bg-danger">{{ lost_loans_count }}</span>
                                 </h6>
                                 <div class="table-responsive">
@@ -335,16 +322,16 @@
                                         </thead>
                                         <tbody>
                                             {% for loan_item in lost_loans %}
-                                                <tr class="table-danger">
+                                                <tr>
                                                     <td>
-                                                        <a href="{% url 'loans:dashboard_loan_detail' loan_item.loan.id %}">#{{ loan_item.loan.id }}</a>
+                                                        <a href="{% url 'fines:dashboard_fines_detail' loan_item.loan.id %}">#{{ loan_item.loan.id }}</a>
                                                     </td>
                                                     <td>{{ loan_item.loan.user.username }}</td>
                                                     <td>
                                                         <small class="text-muted">{{ loan_item.loan.created_at|date:"d/m/Y H:i" }}</small>
                                                     </td>
                                                     <td>
-                                                        <small class="text-muted">{{ loan_item.updated_at|date:"d/m/Y H:i" }}</small>
+                                                        <small class="text-muted">{{ loan_item.returned_at|date:"d/m/Y H:i" }}</small>
                                                     </td>
                                                 </tr>
                                             {% endfor %}
