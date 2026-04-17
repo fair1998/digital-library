@@ -334,6 +334,57 @@ def dashboard_books_view(request):
 
 
 @staff_member_required
+def dashboard_book_detail_view(request, book_id):
+    """
+    Admin dashboard view for displaying detailed information about a book.
+    """
+    book = get_object_or_404(
+        Book.objects.select_related('publisher').prefetch_related('authors', 'categories'),
+        id=book_id
+    )
+    
+    # Get confirmed hold items (books reserved and confirmed by admin)
+    # Must check both Hold.status='confirmed' AND HoldItem.status='confirmed'
+    confirmed_holds = book.hold_items.filter(
+        hold__status='confirmed',
+        status='confirmed'
+    ).select_related('hold__user').order_by('-created_at')
+    
+    # Get borrowed loan items (books currently being borrowed)
+    # Must check both Loan.status='active' AND LoanItem.status='borrowed'
+    borrowed_loans = book.loan_items.filter(
+        loan__status='active',
+        status='borrowed'
+    ).select_related('loan__user', 'loan').order_by('-created_at')
+    
+    # Get lost loan items
+    lost_loans = book.loan_items.filter(
+        status='lost'
+    ).select_related('loan__user', 'loan').order_by('-created_at')
+    
+    # Calculate book distribution
+    confirmed_holds_count = confirmed_holds.count()
+    borrowed_loans_count = borrowed_loans.count()
+    lost_loans_count = lost_loans.count()
+    
+    # Calculate accounted books (not including lost books as they're already deducted from total)
+    accounted_books = book.available_quantity + confirmed_holds_count + borrowed_loans_count
+    
+    context = {
+        'book': book,
+        'confirmed_holds': confirmed_holds,
+        'borrowed_loans': borrowed_loans,
+        'lost_loans': lost_loans,
+        'confirmed_holds_count': confirmed_holds_count,
+        'borrowed_loans_count': borrowed_loans_count,
+        'lost_loans_count': lost_loans_count,
+        'accounted_books': accounted_books,
+    }
+    
+    return render(request, 'dashboard/books/detail.html', context)
+
+
+@staff_member_required
 def dashboard_book_form_view(request):
     """
     Admin dashboard view for creating a new book.

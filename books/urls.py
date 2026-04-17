@@ -15,6 +15,7 @@ urlpatterns = [
     path('books/<int:book_id>/reserve/', views.reserve_book_view, name='reserve_book'),
 
     path('dashboard/books/', views.dashboard_books_view, name='dashboard_books'),
+    path('dashboard/books/<int:book_id>/', views.dashboard_book_detail_view, name='dashboard_book_detail'),
     path('dashboard/books/form/', views.dashboard_book_form_view, name='dashboard_book_form'),
     path('dashboard/books/form/<int:book_id>/', views.dashboard_books_form_id_view, name='dashboard_book_form_id'),
     path('dashboard/books/delete/<int:book_id>/', views.dashboard_book_delete_view, name='dashboard_book_delete'),
