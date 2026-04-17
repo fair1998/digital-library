@@ -324,7 +324,7 @@
                                             {% for loan_item in lost_loans %}
                                                 <tr>
                                                     <td>
-                                                        <a href="{% url 'fines:dashboard_fines_detail' loan_item.loan.id %}">#{{ loan_item.loan.id }}</a>
+                                                        <a href="{% url 'loans:dashboard_loan_detail' loan_item.loan.id %}">#{{ loan_item.loan.id }}</a>
                                                     </td>
                                                     <td>{{ loan_item.loan.user.username }}</td>
                                                     <td>
