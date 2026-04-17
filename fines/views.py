@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum, Q, Count
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Fine
 from loans.models import Loan
 
@@ -16,17 +17,27 @@ def my_fines_view(request):
     Display user's fine history.
     All fines are paid immediately, so no unpaid/paid distinction.
     """
-    fines = Fine.objects.filter(
+    fines_list = Fine.objects.filter(
         loan_item__loan__user=request.user
     ).select_related(
-        'loan_item__book__publisher',
         'loan_item__loan'
-    ).prefetch_related(
-        'loan_item__book__authors'
     ).order_by('-paid_at')
     
-    # Calculate total
-    total_amount = fines.aggregate(Sum('amount'))['amount__sum'] or 0
+    # Calculate total (from all fines, not just current page)
+    total_amount = fines_list.aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    # Pagination
+    paginator = Paginator(fines_list, 20)  # Show 20 fines per page
+    page = request.GET.get('page')
+    
+    try:
+        fines = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        fines = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page
+        fines = paginator.page(paginator.num_pages)
     
     context = {
         'fines': fines,
@@ -48,7 +59,7 @@ def dashboard_fines_view(request):
     search_query = request.GET.get('search', '')
     
     # Query loan batches that have fines
-    loan_batches = Loan.objects.filter(
+    loans = Loan.objects.filter(
         loan_items__fines__isnull=False
     ).select_related(
         'user'
@@ -65,16 +76,16 @@ def dashboard_fines_view(request):
         # If search query is a number, also search by batch ID
         if search_query.isdigit():
             q_filter |= Q(id=int(search_query))
-        loan_batches = loan_batches.filter(q_filter).distinct()
+        loans = loans.filter(q_filter).distinct()
     
-    loan_batches = loan_batches.order_by('-created_at')
+    loans = loans.order_by('-created_at')
     
     # Calculate totals across all fines
     all_fines = Fine.objects.all()
     total_all = all_fines.aggregate(Sum('amount'))['amount__sum'] or 0
     
     context = {
-        'loan_batches': loan_batches,
+        'loan_batches': loans,
         'total_all': total_all,
         'search_query': search_query,
     }
