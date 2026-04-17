@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import timedelta
 
 from loans.models import Loan, LoanItem
@@ -17,12 +18,25 @@ def my_holds_view(request):
     """
     Display user's hold item history.
     """
-    holds = Hold.objects.filter(
+    holds_list = Hold.objects.filter(
         user=request.user
     ).prefetch_related(
         'hold_items__book__authors',
         'hold_items__book__publisher'
     ).order_by('-created_at')
+    
+    # Pagination
+    paginator = Paginator(holds_list, 10)  # Show 10 holds per page
+    page = request.GET.get('page')
+    
+    try:
+        holds = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        holds = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page
+        holds = paginator.page(paginator.num_pages)
     
     context = {
         'holds': holds,

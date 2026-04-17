@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
 from django.conf import settings
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import timedelta
 from decimal import Decimal
 from .models import Loan, LoanItem
@@ -21,15 +22,28 @@ def my_loans_view(request):
     """
     Display user's loan history.
     """
-    loans = Loan.objects.filter(
+    loans_list = Loan.objects.filter(
         user=request.user
     ).prefetch_related(
         'loan_items__book__authors',
         'loan_items__book__publisher'
     ).order_by('-created_at')
     
+    # Pagination
+    paginator = Paginator(loans_list, 10)  # Show 10 loans per page
+    page = request.GET.get('page')
+    
+    try:
+        loan_batches = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        loan_batches = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page
+        loan_batches = paginator.page(paginator.num_pages)
+    
     context = {
-        'loan_batches': loans,
+        'loan_batches': loan_batches,
     }
     
     return render(request, 'loans/my_loans.html', context)
