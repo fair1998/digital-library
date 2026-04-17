@@ -90,7 +90,7 @@ def cancel_hold_view(request, hold_id):
 @staff_member_required
 def dashboard_holds_view(request):
     """
-    Admin dashboard to manage all hold batches.
+    Admin dashboard to manage all holds.
     Shows pending, confirmed, completed, cancelled, and expired holds.
     """
     # Get filter parameters
@@ -100,9 +100,6 @@ def dashboard_holds_view(request):
     # Base queryset
     holds = Hold.objects.select_related(
         'user'
-    ).prefetch_related(
-        'hold_items__book__authors',
-        'hold_items__book__publisher'
     ).order_by('-created_at')
     
     # Apply unified search filter (ID, username, first name, or last name)
@@ -128,33 +125,18 @@ def dashboard_holds_view(request):
     if status_filter and status_filter != 'all':
         holds = holds.filter(status=status_filter)
     
-    # Add expiry info to each batch and collect expired confirmed batches
+    # Collect expired confirmed batches for alert
     expired_batches = []
     for batch in holds:
         # Collect only CONFIRMED batches that expired (customer didn't pick up)
         if batch.is_expired and batch.status == 'confirmed':
             expired_batches.append(batch)
-
-    
-    status_choices = Hold.STATUS_CHOICES
-    
-    # Count stats for dashboard
-    stats = {
-        "status_choices": status_choices,
-        'total': Hold.objects.count(),
-        'pending': Hold.objects.filter(status='pending').count(),
-        'confirmed': Hold.objects.filter(status='confirmed').count(),
-        'completed': Hold.objects.filter(status='completed').count(),
-        'expired_pending': len(expired_batches),  # Confirmed ที่หมดอายุแต่ยังไม่ได้จัดการ
-        'expired': Hold.objects.filter(status='expired').count(),  # ที่เปลี่ยน status เป็น expired แล้ว
-        'cancelled': Hold.objects.filter(status='cancelled').count(),
-    }
     
     context = {
         'holds': holds,
         'status_filter': status_filter,
         'search_query': search_query,
-        'stats': stats,
+        'status_choices': Hold.STATUS_CHOICES,
         'expired_batches': expired_batches,
     }
     

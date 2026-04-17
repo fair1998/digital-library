@@ -7,71 +7,6 @@
     จัดการการจอง
 {% endblock page_title %}
 {% block content %}
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-2">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">ทั้งหมด</h5>
-                    <h2 class="display-4">{{ stats.total }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card text-center border-warning">
-                <div class="card-body">
-                    <h5 class="card-title text-warning">รอดำเนินการ</h5>
-                    <h2 class="display-4">{{ stats.pending }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card text-center border-success">
-                <div class="card-body">
-                    <h5 class="card-title text-success">ยืนยันแล้ว</h5>
-                    <h2 class="display-4">{{ stats.confirmed }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card text-center border-primary">
-                <div class="card-body">
-                    <h5 class="card-title text-primary">เสร็จสิ้น</h5>
-                    <h2 class="display-4">{{ stats.completed }}</h2>
-                    <small class="text-muted">รับหนังสือแล้ว</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card text-center border-danger">
-                <div class="card-body">
-                    <h5 class="card-title text-danger">
-                        <i class="bi bi-exclamation-triangle-fill"></i> ต้องดำเนินการ
-                    </h5>
-                    <h2 class="display-4">{{ stats.expired_pending }}</h2>
-                    <small class="text-muted">หมดอายุแล้ว</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card text-center border-danger opacity-75">
-                <div class="card-body">
-                    <h5 class="card-title text-danger">หมดอายุ</h5>
-                    <h2 class="display-4">{{ stats.expired }}</h2>
-                    <small class="text-muted">ไม่มารับ</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card text-center border-secondary">
-                <div class="card-body">
-                    <h5 class="card-title text-secondary">ยกเลิก</h5>
-                    <h2 class="display-4">{{ stats.cancelled }}</h2>
-                    <small class="text-muted">ยกเลิก</small>
-                </div>
-            </div>
-        </div>
-    </div>
     <!-- Expired Hold items Alert -->
     {% if expired_batches %}
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -158,7 +93,7 @@
                     <label for="status" class="form-label">สถานะ</label>
                     <select name="status" id="status" class="form-select">
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>ทั้งหมด</option>
-                        {% for value, label in stats.status_choices %}
+                        {% for value, label in status_choices %}
                             <option value="{{ value }}"
                                     {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
