@@ -91,8 +91,12 @@ def dashboard_loan_detail_view(request, loan_id):
         id=loan_id
     )
     
+    # Check if there are any borrowed items
+    has_borrowed_items = loan.loan_items.filter(status='borrowed').exists()
+    
     context = {
         'loan': loan,
+        'has_borrowed_items': has_borrowed_items,
     }
     
     return render(request, 'dashboard/loans/detail.html', context)
@@ -137,54 +141,70 @@ def dashboard_return_loan_view(request, loan_id):
                         
                         returned_count += 1
                         
-                        # Check for late return fine
-                        if loan.due_date and now.date() > loan.due_date.date():
-                            days_late = (now.date() - loan.due_date.date()).days
-                            late_fine_per_day = Decimal(getattr(settings, 'FINE_LATE_RETURN_PER_DAY', 10))
-                            late_fine_amount = late_fine_per_day * days_late
-                            
-                            Fine.objects.create(
-                                loan_item=item,
-                                type='late_return',
-                                amount=late_fine_amount,
-                                reason=f'คืนช้า {days_late} วัน',
-                                paid_at=now
-                            )
-                            total_fine_amount += late_fine_amount
+                        # Get late return fine from form (calculated by JavaScript)
+                        late_fine_str = request.POST.get(f'late_fine_{item.id}', '').strip()
+                        if late_fine_str:
+                            try:
+                                late_fine_amount = Decimal(late_fine_str)
+                                days_late = (now.date() - loan.due_date.date()).days if loan.due_date else 0
+                                Fine.objects.create(
+                                    loan_item=item,
+                                    type='late_return',
+                                    amount=late_fine_amount,
+                                    reason=f'คืนช้า {days_late} วัน',
+                                    paid_at=now
+                                )
+                                total_fine_amount += late_fine_amount
+                            except (ValueError, TypeError):
+                                pass
                         
                         # Check for damage fine
                         is_damaged = request.POST.get(f'damaged_{item.id}') == 'true'
                         if is_damaged:
-                            damage_amount = Decimal(request.POST.get(f'damage_amount_{item.id}', 0))
+                            damage_amount_str = request.POST.get(f'damage_amount_{item.id}', '').strip()
                             damage_reason = request.POST.get(f'damage_reason_{item.id}', '')
                             
-                            if damage_amount > 0:
-                                Fine.objects.create(
-                                    loan_item=item,
-                                    type='damaged',
-                                    amount=damage_amount,
-                                    reason=damage_reason,
-                                    paid_at=now
-                                )
-                                total_fine_amount += damage_amount
+                            if damage_amount_str:
+                                try:
+                                    damage_amount = Decimal(damage_amount_str)
+                                    if damage_amount > 0:
+                                        Fine.objects.create(
+                                            loan_item=item,
+                                            type='damaged',
+                                            amount=damage_amount,
+                                            reason=damage_reason,
+                                            paid_at=now
+                                        )
+                                        total_fine_amount += damage_amount
+                                except (ValueError, TypeError):
+                                    pass
                     
                     elif action == 'lost':
                         # Process lost
                         item.status = 'lost'
                         item.save()
                         
+                        # Decrease total quantity since book is lost
+                        item.book.total_quantity -= 1
+                        item.book.save()
+                        
                         lost_count += 1
                         
-                        # Create lost fine
-                        lost_fine_amount = Decimal(getattr(settings, 'FINE_LOST_BOOK', 500))
-                        Fine.objects.create(
-                            loan_item=item,
-                            type='lost',
-                            amount=lost_fine_amount,
-                            reason=f'ทำหนังสือหาย: {item.book.title}',
-                            paid_at=now
-                        )
-                        total_fine_amount += lost_fine_amount
+                        # Get lost fine from form (calculated by JavaScript)
+                        lost_fine_str = request.POST.get(f'lost_fine_{item.id}', '').strip()
+                        if lost_fine_str:
+                            try:
+                                lost_fine_amount = Decimal(lost_fine_str)
+                                Fine.objects.create(
+                                    loan_item=item,
+                                    type='lost',
+                                    amount=lost_fine_amount,
+                                    reason=f'ทำหนังสือหาย: {item.book.title}',
+                                    paid_at=now
+                                )
+                                total_fine_amount += lost_fine_amount
+                            except (ValueError, TypeError):
+                                pass
                 
                 # Check if all items in batch are completed
                 all_completed = not loan.loan_items.filter(status='borrowed').exists()

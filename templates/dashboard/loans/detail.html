@@ -84,128 +84,188 @@
                 </div>
             </div>
             <!-- Batch Return/Lost Form -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-book me-2"></i>จัดการคืน/หาย พร้อมชำระค่าปรับ
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <form method="post"
-                          action="{% url 'loans:dashboard_return_loan' loan.id %}"
-                          id="batchReturnForm">
-                        {% csrf_token %}
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>หนังสือ</th>
-                                        <th>สถานะ</th>
-                                        <th>การดำเนินการ</th>
-                                        <th>ความเสียหาย</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in loan.loan_items.all %}
+            {% if has_borrowed_items %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-book me-2"></i>จัดการคืน/หาย พร้อมชำระค่าปรับ
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post"
+                              action="{% url 'loans:dashboard_return_loan' loan.id %}"
+                              id="batchReturnForm">
+                            {% csrf_token %}
+                            <div class="table-responsive">
+                                <table class="table" style="table-layout: fixed;">
+                                    <colgroup>
+                                        <col style="width: 35%;">
+                                        <col style="width: 12%;">
+                                        <col style="width: 18%;">
+                                        <col style="width: 35%;">
+                                    </colgroup>
+                                    <thead>
                                         <tr>
-                                            <td>
-                                                <div>
-                                                    <strong>{{ item.book.title }}</strong>
-                                                </div>
-                                                <small class="text-muted">
-                                                    {% for author in item.book.authors.all %}
-                                                        {{ author.name }}
-                                                        {% if not forloop.last %},{% endif %}
-                                                    {% endfor %}
-                                                </small>
-                                            </td>
-                                            <td>
-                                                {% if item.status == 'borrowed' %}
-                                                    <span class="badge bg-warning text-dark">กำลังยืม</span>
-                                                {% elif item.status == 'returned' %}
-                                                    <span class="badge bg-success">คืนแล้ว</span>
-                                                {% elif item.status == 'lost' %}
-                                                    <span class="badge bg-danger">หาย</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if item.status == 'borrowed' %}
-                                                    <div class="btn-group btn-group-sm" role="group">
-                                                        <input type="radio"
-                                                               class="btn-check"
-                                                               name="action_{{ item.id }}"
-                                                               id="return_{{ item.id }}"
-                                                               value="return"
-                                                               autocomplete="off"
-                                                               checked>
-                                                        <label class="btn btn-outline-success" for="return_{{ item.id }}">คืน</label>
-                                                        <input type="radio"
-                                                               class="btn-check"
-                                                               name="action_{{ item.id }}"
-                                                               id="lost_{{ item.id }}"
-                                                               value="lost"
-                                                               autocomplete="off">
-                                                        <label class="btn btn-outline-danger" for="lost_{{ item.id }}">หาย</label>
-                                                        <input type="radio"
-                                                               class="btn-check"
-                                                               name="action_{{ item.id }}"
-                                                               id="skip_{{ item.id }}"
-                                                               value="skip"
-                                                               autocomplete="off">
-                                                        <label class="btn btn-outline-secondary" for="skip_{{ item.id }}">ข้าม</label>
-                                                    </div>
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if item.status == 'borrowed' %}
-                                                    <div class="form-check form-check-inline">
-                                                        <input class="form-check-input damage-checkbox"
-                                                               type="checkbox"
-                                                               id="damaged_{{ item.id }}"
-                                                               name="damaged_{{ item.id }}"
-                                                               value="true"
-                                                               onchange="toggleDamageFields({{ item.id }})">
-                                                        <label class="form-check-label" for="damaged_{{ item.id }}">มีความเสียหาย</label>
-                                                    </div>
-                                                    <div id="damageFields_{{ item.id }}"  class="mt-2 d-none">
-                                                        <input type="number"
-                                                               class="form-control form-control-sm mb-1"
-                                                               name="damage_amount_{{ item.id }}"
-                                                               placeholder="จำนวนเงิน (บาท)"
-                                                               step="0.01"
-                                                               min="0">
-                                                        <textarea class="form-control form-control-sm"
-                                                                  name="damage_reason_{{ item.id }}"
-                                                                  placeholder="เหตุผล/รายละเอียด"
-                                                                  rows="2"></textarea>
-                                                    </div>
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
+                                            <th>หนังสือ</th>
+                                            <th>สถานะ</th>
+                                            <th>การดำเนินการ</th>
+                                            <th>ความเสียหาย</th>
                                         </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody style="vertical-align: top;">
+                                        {% for item in loan.loan_items.all %}
+                                            <tr>
+                                                <td>
+                                                    <div>
+                                                        <strong>{{ item.book.title }}</strong>
+                                                    </div>
+                                                    <small class="text-muted">
+                                                        {% for author in item.book.authors.all %}
+                                                            {{ author.name }}
+                                                            {% if not forloop.last %},{% endif %}
+                                                        {% endfor %}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    {% if item.status == 'borrowed' %}
+                                                        <span class="badge bg-warning text-dark">กำลังยืม</span>
+                                                    {% elif item.status == 'returned' %}
+                                                        <span class="badge bg-success">คืนแล้ว</span>
+                                                    {% elif item.status == 'lost' %}
+                                                        <span class="badge bg-danger">หาย</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if item.status == 'borrowed' %}
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            <input type="radio"
+                                                                   class="btn-check"
+                                                                   name="action_{{ item.id }}"
+                                                                   id="return_{{ item.id }}"
+                                                                   value="return"
+                                                                   autocomplete="off"
+                                                                   onchange="handleActionChange({{ item.id }})"
+                                                                   checked>
+                                                            <label class="btn btn-outline-success" for="return_{{ item.id }}">คืน</label>
+                                                            <input type="radio"
+                                                                   class="btn-check"
+                                                                   name="action_{{ item.id }}"
+                                                                   id="lost_{{ item.id }}"
+                                                                   value="lost"
+                                                                   autocomplete="off"
+                                                                   onchange="handleActionChange({{ item.id }})">
+                                                            <label class="btn btn-outline-danger" for="lost_{{ item.id }}">หาย</label>
+                                                        </div>
+                                                    {% else %}
+                                                        <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if item.status == 'borrowed' %}
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input damage-checkbox"
+                                                                   type="checkbox"
+                                                                   id="damaged_{{ item.id }}"
+                                                                   name="damaged_{{ item.id }}"
+                                                                   value="true"
+                                                                   onchange="toggleDamageFields({{ item.id }})">
+                                                            <label class="form-check-label" for="damaged_{{ item.id }}">มีความเสียหาย</label>
+                                                        </div>
+                                                        <div id="damageFields_{{ item.id }}"
+                                                             class="mt-2 d-none"
+                                                             style="width: 100%">
+                                                            <input type="number"
+                                                                   class="form-control form-control-sm mb-1 damage-amount-input"
+                                                                   name="damage_amount_{{ item.id }}"
+                                                                   placeholder="จำนวนเงิน (บาท)"
+                                                                   step="0.01"
+                                                                   min="0"
+                                                                   style="width: 100%">
+                                                            <textarea class="form-control form-control-sm damage-reason-input"
+                                                                      name="damage_reason_{{ item.id }}"
+                                                                      placeholder="เหตุผล/รายละเอียด"
+                                                                      rows="2"
+                                                                      style="width: 100%;
+                                                                             resize: vertical"></textarea>
+                                                        </div>
+                                                    {% else %}
+                                                        <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-end mt-3">
+                                <button type="button"
+                                        class="btn btn-success"
+                                        id="submitBtn"
+                                        onclick="validateAndShowModal()">
+                                    <i class="bi bi-check-circle me-1"></i>ยืนยันการคืนหนังสือ
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">คืนหนังสือครบแล้ว</h5>
+                        <p class="text-muted">ไม่มีหนังสือที่รอดำเนินการ</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Confirmation Modal -->
+    <div class="modal fade"
+         id="confirmReturnModal"
+         tabindex="-1"
+         aria-labelledby="confirmReturnModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="confirmReturnModalLabel">
+                        <i class="bi bi-check-circle me-2"></i>ยืนยันการคืนหนังสือ
+                    </h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6 class="mb-2">
+                            <i class="bi bi-info-circle me-2"></i>กรุณาตรวจสอบข้อมูลก่อนยืนยัน
+                        </h6>
+                        <p class="mb-0 small">การดำเนินการนี้จะบันทึกการคืนหนังสือและชำระค่าปรับทันที</p>
+                    </div>
+                    <h6 class="mb-3">
+                        <i class="bi bi-book me-2"></i>รายการหนังสือ
+                    </h6>
+                    <div id="modalBookList"></div>
+                    <hr>
+                    <h6 class="mb-3">
+                        <i class="bi bi-calculator me-2"></i>สรุปค่าปรับ
+                    </h6>
+                    <div id="modalFineSummary"></div>
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">รวมค่าปรับทั้งหมด:</h5>
+                            <h4 class="mb-0 text-danger" id="modalTotalFine">0.00 บาท</h4>
                         </div>
-                        <!-- Summary Section -->
-                        <div class="alert alert-info mt-3 d-none" id="fineSummary">
-                            <h6>
-                                <i class="bi bi-calculator me-2"></i>สรุปค่าปรับ
-                            </h6>
-                            <div id="summaryDetails"></div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <button type="button" class="btn btn-primary" onclick="calculateFines()">
-                                <i class="bi bi-calculator me-1"></i>คำนวณค่าปรับ
-                            </button>
-                            <button type="submit" class="btn btn-success d-none" id="submitBtn">
-                                <i class="bi bi-check-circle me-1"></i>ยืนยันและการคืนหนังสือ
-                            </button>
-                        </div>
-                    </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>ยกเลิก
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="submitReturn()">
+                        <i class="bi bi-check-circle me-1"></i>ยืนยันการคืนหนังสือ
+                    </button>
                 </div>
             </div>
         </div>
@@ -213,72 +273,265 @@
 {% endblock content %}
 {% block extra_js %}
     <script>
-        function toggleDamageFields(itemId) {
-            const checkbox = document.getElementById('damaged_' + itemId);
-            const fields = document.getElementById('damageFields_' + itemId);
+        function handleActionChange(itemId) {
+            const returnRadio = document.getElementById('return_' + itemId);
+            const lostRadio = document.getElementById('lost_' + itemId);
+            const damageCheckbox = document.getElementById('damaged_' + itemId);
             
-            if (checkbox.checked) {
-                fields.classList.remove('d-none');
-            } else {
-                fields.classList.add('d-none');
+            if (lostRadio && lostRadio.checked) {
+                // If "lost" is selected, uncheck and disable damage checkbox
+                if (damageCheckbox) {
+                    damageCheckbox.checked = false;
+                    damageCheckbox.disabled = true;
+                    toggleDamageFields(itemId);
+                }
+            } else if (returnRadio && returnRadio.checked) {
+                // If "return" is selected, enable damage checkbox
+                if (damageCheckbox) {
+                    damageCheckbox.disabled = false;
+                }
             }
         }
         
+        function toggleDamageFields(itemId) {
+            const checkbox = document.getElementById('damaged_' + itemId);
+            const fields = document.getElementById('damageFields_' + itemId);
+            const amountInput = fields.querySelector('.damage-amount-input');
+            const reasonInput = fields.querySelector('.damage-reason-input');
+            
+            if (checkbox.checked) {
+                fields.classList.remove('d-none');
+                // Remove is-invalid class when showing fields
+                amountInput.classList.remove('is-invalid');
+                reasonInput.classList.remove('is-invalid');
+            } else {
+                fields.classList.add('d-none');
+                // Clear values when hiding
+                amountInput.value = '';
+                reasonInput.value = '';
+                amountInput.classList.remove('is-invalid');
+                reasonInput.classList.remove('is-invalid');
+            }
+        }
+        
+        // Store book data for modal display
+        const bookData = {};
+        {% for item in loan.loan_items.all %}
+        bookData[{{ item.id }}] = {
+            title: "{{ item.book.title|escapejs }}"
+        };
+        {% endfor %}
+        
         function calculateFines() {
-            console.log('Calculating fines...');
             const dueDate = new Date('{{ loan.due_date|date:"Y-m-d" }}');
             const today = new Date();
             const lateFinePerDay = parseFloat('{{ FINE_LATE_RETURN_PER_DAY|default:10 }}');
             const lostFine = parseFloat('{{ FINE_LOST_BOOK|default:500 }}');
             
             let totalFine = 0;
-            let fineDetails = [];
+            let bookDetails = [];
             
-            document.querySelectorAll('input[name^="action_"]').forEach(radio => {
-                if (radio.checked) {
-                    const itemId = radio.name.split('_')[1];
-                    const action = radio.value;
-                    
-                    if (action === 'return') {
-                        // Check for late return
-                        if (today > dueDate) {
-                            const daysLate = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
-                            const lateFine = lateFinePerDay * daysLate;
-                            totalFine += lateFine;
-                            fineDetails.push(`คืนช้า ${daysLate} วัน: ${lateFine.toFixed(2)} บาท`);
-                        }
+            // Clear previous hidden inputs
+            document.querySelectorAll('input[name^="late_fine_"], input[name^="lost_fine_"]').forEach(input => {
+                input.remove();
+            });
+            
+            const form = document.getElementById('batchReturnForm');
+            
+            // Process each selected action
+            document.querySelectorAll('input[name^="action_"]:checked').forEach(radio => {
+                const itemId = radio.name.split('_')[1];
+                const action = radio.value;
+                let itemFines = [];
+                let itemTotal = 0;
+                
+                if (action === 'return') {
+                    // Late return fine
+                    if (today > dueDate) {
+                        const daysLate = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+                        const lateFine = lateFinePerDay * daysLate;
+                        itemTotal += lateFine;
+                        itemFines.push(`คืนช้า ${daysLate} วัน: ${lateFine.toFixed(2)} บาท`);
                         
-                        // Check for damage
-                        const damageCheckbox = document.getElementById('damaged_' + itemId);
-                        if (damageCheckbox && damageCheckbox.checked) {
-                            const damageAmount = parseFloat(document.querySelector(`input[name="damage_amount_${itemId}"]`).value || 0);
-                            if (damageAmount > 0) {
-                                totalFine += damageAmount;
-                                fineDetails.push(`ความเสียหาย: ${damageAmount.toFixed(2)} บาท`);
-                            }
-                        }
-                    } else if (action === 'lost') {
-                        totalFine += lostFine;
-                        fineDetails.push(`หนังสือหาย: ${lostFine.toFixed(2)} บาท`);
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `late_fine_${itemId}`;
+                        input.value = lateFine.toFixed(2);
+                        form.appendChild(input);
                     }
+                    
+                    // Damage fine
+                    const damageCheckbox = document.getElementById('damaged_' + itemId);
+                    if (damageCheckbox?.checked) {
+                        const damageAmount = parseFloat(document.querySelector(`input[name="damage_amount_${itemId}"]`).value || 0);
+                        const damageReason = document.querySelector(`textarea[name="damage_reason_${itemId}"]`).value || '';
+                        if (damageAmount > 0) {
+                            itemTotal += damageAmount;
+                            itemFines.push(`ความเสียหาย (${damageReason}): ${damageAmount.toFixed(2)} บาท`);
+                        }
+                    }
+                    
+                    bookDetails.push({
+                        title: bookData[itemId].title,
+                        action: 'คืน',
+                        actionClass: 'success',
+                        fines: itemFines,
+                        total: itemTotal
+                    });
+                    
+                } else if (action === 'lost') {
+                    // Late return fine (applies even if lost)
+                    if (today > dueDate) {
+                        const daysLate = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+                        const lateFine = lateFinePerDay * daysLate;
+                        itemTotal += lateFine;
+                        itemFines.push(`คืนช้า ${daysLate} วัน: ${lateFine.toFixed(2)} บาท`);
+                        
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `late_fine_${itemId}`;
+                        input.value = lateFine.toFixed(2);
+                        form.appendChild(input);
+                    }
+                    
+                    // Lost fine
+                    itemTotal += lostFine;
+                    itemFines.push(`หนังสือหาย: ${lostFine.toFixed(2)} บาท`);
+                    
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `lost_fine_${itemId}`;
+                    input.value = lostFine.toFixed(2);
+                    form.appendChild(input);
+                    
+                    bookDetails.push({
+                        title: bookData[itemId].title,
+                        action: 'หาย',
+                        actionClass: 'danger',
+                        fines: itemFines,
+                        total: itemTotal
+                    });
+                }
+                
+                totalFine += itemTotal;
+            });
+            
+            // Store for modal
+            window.currentBookDetails = bookDetails;
+            window.currentTotalFine = totalFine;
+        }
+        
+        function prepareConfirmModal() {
+            const bookList = document.getElementById('modalBookList');
+            const fineSummary = document.getElementById('modalFineSummary');
+            const totalFineEl = document.getElementById('modalTotalFine');
+            
+            // Build book list HTML
+            let bookListHTML = '';
+            window.currentBookDetails.forEach(book => {
+                bookListHTML += `
+                    <div class="card mb-3 border-${book.actionClass}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">${book.title}</h6>
+                                </div>
+                                <span class="badge bg-${book.actionClass}">${book.action}</span>
+                            </div>
+                            ${book.fines.length > 0 ? `
+                                <div class="mt-2">
+                                    <small class="text-muted">ค่าปรับ:</small>
+                                    <ul class="mb-0 small">
+                                        ${book.fines.map(f => `<li>${f}</li>`).join('')}
+                                    </ul>
+                                    <div class="mt-1"><strong>รวม: ${book.total.toFixed(2)} บาท</strong></div>
+                                </div>
+                            ` : '<div class="mt-2 text-success"><small>ไม่มีค่าปรับ</small></div>'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            bookList.innerHTML = bookListHTML;
+            
+            // Build fine summary
+            if (window.currentTotalFine > 0) {
+                let fineTypesSummary = {};
+                window.currentBookDetails.forEach(book => {
+                    book.fines.forEach(fine => {
+                        const type = fine.split(':')[0];
+                        if (!fineTypesSummary[type]) {
+                            fineTypesSummary[type] = 0;
+                        }
+                        const amount = parseFloat(fine.match(/([0-9.]+) บาท$/)[1]);
+                        fineTypesSummary[type] += amount;
+                    });
+                });
+                
+                let summaryHTML = '<ul class="mb-0">';
+                for (let type in fineTypesSummary) {
+                    summaryHTML += `<li>${type}: ${fineTypesSummary[type].toFixed(2)} บาท</li>`;
+                }
+                summaryHTML += '</ul>';
+                fineSummary.innerHTML = summaryHTML;
+            } else {
+                fineSummary.innerHTML = '<p class="mb-0 text-success">ไม่มีค่าปรับ</p>';
+            }
+            
+            totalFineEl.textContent = window.currentTotalFine.toFixed(2) + ' บาท';
+            if (window.currentTotalFine === 0) {
+                totalFineEl.classList.remove('text-danger');
+                totalFineEl.classList.add('text-success');
+            } else {
+                totalFineEl.classList.remove('text-success');
+                totalFineEl.classList.add('text-danger');
+            }
+        }
+        
+        function validateAndShowModal() {
+            let isValid = true;
+            
+            // Validate damage fields
+            document.querySelectorAll('.damage-checkbox:checked:not([disabled])').forEach(checkbox => {
+                const itemId = checkbox.id.split('_')[1];
+                const amountInput = document.querySelector(`input[name="damage_amount_${itemId}"]`);
+                const reasonInput = document.querySelector(`textarea[name="damage_reason_${itemId}"]`);
+                
+                // Validate amount
+                if (!amountInput.value || parseFloat(amountInput.value) <= 0) {
+                    isValid = false;
+                    amountInput.classList.add('is-invalid');
+                } else {
+                    amountInput.classList.remove('is-invalid');
+                }
+                
+                // Validate reason
+                if (!reasonInput.value.trim()) {
+                    isValid = false;
+                    reasonInput.classList.add('is-invalid');
+                } else {
+                    reasonInput.classList.remove('is-invalid');
                 }
             });
             
-            const summaryDiv = document.getElementById('fineSummary');
-            const detailsDiv = document.getElementById('summaryDetails');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            if (fineDetails.length > 0) {
-                detailsDiv.innerHTML = '<ul class="mb-0">' + 
-                    fineDetails.map(d => `<li>${d}</li>`).join('') + 
-                    `</ul><hr><strong>รวมทั้งหมด: ${totalFine.toFixed(2)} บาท</strong>`;
-                summaryDiv.classList.remove('d-none');
-                submitBtn.classList.remove('d-none');
-            } else {
-                detailsDiv.innerHTML = '<p class="mb-0">ไม่มีค่าปรับ</p>';
-                summaryDiv.classList.remove('d-none');
-                submitBtn.classList.remove('d-none');
+            if (!isValid) {
+                // Scroll to first invalid field
+                document.querySelector('.is-invalid')?.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                return false;
             }
+            
+            // Calculate fines and show modal
+            calculateFines();
+            prepareConfirmModal();
+            new bootstrap.Modal(document.getElementById('confirmReturnModal')).show();
+        }
+        
+        function submitReturn() {
+            bootstrap.Modal.getInstance(document.getElementById('confirmReturnModal')).hide();
+            document.getElementById('batchReturnForm').submit();
         }
     </script>
 {% endblock extra_js %}
