@@ -116,15 +116,7 @@
                                         {% for item in loan.loan_items.all %}
                                             <tr>
                                                 <td>
-                                                    <div>
-                                                        <strong>{{ item.book.title }}</strong>
-                                                    </div>
-                                                    <small class="text-muted">
-                                                        {% for author in item.book.authors.all %}
-                                                            {{ author.name }}
-                                                            {% if not forloop.last %},{% endif %}
-                                                        {% endfor %}
-                                                    </small>
+                                                    <strong>{{ item.book.title }}</strong>
                                                 </td>
                                                 <td>
                                                     {% if item.status == 'borrowed' %}
