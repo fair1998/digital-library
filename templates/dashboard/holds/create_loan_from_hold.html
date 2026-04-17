@@ -1,26 +1,45 @@
 {% extends "base_admin.html" %}
 {% block title %}
-    Create Loan - สร้างรายการยืม
+    สร้างรายการยืม
 {% endblock title %}
+{% block page_title %}
+    สร้างรายการยืม จากการจอง #{{ hold.id }}
+{% endblock page_title %}
 {% block extra_css %}
     <style>
-.book-search-item {
+.search-item {
     cursor: pointer;
     transition: background-color 0.2s;
 }
-.book-search-item:hover {
+.search-item:hover {
     background-color: #f8f9fa;
 }
 .selected-book-item {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 0.25rem;
-    padding: 0.5rem;
+    padding: 0.75rem;
     margin-bottom: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+.selected-book-item img {
+    width: 80px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+}
+.selected-book-item .book-info {
+    flex: 1;
 }
 .remove-book-btn {
     cursor: pointer;
     color: #dc3545;
+    transition: color 0.2s;
+}
+.remove-book-btn:hover {
+    color: #bd2130;
 }
 .spinner-border-sm {
     width: 1rem;
@@ -33,179 +52,180 @@
     </style>
 {% endblock extra_css %}
 {% block content %}
-    <div class="container py-4">
-        <div class="row mb-4">
-            <div class="col">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item">
-                            <a href="{% url 'holds:dashboard_holds' %}">รายการจอง</a>
-                        </li>
-                        <li class="breadcrumb-item active">สร้างรายการยืม</li>
-                    </ol>
-                </nav>
-                <h2>
-                    <i class="bi bi-plus-circle me-2"></i>สร้างรายการยืม
-                </h2>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-person-circle me-2"></i>ข้อมูลผู้ยืม
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p>
-                                    <strong>ชื่อ:</strong> {{ hold.user.get_full_name|default:hold.user.username }}
-                                </p>
-                                <p>
-                                    <strong>Username:</strong> {{ hold.user.username }}
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p>
-                                    <strong>Email:</strong> {{ hold.user.email }}
-                                </p>
-                                {% if hold.user.phone_number %}
-                                    <p>
-                                        <strong>โทรศัพท์:</strong> {{ hold.user.phone_number }}
-                                    </p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+    <div class="mb-3">
+        <a href="{% url 'holds:dashboard_hold_detail' hold.id %}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> กลับหน้ารายละเอียดการจอง
+        </a>
+    </div>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-circle"></i> ข้อมูลผู้ยืม
+                    </h5>
                 </div>
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-book me-2"></i>หนังสือที่จะยืม
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>ชื่อหนังสือ</th>
-                                        <th>ผู้แต่ง</th>
-                                        <th>สำนักพิมพ์</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for hold_item in hold_items %}
-                                        <tr>
-                                            <td>{{ forloop.counter }}</td>
-                                            <td>
-                                                <strong>{{ hold_item.book.title }}</strong>
-                                            </td>
-                                            <td>
-                                                {% if hold_item.book.authors.exists %}
-                                                    {{ hold_item.book.authors.all|join:", " }}
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ hold_item.book.publisher.name|default:"-" }}</td>
-                                        </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted">ไม่มีหนังสือที่ยืนยันแล้ว</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <!-- Additional Books Section -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-plus-square me-2"></i>เพิ่มหนังสือเพิ่มเติม
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="bookSearch" class="form-label">ค้นหาหนังสือ</label>
-                            <div class="input-group">
-                                <input type="text"
-                                       class="form-control"
-                                       id="bookSearch"
-                                       placeholder="พิมพ์ชื่อหนังสือเพื่อค้นหา...">
-                                <button class="btn btn-outline-secondary" type="button" id="clearSearch">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-                            <div id="searchResults" class="list-group mt-2 search-results-scroll"></div>
-                        </div>
-                        <div id="selectedBooksContainer" class="mt-3">
-                            <h6 class="text-muted">หนังสือที่เลือกเพิ่ม:</h6>
-                            <div id="selectedBooksList"></div>
-                            <p id="noSelectedBooks" class="text-muted small">ยังไม่ได้เลือกหนังสือเพิ่มเติม</p>
-                        </div>
-                    </div>
-                </div>
-                <form method="post" id="loanForm">
-                    {% csrf_token %}
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                <strong>คำเตือน:</strong> การกดยืนยันจะสร้างรายการยืมและเปลี่ยนสถานะการจองเป็น "เสร็จสิ้น"
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <a href="{% url 'holds:dashboard_holds' %}" class="btn btn-secondary">
-                                    <i class="bi bi-arrow-left me-1"></i>ยกเลิก
-                                </a>
-                                <button type="submit" class="btn btn-success btn-lg">
-                                    <i class="bi bi-check-circle me-1"></i>ยืนยันการยืม
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="col-lg-4">
-                <div class="card shadow-sm bg-light">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-info-circle me-2"></i>ข้อมูลการจอง
-                        </h5>
-                        <hr>
-                        <p>
-                            <strong>Batch ID:</strong> #{{ hold.id }}
-                        </p>
-                        <p>
-                            <strong>สถานะ:</strong> <span class="badge bg-primary">{{ hold.get_status_display }}</span>
-                        </p>
-                        <p>
-                            <strong>จำนวนหนังสือ:</strong> {{ hold_items.count }} เล่ม
-                        </p>
-                        <p>
-                            <strong>วันที่จอง:</strong> {{ hold.created_at|date:"d/m/Y H:i" }}
-                        </p>
-                        {% if hold.expires_at %}
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
                             <p>
-                                <strong>หมดอายุ:</strong> {{ hold.expires_at|date:"d/m/Y H:i" }}
+                                <strong>ชื่อผู้ใช้:</strong> {{ hold.user.username }}
                             </p>
-                        {% endif %}
-                        <hr>
-                        <h6 class="text-success">
-                            <i class="bi bi-calendar-check me-2"></i>กำหนดคืน
-                        </h6>
-                        <p class="mb-0">14 วันนับจากวันยืม</p>
+                            <p>
+                                <strong>ชื่อ-นามสกุล:</strong> {{ hold.user.get_full_name|default:"-" }}
+                            </p>
+                            <p>
+                                <strong>รหัสบัตรประชาชน:</strong> {{ hold.user.citizen_id|default:"-" }}
+                            </p>
+                            <p>
+                                <strong>เบอร์โทรศัพท์:</strong> {{ hold.user.phone_number|default:"-" }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong>อีเมล:</strong> {{ hold.user.email|default:"-" }}
+                            </p>
+                            <p>
+                                <strong>สถานะการจอง:</strong>
+                                <span class="badge bg-{% if hold.status == 'pending' %}warning{% elif hold.status == 'confirmed' %}success{% elif hold.status == 'completed' %}primary{% elif hold.status == 'expired' %}danger{% else %}secondary{% endif %} fs-6">
+                                    {{ hold.get_status_display }}
+                                </span>
+                            </p>
+                            <p>
+                                <strong>วันที่จอง:</strong> {{ hold.created_at|date:"d/m/Y H:i" }}
+                            </p>
+                            {% if hold.expires_at %}
+                                <p>
+                                    <strong>วันหมดอายุ:</strong> {{ hold.expires_at|date:"d/m/Y H:i" }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-book me-2"></i>หนังสือที่จะยืม
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ชื่อหนังสือ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hold_item in hold_items %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <strong>{{ hold_item.book.title }}</strong>
+                                            <br>
+                                            <small class="text-muted">ISBN: {{ hold_item.book.isbn|default:"-" }}</small>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">ไม่มีหนังสือที่ยืนยันแล้ว</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Additional Books Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-square me-2"></i>เพิ่มหนังสือเพิ่มเติม
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="bookSearch" class="form-label">ค้นหาหนังสือ (ชื่อหนังสือ, ISBN)</label>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control"
+                                   id="bookSearch"
+                                   placeholder="พิมพ์ชื่อหนังสือ, ISBN เพื่อค้นหา...">
+                            <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div id="searchResults" class="list-group mt-2 search-results-scroll"></div>
+                    </div>
+                    <div id="selectedBooksContainer" class="mt-3">
+                        <h6 class="text-muted">หนังสือที่เลือกเพิ่ม:</h6>
+                        <div id="selectedBooksList"></div>
+                        <p id="noSelectedBooks" class="text-muted small">ยังไม่ได้เลือกหนังสือเพิ่มเติม</p>
+                    </div>
+                </div>
+            </div>
+            <form method="post" id="loanForm">
+                {% csrf_token %}
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>คำเตือน:</strong> การกดยืนยันจะสร้างรายการยืมและเปลี่ยนสถานะการจองเป็น "เสร็จสิ้น"
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'holds:dashboard_holds' %}" class="btn btn-secondary">
+                                <i class="bi bi-x"></i> ยกเลิก
+                            </a>
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-check-circle me-1"></i>สร้างรายการยืม
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3 sticky-top" style="top: 1rem;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-check me-2"></i>สรุป
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>รหัสการจอง:</strong>
+                        <p class="mb-0">#{{ hold.id }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>ผู้ยืม:</strong>
+                        <p class="mb-0">{{ hold.user.get_full_name|default:hold.user.username }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>จำนวนหนังสือที่ยืนยัน:</strong>
+                        <p class="mb-0">{{ hold_items.count }} เล่ม</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>หนังสือเพิ่มเติม:</strong>
+                        <p id="summaryAdditionalCount" class="mb-0 text-muted">0 เล่ม</p>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <strong>รวมทั้งหมด:</strong>
+                        <p id="summaryTotalCount" class="mb-0 fs-5 text-primary">{{ hold_items.count }} เล่ม</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>กำหนดคืน:</strong>
+                        <p id="summaryDueDate" class="mb-0">{{ LOAN_PERIOD_DAYS }} วันนับจากวันยืม</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <script>
+</div>
+<script>
     // Additional books management
     let selectedBooks = [];
     let searchTimeout = null;
@@ -216,6 +236,24 @@
     const noSelectedBooks = document.getElementById('noSelectedBooks');
     const clearSearchBtn = document.getElementById('clearSearch');
     const loanForm = document.getElementById('loanForm');
+    
+    // Initialize summary on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateSummaryCounts();
+        
+        // Set default due date
+        const summaryDueDate = document.getElementById('summaryDueDate');
+        const today = new Date();
+        today.setDate(today.getDate() + {{ LOAN_PERIOD_DAYS|default:7 }});
+        
+        // Format date for display in Thai
+        const thaiDate = today.toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        summaryDueDate.textContent = thaiDate;
+    });
     
     // Search books
     bookSearchInput.addEventListener('input', function() {
@@ -230,7 +268,7 @@
         searchResults.innerHTML = '<div class="list-group-item text-muted"><span class="spinner-border spinner-border-sm me-2"></span>กำลังค้นหา...</div>';
         
         searchTimeout = setTimeout(() => {
-            fetch(`/api/books/?q=${encodeURIComponent(query)}`)
+            fetch(`{% url 'books:get_books' %}?q=${encodeURIComponent(query)}`)
                 .then(response => response.json())
                 .then(data => {
                     displaySearchResults(data.books);
@@ -257,27 +295,15 @@
         
         searchResults.innerHTML = books.map(book => {
             const isSelected = selectedBooks.some(b => b.id === book.id);
-            const isAvailable = book.available_quantity > 0;
             
             return `
-                <div class="list-group-item list-group-item-action book-search-item ${
-                    isSelected ? 'disabled' : ''
-                }" 
-                     data-book-id="${book.id}"
-                     ${isSelected ? '' : 'onclick="selectBook(' + book.id + ', \'' + escapeHtml(book.title) + '\', \'' + escapeHtml(book.authors) + '\', ' + isAvailable + ')"'}>
-                    <div class="d-flex justify-content-between align-items-start">
+                <div class="list-group-item list-group-item-action search-item" onclick="${!isSelected ? `selectBook(${book.id}, '${escapeHtml(book.title)}', '${book.isbn}', '${book.image_url}')` : ''}">
+                    <div class="d-flex w-100 justify-content-between">
                         <div>
-                            <strong>${book.title}</strong>
-                            <br>
-                            <small class="text-muted">${book.authors || 'ไม่ระบุผู้แต่ง'}</small>
+                            <h6 class="mb-1">${book.title}</h6>
+                            <p class="mb-0 small text-muted">ISBN: ${book.isbn}</p>
                         </div>
-                        <div class="text-end">
-                            ${isAvailable ? 
-                                '<span class="badge bg-success">มี ' + book.available_quantity + ' เล่ม</span>' : 
-                                '<span class="badge bg-danger">ไม่มีในคลัง</span>'
-                            }
-                            ${isSelected ? '<br><span class="badge bg-secondary mt-1">เลือกแล้ว</span>' : ''}
-                        </div>
+                        ${isSelected ? '<span class="badge bg-success">เลือกแล้ว</span>' : ''}
                     </div>
                 </div>
             `;
@@ -285,36 +311,23 @@
     }
     
     // Select book
-    function selectBook(id, title, authors, isAvailable) {
-        if (!isAvailable) {
-            alert('หนังสือเล่มนี้ไม่มีในคลังขณะนี้');
-            return;
-        }
-        
+    function selectBook(id, title, isbn, imageUrl) {
         if (selectedBooks.some(b => b.id === id)) {
             return; // Already selected
         }
         
-        selectedBooks.push({ id, title, authors });
+        selectedBooks.push({ id, title, isbn, imageUrl });
         updateSelectedBooksList();
         
-        // Refresh search results to show "เลือกแล้ว"
-        const query = bookSearchInput.value.trim();
-        if (query.length >= 2) {
-            bookSearchInput.dispatchEvent(new Event('input'));
-        }
+        // Clear search
+        bookSearchInput.value = '';
+        searchResults.innerHTML = '';
     }
     
     // Remove book
     function removeBook(id) {
         selectedBooks = selectedBooks.filter(b => b.id !== id);
         updateSelectedBooksList();
-        
-        // Refresh search results
-        const query = bookSearchInput.value.trim();
-        if (query.length >= 2) {
-            bookSearchInput.dispatchEvent(new Event('input'));
-        }
     }
     
     // Update selected books list
@@ -327,17 +340,40 @@
         
         noSelectedBooks.style.display = 'none';
         selectedBooksList.innerHTML = selectedBooks.map(book => `
-            <div class="selected-book-item d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>${book.title}</strong>
-                    <br>
-                    <small class="text-muted">${book.authors || 'ไม่ระบุผู้แต่ง'}</small>
+            <div class="selected-book-item">
+                ${book.imageUrl ? `<img src="${book.imageUrl}" alt="${book.title}">` : '<div style="width:80px;height:120px;background:#e9ecef;display:flex;align-items:center;justify-content:center;border-radius:0.25rem;"><i class="bi bi-book" style="font-size:2rem;color:#6c757d;"></i></div>'}
+                <div class="book-info">
+                    <h6 class="mb-1">${book.title}</h6>
+                    <p class="mb-0 small text-muted">
+                        <strong>ISBN:</strong> ${book.isbn}
+                    </p>
                 </div>
-                <span class="remove-book-btn" onclick="removeBook(${book.id})" title="ลบออก">
-                    <i class="bi bi-x-circle-fill"></i>
-                </span>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeBook(${book.id})">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
         `).join('');
+        
+        // Update summary counts
+        updateSummaryCounts();
+    }
+    
+    // Update summary counts
+    function updateSummaryCounts() {
+        const confirmedCount = {{ hold_items.count }};
+        const additionalCount = selectedBooks.length;
+        const totalCount = confirmedCount + additionalCount;
+        
+        document.getElementById('summaryAdditionalCount').textContent = additionalCount + ' เล่ม';
+        document.getElementById('summaryTotalCount').textContent = totalCount + ' เล่ม';
+        
+        if (additionalCount > 0) {
+            document.getElementById('summaryAdditionalCount').classList.remove('text-muted');
+            document.getElementById('summaryAdditionalCount').classList.add('text-success');
+        } else {
+            document.getElementById('summaryAdditionalCount').classList.add('text-muted');
+            document.getElementById('summaryAdditionalCount').classList.remove('text-success');
+        }
     }
     
     // Add selected books to form before submit
@@ -361,5 +397,5 @@
         div.textContent = text;
         return div.innerHTML;
     }
-    </script>
+</script>
 {% endblock content %}

@@ -346,10 +346,7 @@ def dashboard_create_loan_from_hold_view(request, hold_id):
     This happens when user comes to pick up the books.
     """
     hold = get_object_or_404(
-        Hold.objects.prefetch_related(
-            'hold_items__book__authors',
-            'hold_items__book__publisher'
-        ),
+        Hold.objects.prefetch_related('hold_items__book'),
         id=hold_id
     )
     
@@ -456,9 +453,13 @@ def dashboard_create_loan_from_hold_view(request, hold_id):
         status='confirmed'
     )
     
+    # Get loan period from settings
+    loan_days = getattr(settings, 'LOAN_PERIOD_DAYS', 7)
+    
     context = {
         'hold': hold,
         'hold_items': confirmed_hold_items,
+        'LOAN_PERIOD_DAYS': loan_days,
     }
     
     return render(request, 'dashboard/holds/create_loan_from_hold.html', context)
