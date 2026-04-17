@@ -59,7 +59,8 @@ def dashboard_fines_view(request):
     All fines are paid immediately upon creation.
     """
     # Get filter parameters
-    search_query = request.GET.get('search', '')
+    search_id = request.GET.get('search_id', '').strip()
+    search_user = request.GET.get('search_user', '').strip()
     
     # Query loan batches that have fines
     loans = Loan.objects.filter(
@@ -73,13 +74,29 @@ def dashboard_fines_view(request):
         fine_count=Count('loan_items__fines', distinct=True)
     ).distinct()
     
-    if search_query:
-        q_filter = Q(user__username__icontains=search_query)
-        q_filter |= Q(user__email__icontains=search_query)
-        # If search query is a number, also search by batch ID
-        if search_query.isdigit():
-            q_filter |= Q(id=int(search_query))
-        loans = loans.filter(q_filter).distinct()
+    # Apply ID search filter
+    if search_id:
+        if search_id.isdigit():
+            loans = loans.filter(id=int(search_id))
+    
+    # Apply user search filter (citizen_id, username, email, full name, phone)
+    if search_user:
+        from django.db.models import Value, CharField
+        from django.db.models.functions import Concat
+        
+        # Build search filter for user fields
+        q_filter = Q()
+        q_filter |= Q(user__citizen_id__icontains=search_user)
+        q_filter |= Q(user__username__icontains=search_user)
+        q_filter |= Q(user__email__icontains=search_user)
+        q_filter |= Q(user__first_name__icontains=search_user)
+        q_filter |= Q(user__last_name__icontains=search_user)
+        q_filter |= Q(user__phone_number__icontains=search_user)
+        
+        # Annotate full name and add to search
+        loans = loans.annotate(
+            user_full_name=Concat('user__first_name', Value(' '), 'user__last_name', output_field=CharField())
+        ).filter(q_filter | Q(user_full_name__icontains=search_user)).distinct()
     
     loans = loans.order_by('-created_at')
     
@@ -90,7 +107,8 @@ def dashboard_fines_view(request):
     context = {
         'loan_batches': loans,
         'total_all': total_all,
-        'search_query': search_query,
+        'search_id': search_id,
+        'search_user': search_user,
     }
     
     return render(request, 'dashboard/fines/list.html', context)

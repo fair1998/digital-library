@@ -95,31 +95,38 @@ def dashboard_holds_view(request):
     """
     # Get filter parameters
     status_filter = request.GET.get('status', 'all')
-    search_query = request.GET.get('search', '').strip()
+    search_id = request.GET.get('search_id', '').strip()
+    search_user = request.GET.get('search_user', '').strip()
     
     # Base queryset
     holds = Hold.objects.select_related(
         'user'
     ).order_by('-created_at')
     
-    # Apply unified search filter (ID, username, first name, or last name)
-    if search_query:
+    # Apply ID search filter
+    if search_id:
         from django.db.models import Q
-        # Try to search by ID if the query is numeric
-        if search_query.isdigit():
-            holds = holds.filter(
-                Q(id=search_query) |
-                Q(user__username__icontains=search_query) |
-                Q(user__first_name__icontains=search_query) |
-                Q(user__last_name__icontains=search_query)
-            )
-        else:
-            # Search by username or name only
-            holds = holds.filter(
-                Q(user__username__icontains=search_query) |
-                Q(user__first_name__icontains=search_query) |
-                Q(user__last_name__icontains=search_query)
-            )
+        if search_id.isdigit():
+            holds = holds.filter(id=int(search_id))
+    
+    # Apply user search filter (citizen_id, username, email, full name, phone)
+    if search_user:
+        from django.db.models import Q, Value, CharField
+        from django.db.models.functions import Concat
+        
+        # Build search filter for user fields
+        q_filter = Q()
+        q_filter |= Q(user__citizen_id__icontains=search_user)
+        q_filter |= Q(user__username__icontains=search_user)
+        q_filter |= Q(user__email__icontains=search_user)
+        q_filter |= Q(user__first_name__icontains=search_user)
+        q_filter |= Q(user__last_name__icontains=search_user)
+        q_filter |= Q(user__phone_number__icontains=search_user)
+        
+        # Annotate full name and add to search
+        holds = holds.annotate(
+            user_full_name=Concat('user__first_name', Value(' '), 'user__last_name', output_field=CharField())
+        ).filter(q_filter | Q(user_full_name__icontains=search_user))
     
     # Apply status filter
     if status_filter and status_filter != 'all':
@@ -135,7 +142,8 @@ def dashboard_holds_view(request):
     context = {
         'holds': holds,
         'status_filter': status_filter,
-        'search_query': search_query,
+        'search_id': search_id,
+        'search_user': search_user,
         'status_choices': Hold.STATUS_CHOICES,
         'expired_batches': expired_batches,
     }

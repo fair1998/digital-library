@@ -80,14 +80,23 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-6">
-                    <label for="search" class="form-label">ค้นหา</label>
+                <div class="col-md-3">
+                    <label for="search_id" class="form-label">ค้นหาจาก ID</label>
                     <input type="text"
-                           name="search"
-                           id="search"
+                           name="search_id"
+                           id="search_id"
                            class="form-control"
-                           placeholder="ค้นหาจาก ID, Username หรือ ชื่อ-นามสกุล"
-                           value="{{ search_query }}">
+                           placeholder="กรอก Hold ID"
+                           value="{{ search_id }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="search_user" class="form-label">ค้นหาจากข้อมูลผู้ใช้</label>
+                    <input type="text"
+                           name="search_user"
+                           id="search_user"
+                           class="form-control"
+                           placeholder="รหัสประชาชน, ชื่อผู้ใช้, อีเมล, ชื่อ-นามสกุล, เบอร์โทร"
+                           value="{{ search_user }}">
                 </div>
                 <div class="col-md-4">
                     <label for="status" class="form-label">สถานะ</label>

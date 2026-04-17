@@ -57,7 +57,8 @@ def dashboard_loans_view(request):
     """
     # Get filter parameters
     status_filter = request.GET.get('status', 'all')
-    search_query = request.GET.get('search', '')
+    search_id = request.GET.get('search_id', '').strip()
+    search_user = request.GET.get('search_user', '').strip()
     
     # Base query
     loan_batches = Loan.objects.select_related('user').prefetch_related(
@@ -69,19 +70,37 @@ def dashboard_loans_view(request):
     if status_filter and status_filter != 'all':
         loan_batches = loan_batches.filter(status=status_filter)
     
-    if search_query:
-        q_filter = Q(user__username__icontains=search_query)
-        # If search query is a number, also search by batch ID
-        if search_query.isdigit():
-            q_filter |= Q(id=int(search_query))
-        loan_batches = loan_batches.filter(q_filter).distinct()
+    # Apply ID search filter
+    if search_id:
+        if search_id.isdigit():
+            loan_batches = loan_batches.filter(id=int(search_id))
+    
+    # Apply user search filter (citizen_id, username, email, full name, phone)
+    if search_user:
+        from django.db.models import Value, CharField
+        from django.db.models.functions import Concat
+        
+        # Build search filter for user fields
+        q_filter = Q()
+        q_filter |= Q(user__citizen_id__icontains=search_user)
+        q_filter |= Q(user__username__icontains=search_user)
+        q_filter |= Q(user__email__icontains=search_user)
+        q_filter |= Q(user__first_name__icontains=search_user)
+        q_filter |= Q(user__last_name__icontains=search_user)
+        q_filter |= Q(user__phone_number__icontains=search_user)
+        
+        # Annotate full name and add to search
+        loan_batches = loan_batches.annotate(
+            user_full_name=Concat('user__first_name', Value(' '), 'user__last_name', output_field=CharField())
+        ).filter(q_filter | Q(user_full_name__icontains=search_user)).distinct()
     
     loan_batches = loan_batches.order_by('-created_at')
     
     context = {
         'loan_batches': loan_batches,
         'status_filter': status_filter,
-        'search_query': search_query,
+        'search_id': search_id,
+        'search_user': search_user,
     }
     
     return render(request, 'dashboard/loans/list.html', context)
