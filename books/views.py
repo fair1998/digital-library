@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Count, Q
+from django.db.models import Count, Q, F
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -305,8 +305,19 @@ def dashboard_books_view(request):
         'total_quantity': 'total_quantity',
         '-publish_year': '-publish_year',
         'publish_year': 'publish_year',
+        '-borrowed_count': '-borrowed_count',
+        'borrowed_count': 'borrowed_count',
     }
     sort_order = allowed_sorts.get(sort_by, 'title')
+
+    # Annotate with borrowed count (total - available)
+    from django.db.models import ExpressionWrapper, IntegerField
+    books = books.annotate(
+        borrowed_count=ExpressionWrapper(
+            F('total_quantity') - F('available_quantity'),
+            output_field=IntegerField()
+        )
+    )
 
     books = books.order_by(sort_order).distinct()
 

@@ -97,6 +97,14 @@
                                 {% if sort_by == 'available_quantity' %}selected{% endif %}>
                             พร้อมให้ยืม (น้อยไปมาก)
                         </option>
+                        <option value="-borrowed_count"
+                                {% if sort_by == '-borrowed_count' %}selected{% endif %}>
+                            กำลังถูกยืม/จอง (มากไปน้อย)
+                        </option>
+                        <option value="borrowed_count"
+                                {% if sort_by == 'borrowed_count' %}selected{% endif %}>
+                            กำลังถูกยืม/จอง (น้อยไปมาก)
+                        </option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
