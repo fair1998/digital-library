@@ -54,6 +54,13 @@ def dashboard_home_view(request):
     monthly_labels = []
     today = timezone.now()
     
+    # Thai month names
+    thai_months = {
+        1: 'ม.ค.', 2: 'ก.พ.', 3: 'มี.ค.', 4: 'เม.ย.',
+        5: 'พ.ค.', 6: 'มิ.ย.', 7: 'ก.ค.', 8: 'ส.ค.',
+        9: 'ก.ย.', 10: 'ต.ค.', 11: 'พ.ย.', 12: 'ธ.ค.'
+    }
+    
     for i in range(11, -1, -1):
         month_date = today - timedelta(days=30*i)
         month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -70,7 +77,9 @@ def dashboard_home_view(request):
         ).count()
         
         monthly_loans.append(count)
-        monthly_labels.append(month_start.strftime('%b %Y'))
+        # Format as Thai month and Buddhist year
+        thai_month = thai_months[month_start.month]
+        monthly_labels.append(f'{thai_month} {month_start.year}')
     
     # Top borrowed books
     top_borrowed_books = Book.objects.annotate(
