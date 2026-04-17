@@ -1,10 +1,10 @@
 {% extends "base_admin.html" %}
 {% load static %}
 {% block title %}
-    จัดการการจอง
+    รายการรจอง
 {% endblock title %}
 {% block page_title %}
-    จัดการการจอง
+    รายการรจอง
 {% endblock page_title %}
 {% block content %}
     <!-- Expired Hold items Alert -->
@@ -21,7 +21,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>ผู้ใช้</th>
+                            <th>ชื่อ - นามสกุล</th>
                             <th>หนังสือ</th>
                             <th>วันที่ยืนยัน</th>
                             <th>หมดอายุเมื่อ</th>
@@ -35,13 +35,7 @@
                                     <a href="{% url 'holds:dashboard_hold_detail' hold.id %}"
                                        class="btn btn-sm btn-outline-primary">#{{ hold.id }}</a>
                                 </td>
-                                <td>
-                                    <strong>{{ hold.user.username }}</strong>
-                                    {% if hold.user.get_full_name %}
-                                        <br>
-                                        <small>{{ hold.user.get_full_name }}</small>
-                                    {% endif %}
-                                </td>
+                                <td>{{ hold.user.get_full_name|default:hold.user.username }}</td>
                                 <td>{{ hold.hold_items.count }} เล่ม</td>
                                 <td>
                                     <small>{{ hold.created_at|date:"d/m/Y H:i" }}</small>
@@ -131,7 +125,7 @@
                     </colgroup>
                     <tr>
                         <th>ID</th>
-                        <th>ผู้ใช้</th>
+                        <th>ชื่อ - นามสกุล</th>
                         <th>สถานะ</th>
                         <th>วันที่จอง</th>
                         <th>หมดอายุ</th>
@@ -146,9 +140,7 @@
                                     <strong>#{{ hold.id }}</strong>
                                 </a>
                             </td>
-                            <td>
-                                <i class="bi bi-person"></i> {{ hold.user.username }}
-                            </td>
+                            <td>{{ hold.user.get_full_name|default:hold.user.username }}</td>
                             <td>
                                 {% if hold.status == 'pending' %}
                                     <span class="badge bg-warning text-dark">
