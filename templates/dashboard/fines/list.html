@@ -1,4 +1,5 @@
 {% extends "base_admin.html" %}
+{% load static %}
 {% block title %}
     รายงานค่าปรับ
 {% endblock title %}
@@ -6,41 +7,11 @@
     รายงานค่าปรับ
 {% endblock page_title %}
 {% block content %}
-    <div class="row mb-4">
-        <div class="col">
-            <h2>
-                <i class="bi bi-currency-dollar me-2"></i>รายงานค่าปรับทั้งหมด (ชำระแล้วทั้งหมด)
-            </h2>
-        </div>
-    </div>
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="bi bi-cash-stack me-2"></i>ค่าปรับทั้งหมด (ชำระแล้ว)
-                    </h5>
-                    <h2 class="mb-0">{{ total_all|floatformat:2 }} บาท</h2>
-                    <small>ค่าปรับทุกรายการถูกชำระทันทีหลังคืนหนังสือ</small>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Filters -->
+    <!-- Filter -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-5">
-                    <label for="search_id" class="form-label">ค้นหาจาก ID</label>
-                    <input type="text"
-                           name="search_id"
-                           id="search_id"
-                           class="form-control"
-                           placeholder="กรอก Loan Batch ID"
-                           value="{{ search_id }}">
-                </div>
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label for="search_user" class="form-label">ค้นหาจากข้อมูลผู้ใช้</label>
                     <input type="text"
                            name="search_user"
@@ -48,6 +19,25 @@
                            class="form-control"
                            placeholder="รหัสประชาชน, ชื่อผู้ใช้, อีเมล, ชื่อ-นามสกุล, เบอร์โทร"
                            value="{{ search_user }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="filter_type" class="form-label">ประเภทค่าปรับ</label>
+                    <select name="filter_type" id="filter_type" class="form-select">
+                        <option value="">ทั้งหมด</option>
+                        {% for type_value, type_label in type_choices %}
+                            <option value="{{ type_value }}"
+                                    {% if filter_type == type_value %}selected{% endif %}>{{ type_label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="sort_by" class="form-label">เรียงตาม</label>
+                    <select name="sort_by" id="sort_by" class="form-select">
+                        <option value="-paid_at" {% if sort_by == "-paid_at" %}selected{% endif %}>วันที่ชำระ (ใหม่ล่าสุด)</option>
+                        <option value="paid_at" {% if sort_by == "paid_at" %}selected{% endif %}>วันที่ชำระ (เก่าล่าสุด)</option>
+                        <option value="-amount" {% if sort_by == "-amount" %}selected{% endif %}>จำนวนเงิน (มาก-น้อย)</option>
+                        <option value="amount" {% if sort_by == "amount" %}selected{% endif %}>จำนวนเงิน (น้อย-มาก)</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label d-block">&nbsp;</label>
@@ -58,63 +48,99 @@
             </form>
         </div>
     </div>
-    <!-- Loan Batches with Fines Table -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">
-                <i class="bi bi-list-ul me-2"></i>รายการชุดการยืมที่มีค่าปรับ ({{ loan_batches.count }} ชุด)
-            </h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+    <!-- Fines List -->
+    {% if fines %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <colgroup>
+                    <col style="width: 20%;">
+                    <col style="width: 25%;">
+                    <col style="width: 10%;">
+                    <col style="width: 10%;">
+                    <col style="width: 12%;">
+                    <col style="width: 23%;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>ชื่อ - นามสกุล</th>
+                        <th>หนังสือ</th>
+                        <th>ประเภท</th>
+                        <th>จำนวนเงิน</th>
+                        <th>วันที่ชำระ</th>
+                        <th>เหตุผล</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fine in fines %}
                         <tr>
-                            <th>Loan Batch ID</th>
-                            <th>ผู้ใช้</th>
-                            <th>จำนวนหนังสือที่โดนปรับ</th>
-                            <th>จำนวนเงินรวม (ชำระแล้ว)</th>
-                            <th>วันที่ยืม</th>
-                            <th>การกระทำ</th>
+                            <td>
+                                <strong>{{ fine.loan_item.loan.user.get_full_name|default:fine.loan_item.loan.user.username }}</strong>
+                            </td>
+                            <td>
+                                <div class="text-truncate"
+                                     style="max-width: 300px"
+                                     title="{{ fine.loan_item.book.title }}">{{ fine.loan_item.book.title }}</div>
+                            </td>
+                            <td>
+                                {% if fine.type == 'late_return' %}
+                                    <span class="badge bg-warning text-dark">{{ fine.get_type_display }}</span>
+                                {% elif fine.type == 'lost' %}
+                                    <span class="badge bg-danger">{{ fine.get_type_display }}</span>
+                                {% elif fine.type == 'damaged' %}
+                                    <span class="badge bg-secondary">{{ fine.get_type_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ fine.amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ fine.paid_at|date:"d/m/Y H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if fine.reason %}
+                                    <div class="text-truncate" title="{{ fine.reason }}">{{ fine.reason }}</div>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for batch in loan_batches %}
-                            <tr>
-                                <td>
-                                    <strong>#{{ batch.id }}</strong>
-                                </td>
-                                <td>
-                                    <div>
-                                        <strong>{{ batch.user.get_full_name|default:batch.user.username }}</strong>
-                                    </div>
-                                    <small class="text-muted">{{ batch.user.email }}</small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary">{{ batch.fine_count }} เล่ม</span>
-                                </td>
-                                <td>
-                                    <strong class="text-success">{{ batch.total_fine_amount|floatformat:2 }} บาท</strong>
-                                    <div>
-                                        <small class="text-muted">ชำระแล้วทั้งหมด</small>
-                                    </div>
-                                </td>
-                                <td>{{ batch.created_at|date:"d/m/Y H:i" }}</td>
-                                <td>
-                                    <a href="{% url 'fines:dashboard_fines_detail' batch.id %}"
-                                       class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye me-1"></i>ดูรายละเอียด
-                                    </a>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">ไม่พบรายการชุดการยืมที่มีค่าปรับ</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
+        <!-- Pagination -->
+        {% if fines.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if fines.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page=1{% if search_user %}&search_user={{ search_user }}{% endif %}{% if filter_type %}&filter_type={{ filter_type }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">&laquo; แรก</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ fines.previous_page_number }}{% if search_user %}&search_user={{ search_user }}{% endif %}{% if filter_type %}&filter_type={{ filter_type }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">ก่อนหน้า</a>
+                        </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">หน้า {{ fines.number }} จาก {{ fines.paginator.num_pages }}</span>
+                    </li>
+                    {% if fines.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ fines.next_page_number }}{% if search_user %}&search_user={{ search_user }}{% endif %}{% if filter_type %}&filter_type={{ filter_type }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">ถัดไป</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ fines.paginator.num_pages }}{% if search_user %}&search_user={{ search_user }}{% endif %}{% if filter_type %}&filter_type={{ filter_type }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">สุดท้าย &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> ไม่มีรายการค่าปรับในระบบ
+        </div>
+    {% endif %}
 {% endblock content %}
