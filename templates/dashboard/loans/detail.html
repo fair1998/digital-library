@@ -363,11 +363,18 @@
                         itemTotal += lateFine;
                         itemFines.push(`คืนช้า ${daysLate} วัน: ${lateFine.toFixed(2)} บาท`);
                         
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = `late_fine_${itemId}`;
-                        input.value = lateFine.toFixed(2);
-                        form.appendChild(input);
+                        // Send both fine amount and days late
+                        const fineInput = document.createElement('input');
+                        fineInput.type = 'hidden';
+                        fineInput.name = `late_fine_${itemId}`;
+                        fineInput.value = lateFine.toFixed(2);
+                        form.appendChild(fineInput);
+                        
+                        const daysInput = document.createElement('input');
+                        daysInput.type = 'hidden';
+                        daysInput.name = `late_days_${itemId}`;
+                        daysInput.value = daysLate;
+                        form.appendChild(daysInput);
                     }
                     
                     // Damage fine
@@ -397,11 +404,18 @@
                         itemTotal += lateFine;
                         itemFines.push(`คืนช้า ${daysLate} วัน: ${lateFine.toFixed(2)} บาท`);
                         
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = `late_fine_${itemId}`;
-                        input.value = lateFine.toFixed(2);
-                        form.appendChild(input);
+                        // Send both fine amount and days late
+                        const fineInput = document.createElement('input');
+                        fineInput.type = 'hidden';
+                        fineInput.name = `late_fine_${itemId}`;
+                        fineInput.value = lateFine.toFixed(2);
+                        form.appendChild(fineInput);
+                        
+                        const daysInput = document.createElement('input');
+                        daysInput.type = 'hidden';
+                        daysInput.name = `late_days_${itemId}`;
+                        daysInput.value = daysLate;
+                        form.appendChild(daysInput);
                     }
                     
                     // Lost fine

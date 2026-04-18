@@ -289,7 +289,9 @@ def dashboard_return_loan_view(request, loan_id):
                         if late_fine_str:
                             try:
                                 late_fine_amount = Decimal(late_fine_str)
-                                days_late = (now.date() - loan.due_date.date()).days if loan.due_date else 0
+                                # Get days_late from form (same value used in JS calculation)
+                                days_late_str = request.POST.get(f'late_days_{item.id}', '').strip()
+                                days_late = int(days_late_str) if days_late_str else 0
                                 Fine.objects.create(
                                     loan_item=item,
                                     type='late_return',
@@ -333,6 +335,25 @@ def dashboard_return_loan_view(request, loan_id):
                         item.book.save()
                         
                         lost_count += 1
+                        
+                        # Get late return fine (if applicable for lost books)
+                        late_fine_str = request.POST.get(f'late_fine_{item.id}', '').strip()
+                        if late_fine_str:
+                            try:
+                                late_fine_amount = Decimal(late_fine_str)
+                                # Get days_late from form (same value used in JS calculation)
+                                days_late_str = request.POST.get(f'late_days_{item.id}', '').strip()
+                                days_late = int(days_late_str) if days_late_str else 0
+                                Fine.objects.create(
+                                    loan_item=item,
+                                    type='late_return',
+                                    amount=late_fine_amount,
+                                    reason=f'คืนช้า {days_late} วัน',
+                                    paid_at=now
+                                )
+                                total_fine_amount += late_fine_amount
+                            except (ValueError, TypeError):
+                                pass
                         
                         # Get lost fine from form (calculated by JavaScript)
                         lost_fine_str = request.POST.get(f'lost_fine_{item.id}', '').strip()
