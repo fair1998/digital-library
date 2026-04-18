@@ -26,10 +26,12 @@ SECRET_KEY = 'django-insecure-7sd95*88vp3pvo*r+x2)r$_+b#f5h4dfs757p-_q_v3jy+i%+y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
-
 RENDER = os.getenv("RENDER") == "true"
 
+if RENDER:
+    ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+else:
+    ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -139,9 +141,12 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 
 if RENDER:
-    STATIC_ROOT = BASE_DIR / 'staticfiles'  
-
-    MEDIA_ROOT = '/var/data/media'
+    # STATIC_ROOT = BASE_DIR / 'staticfiles'  
+    STATICFILES_DIRS = [
+        BASE_DIR / 'static',
+    ]
+    # MEDIA_ROOT = '/var/data/media'
+    MEDIA_ROOT = BASE_DIR / 'media'
 else:
     STATICFILES_DIRS = [
         BASE_DIR / 'static',
