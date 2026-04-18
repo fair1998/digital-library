@@ -38,7 +38,6 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, f'ยินดีต้อนรับ {username}!')
                 next_url = request.GET.get('next', 'home')
                 return redirect(next_url)
             else:
@@ -55,7 +54,6 @@ def login_view(request):
 def logout_view(request):
     """View for user logout"""
     logout(request)
-    messages.success(request, 'ออกจากระบบสำเร็จ')
     return redirect('home')
 
 
