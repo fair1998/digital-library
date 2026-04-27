@@ -12,8 +12,8 @@
 - **Phase 0**: Project Setup - โครงสร้างพื้นฐานพร้อมใช้งาน
 - **Phase 1**: Data Model Foundation - Models หนังสือครบถ้วน (Author, Category, Publisher, Book)
 - **Phase 2**: Admin Foundation - Django Admin พร้อมจัดการข้อมูลหนังสือ
-- **Phase 3**: Reservation System Data Layer - Models การจองครบถ้วน (ReservationBatch, Reservation)
-- **Phase 4**: Reservation Admin Workflow - Admin สามารถยืนยัน/ยกเลิกการจอง
+- **Phase 3**: Hold System Data Layer - Models การจองครบถ้วน (Hold, Hold)
+- **Phase 4**: Hold Admin Workflow - Admin สามารถยืนยัน/ยกเลิกการจอง
 - **Phase 5**: Loan System Data Layer - Models การยืมครบถ้วน (LoanBatch, LoanItem)
 - **Phase 6**: Loan Admin Workflow - Admin สามารถบันทึกการคืน/หาย
 - **Phase 7**: Fine System - Admin สามารถจัดการค่าปรับ (สร้าง/ชำระ/ดูประวัติ)
@@ -21,11 +21,11 @@
   - ✅ Authentication System (Register, Login, Logout)
   - ✅ Home Page with hero section and features
   - ✅ Book List Page with search and filter
-  - ✅ Book Detail Page with Reservation Functionality
-  - ✅ My Reservations Page
+  - ✅ Book Detail Page with Hold Functionality
+  - ✅ My Holds Page
   - ✅ My Loans Page
   - ✅ My Fines Page
-  - ✅ Member Reservation Workflow with Shopping Cart (ระบบตะกร้าจองหนังสือ)
+  - ✅ Member Hold Workflow with Shopping Cart (ระบบตะกร้าจองหนังสือ)
 
 ### 📋 Remaining Phases
 
@@ -56,7 +56,7 @@ Digital Library System
 ## Design Direction
 
 ระบบนี้ตีความเป็น “ระบบจัดการห้องสมุด” มากกว่าระบบอ่าน e-book
-ดังนั้นแกนหลักของระบบคือ inventory + reservation + loan + fine
+ดังนั้นแกนหลักของระบบคือ inventory + hold + loan + fine
 
 ---
 
@@ -67,7 +67,7 @@ Digital Library System
 - Authors Management
 - Categories Management
 - Publishers Management
-- Reservations
+- Holds
 - Loans
 - Fines
 - Admin Management
@@ -124,10 +124,10 @@ Digital Library System
 - book_authors
 - book_categories
 
-### Reservation Domain
+### Hold Domain
 
-- reservation_batches
-- reservations
+- holds
+- holds
 
 ### Loan Domain
 
@@ -149,14 +149,14 @@ Digital Library System
 
 หนังสือ 1 รายการในระบบ มีข้อมูลหลัก เช่น ชื่อ รายละเอียด รูปปก ปีพิมพ์ สำนักพิมพ์ จำนวนทั้งหมด และจำนวนที่พร้อมให้ยืม/จอง
 
-## 5.2 Reservation Batch
+## 5.2 Hold
 
 การจอง 1 ครั้งของผู้ใช้ 1 คน
 ในการจอง 1 ครั้ง สามารถมีหนังสือหลายเล่มได้
 ดังนั้นจึงแยกเป็น:
 
-- reservation_batches = หัวรายการจอง
-- reservations = รายการหนังสือแต่ละเล่มในชุดจอง
+- holds = หัวรายการจอง
+- holds = รายการหนังสือแต่ละเล่มในชุดจอง
 
 ## 5.3 Loan Batch
 
@@ -183,15 +183,15 @@ Digital Library System
 - ค่า `available_quantity` ต้องไม่ติดลบ
 - ค่า `available_quantity` ต้องไม่มากกว่า `total_quantity` ในบริบทปกติ
 
-## 6.2 Reservation Rules
+## 6.2 Hold Rules
 
 - สมาชิกจองหนังสือได้เมื่อ `available_quantity > 0`
 - การจอง 1 ครั้งสามารถมีหลายเล่มได้
-- สถานะ reservation batch มี:
+- สถานะ hold มี:
   - pending
   - confirmed
   - cancelled
-- สถานะ reservation item มี:
+- สถานะ hold item มี:
   - pending
   - confirmed
   - cancelled
@@ -208,7 +208,7 @@ Digital Library System
   - borrowed
   - returned
   - lost
-- loan item อาจอ้างอิง reservation เดิมได้ หากยืมมาจากการจอง
+- loan item อาจอ้างอิง hold เดิมได้ หากยืมมาจากการจอง
 - เมื่อคืนหนังสือ ต้องบันทึก `returned_at`
 - หนังสือที่หายจะไม่ถูกเพิ่มกลับเข้า available_quantity
 - เมื่อ loan item ถูก mark เป็น `returned` หรือ `lost` ระบบตรวจสอบว่าทุก item ใน batch เสร็จสิ้นแล้วหรือไม่ ถ้าไม่มี `borrowed` เหลือ → batch status เปลี่ยนเป็น `completed` อัตโนมัติ
@@ -271,7 +271,7 @@ Digital Library System
 ## 6.5 Permission Rules
 
 - member ห้ามเข้าหน้า admin
-- member เห็นได้เฉพาะข้อมูลของตัวเองในหน้า my reservations / my loans / my fines
+- member เห็นได้เฉพาะข้อมูลของตัวเองในหน้า my holds / my loans / my fines
 - admin เห็นข้อมูลทุกคนได้
 - admin เท่านั้นที่ยืนยันการจองหรือบันทึกการยืมคืนได้
 
@@ -453,7 +453,7 @@ Digital Library System
 - Publisher information
 - Publish year
 - Availability status with color-coded badges
-- Reserve button (disabled, waiting for reservation workflow)
+- Reserve button (disabled, waiting for hold workflow)
 - Login prompt for non-authenticated users
 - Back to list button
 
@@ -474,11 +474,11 @@ Digital Library System
 
 ---
 
-## 7.4 My Reservations Page ✅ IMPLEMENTED
+## 7.4 My Holds Page ✅ IMPLEMENTED
 
 ### URL
 
-`/my-reservations/`
+`/my-holds/`
 
 ### Purpose
 
@@ -495,18 +495,18 @@ Digital Library System
 ### Features Implemented
 
 - @login_required decorator
-- List all reservation batches for current user
+- List all holds for current user
 - Show batch status with color-coded badges
 - Show expiry date with warning for expired
 - Show all books in each batch
 - Book details with links
-- Status badges for each reservation item
+- Status badges for each hold item
 - Query optimization (prefetch_related)
 
 ### Related Data
 
-- reservation_batches
-- reservations
+- holds
+- holds
 - books
 - users
 
@@ -696,8 +696,8 @@ Digital Library System
 ### Related Data
 
 - books
-- reservation_batches
-- reservations
+- holds
+- holds
 - loan_items
 - fines
 
@@ -798,7 +798,7 @@ Digital Library System
 
 ---
 
-## 8.6 Reservation Management
+## 8.6 Hold Management
 
 ### Purpose
 
@@ -806,7 +806,7 @@ Digital Library System
 
 ### Admin Can Do
 
-- ดูรายการจองทั้งหมดใน Admin Dashboard (`/dashboard/reservations`)
+- ดูรายการจองทั้งหมดใน Admin Dashboard (`/dashboard/holds`)
 - ดูรายละเอียดการจองแต่ละ batch
 - ดูว่าใครจองอะไร
 - ดูสถานะสต็อคของหนังสือแต่ละเล่ม (available/out of stock)
@@ -819,8 +819,8 @@ Digital Library System
 
 ### Related Data
 
-- reservation_batches
-- reservations
+- holds
+- holds
 - users
 - books
 
@@ -837,8 +837,8 @@ Digital Library System
 
 ### Workflow สำหรับ Admin ยืนยันการจอง
 
-1. Admin เข้า `/dashboard/reservations`
-2. เลือกดูรายละเอียด reservation batch ที่ต้องการ
+1. Admin เข้า `/dashboard/holds`
+2. เลือกดูรายละเอียด hold ที่ต้องการ
 3. ดูสถานะสต็อคของหนังสือแต่ละเล่ม:
    - 🟢 สีเขียว = มีสต็อค สามารถยืนยันได้
    - 🔴 สีแดง = Out of Stock ยืนยันไม่ได้
@@ -852,7 +852,7 @@ Digital Library System
 
 ### Configuration
 
-- `RESERVATION_EXPIRY_DAYS` (ใน settings.py) = จำนวนวันที่การจองจะหมดอายุหลังจากยืนยัน (default: 3 วัน)
+- `HOLD_EXPIRY_DAYS` (ใน settings.py) = จำนวนวันที่การจองจะหมดอายุหลังจากยืนยัน (default: 3 วัน)
 
 ---
 
@@ -867,7 +867,7 @@ Digital Library System
 - สร้างการยืมใหม่
 - เลือก user
 - เลือกหนังสือหลายเล่ม
-- อ้างอิง reservation เดิมได้ถ้ามี
+- อ้างอิง hold เดิมได้ถ้ามี
 - กำหนด due_date
 - เปลี่ยนสถานะเป็น returned
 - เปลี่ยนสถานะเป็น lost
@@ -879,7 +879,7 @@ Digital Library System
 - loan_items
 - users
 - books
-- reservations
+- holds
 
 ### Important Rules
 
@@ -933,8 +933,8 @@ Digital Library System
 1. Member login เข้าระบบ
 2. Member เลือกหนังสือที่ต้องการจอง
 3. ระบบตรวจสอบว่า available_quantity ของแต่ละเล่มมากกว่า 0
-4. ระบบสร้าง `reservation_batch`
-5. ระบบสร้าง `reservations` หลายรายการภายใต้ batch เดียว
+4. ระบบสร้าง `hold_batch`
+5. ระบบสร้าง `holds` หลายรายการภายใต้ batch เดียว
 6. สถานะเริ่มต้นเป็น `pending`
 7. ระบบบันทึก `expires_at`
 8. Admin เข้ามาตรวจสอบ
@@ -954,7 +954,7 @@ Digital Library System
 1. Admin เปิดหน้าจัดการการยืม
 2. Admin เลือก user
 3. Admin เลือกหนังสือที่จะให้ยืม
-4. ถ้ามาจากการจอง สามารถอ้างอิง reservation เดิมได้
+4. ถ้ามาจากการจอง สามารถอ้างอิง hold เดิมได้
 5. Admin กำหนด due_date
 6. ระบบสร้าง `loan_batch`
 7. ระบบสร้าง `loan_items`
@@ -1006,12 +1006,12 @@ Digital Library System
 - book_authors
 - book_categories
 
-## 10.2 Reservation Feature
+## 10.2 Hold Feature
 
 ใช้ตาราง:
 
-- reservation_batches
-- reservations
+- holds
+- holds
 - books
 - users
 
@@ -1023,7 +1023,7 @@ Digital Library System
 - loan_items
 - books
 - users
-- reservations
+- holds
 
 ## 10.4 Fine Feature
 
@@ -1048,7 +1048,7 @@ Digital Library System
 
 ## 11.2 Status Display Recommendations
 
-### Reservation Status
+### Hold Status
 
 - pending = รอดำเนินการ
 - confirmed = ยืนยันแล้ว
@@ -1107,7 +1107,7 @@ AI ต้องไม่ทำสิ่งต่อไปนี้โดยไ�
 - อย่าสร้างตารางใหม่เองนอกเหนือจาก schema หลัก
 - อย่าเปลี่ยนชื่อ field หลักเอง
 - อย่าลบ concept ของ batch/item
-- อย่ารวม reservations กับ loan_items เป็นตารางเดียว
+- อย่ารวม holds กับ loan_items เป็นตารางเดียว
 - อย่ารวม fines เข้า loan_items โดยตรงแบบไม่มี table แยก
 - อย่าใส่ logic ที่ขัดกับ data dictionary
 
@@ -1151,7 +1151,7 @@ Use this system context for implementation:
 
 1. books models
 2. books admin
-3. reservations models/admin
+3. holds models/admin
 4. loans models/admin
 5. fines models/admin
 6. member-facing pages
@@ -1165,7 +1165,7 @@ AI จะถือว่าเข้าใจระบบถูกต้อง�
 
 - หนังสือ 1 เล่มมีผู้แต่งหลายคนได้
 - หนังสือ 1 เล่มมีหลายหมวดหมู่ได้
-- การจอง 1 ครั้งมีหลายเล่มผ่าน reservation batch
+- การจอง 1 ครั้งมีหลายเล่มผ่าน hold
 - การยืม 1 ครั้งมีหลายเล่มผ่าน loan batch
 - ค่าปรับผูกกับ loan item
 - admin เป็นผู้จัดการธุรกรรมหลักของระบบ

@@ -142,7 +142,7 @@
 - [x] สร้าง apps:
   - [x] users
   - [x] books
-  - [x] reservations
+  - [x] holds
   - [x] loans
   - [x] fines
 
@@ -296,7 +296,7 @@
 
 ---
 
-# Phase 3: Reservation System Data Layer
+# Phase 3: Hold System Data Layer
 
 ## Goal
 
@@ -304,14 +304,14 @@
 
 ## Scope
 
-- reservation_batches
-- reservations
+- holds
+- hold_items
 
 ## Tasks
 
-### 3.1 ReservationBatch Model
+### 3.1 Hold Model
 
-- [x] สร้าง model `ReservationBatch`
+- [x] สร้าง model `Hold`
 - [x] fields:
   - id
   - user
@@ -324,13 +324,13 @@
   - confirmed
   - cancelled
 
-### 3.2 Reservation Model
+### 3.2 HoldItem Model
 
-- [x] สร้าง model `Reservation`
+- [x] สร้าง model `HoldItem`
 - [x] fields:
   - id
   - book
-  - reservation_batch
+  - hold
   - status
   - created_at
   - updated_at
@@ -342,7 +342,7 @@
 ### 3.3 Rules
 
 - [x] ออกแบบ helper/check ว่าจองได้เมื่อ `available_quantity > 0`
-- [x] ออกแบบ policy ว่า 1 batch มีหลาย reservation items
+- [x] ออกแบบ policy ว่า 1 batch มีหลาย hold items
 - [x] ออกแบบการยกเลิกทั้ง batch และราย item ให้สอดคล้องกัน
 
 ## Deliverables
@@ -351,15 +351,15 @@
 
 ## Acceptance Criteria
 
-- สร้าง reservation batch ได้
-- สร้าง reservation items หลายเล่มใน batch เดียวได้
-- ความสัมพันธ์ user -> reservation_batches -> reservations ถูกต้อง
+- สร้าง hold ได้
+- สร้าง hold items หลายเล่มใน batch เดียวได้
+- ความสัมพันธ์ user -> holds -> hold_items ถูกต้อง
 
 ## Status: ✅ COMPLETED
 
 ---
 
-# Phase 4: Reservation Admin Workflow ✅ COMPLETED
+# Phase 4: Hold Admin Workflow ✅ COMPLETED
 
 ## Goal
 
@@ -367,23 +367,23 @@
 
 ## Tasks
 
-- [x] register reservation models ใน admin
+- [x] register hold models ใน admin
 - [x] แสดงข้อมูลผู้ใช้ สถานะ วันหมดอายุ
 - [x] เพิ่ม filter ตาม status
 - [x] เพิ่ม search ตาม username หรือชื่อหนังสือ
 - [x] ออกแบบ admin action:
-  - confirm reservation batch
-  - cancel reservation batch
+  - confirm hold
+  - cancel hold
 - [x] เมื่อ confirm:
   - เปลี่ยน batch status เป็น confirmed
-  - เปลี่ยน reservation items เป็น confirmed
+  - เปลี่ยน hold items เป็น confirmed
   - ลด `books.available_quantity`
 - [x] เมื่อ cancel:
   - เปลี่ยน batch status เป็น cancelled
-  - เปลี่ยน reservation items เป็น cancelled
+  - เปลี่ยน hold items เป็น cancelled
   - ถ้าเคยลดจำนวนแล้ว ต้องคืนจำนวนอย่างระมัดระวังตามเงื่อนไขจริง
 - [x] **เพิ่ม: Admin สามารถสร้างการจองแทน user ได้**
-  - เปิด has_add_permission สำหรับ ReservationBatch และ Reservation
+  - เปิด has_add_permission สำหรับ Hold และ HoldItem
   - เพิ่ม save_model override เพื่อตั้งค่า expires_at อัตโนมัติ
   - เพิ่ม has_delete_permission สำหรับป้องกันการลบ batch
   - ปรับ readonly_fields ให้ admin เลือก user และ book ได้
@@ -397,8 +397,8 @@
 
 - Admin ยืนยันการจองได้
 - Admin ยกเลิกการจองได้
-- **Admin สร้าง reservation batch และเลือก user ได้**
-- **Admin เพิ่ม reservation items (หนังสือ) ได้**
+- **Admin สร้าง hold และเลือก user ได้**
+- **Admin เพิ่ม hold items (หนังสือ) ได้**
 - **ระบบตั้งค่า expires_at อัตโนมัติ (3 วัน)**
 - จำนวน available_quantity สอดคล้องกับสถานะการจอง
 
@@ -436,7 +436,7 @@
   - id
   - book
   - loan_batch
-  - reservation (nullable)
+  - hold_item (nullable)
   - status
   - returned_at
   - created_at
@@ -448,7 +448,7 @@
 
 ### 5.3 Rules
 
-- [x] รองรับทั้งการยืมที่มาจาก reservation และไม่มาจาก reservation
+- [x] รองรับทั้งการยืมที่มาจาก hold และไม่มาจาก hold
 - [x] ออกแบบ flow ยืมหลายเล่มใน batch เดียว
 - [x] ตรวจสอบ available_quantity ก่อนสร้าง loan
 
@@ -460,7 +460,7 @@
 
 - สร้าง loan batch ได้
 - สร้าง loan items หลายรายการได้
-- loan item เชื่อม reservation ได้ถ้ามาจากการจอง
+- loan item เชื่อม hold item ได้ถ้ามาจากการจอง
 
 ## Status: ✅ COMPLETED
 
@@ -572,7 +572,7 @@
 - home
 - book list
 - book detail
-- my reservations
+- my holds
 - my loans
 - my fines
 
@@ -624,11 +624,11 @@
 - [x] Add to cart functionality
 - [x] View cart with real-time availability check
 - [x] Remove from cart functionality
-- [x] Confirm reservation from cart (creates ReservationBatch)
+- [x] Confirm hold from cart (creates Hold)
 - [x] Success/error messages
-- [x] Redirect to My Reservations after booking
+- [x] Redirect to My Holds after booking
 
-### 8.4 My Reservations Page ✅ COMPLETED
+### 8.4 My Holds Page ✅ COMPLETED
 
 - [x] แสดง batch และ items ของการจอง
 - [x] แสดงสถานะ
@@ -661,7 +661,7 @@
 ## Acceptance Criteria
 
 - ✅ ผู้ใช้ดูหนังสือได้
-- ✅ ผู้ใช้จองหนังสือได้ (สร้าง ReservationBatch และ Reservation)
+- ✅ ผู้ใช้จองหนังสือได้ (สร้าง Hold และ HoldItem)
 - ✅ ผู้ใช้ดูประวัติการจอง ยืม และค่าปรับของตัวเองได้
 - ✅ ระบบตรวจสอบ available_quantity ก่อนจอง
 - ✅ ระบบแสดง success/error messages
@@ -671,8 +671,8 @@
 **Implementation Details:**
 
 - Member สามารถจองหนังสือผ่านปุ่มในหน้า Book Detail
-- ระบบสร้าง ReservationBatch พร้อม status='pending' และ expires_at (3 วัน)
-- ระบบสร้าง Reservation item เชื่อมกับหนังสือที่เลือก
+- ระบบสร้าง Hold พร้อม status='pending' และ expires_at (3 วัน)
+- ระบบสร้าง Hold item เชื่อมกับหนังสือที่เลือก
 - ตรวจสอบ available_quantity > 0 ก่อนอนุญาตให้จอง
 - Admin ต้องยืนยันการจองผ่าน Django Admin
 - Admin สามารถสร้างการจองแทน user ได้ผ่าน admin interface
@@ -689,7 +689,7 @@
 
 - [ ] ป้องกัน available_quantity ติดลบ
 - [ ] ป้องกันการคืนซ้ำ
-- [ ] ป้องกัน confirm reservation ซ้ำ
+- [ ] ป้องกัน confirm hold ซ้ำ
 - [ ] ป้องกัน mark lost หลัง returned แล้ว
 - [ ] ป้องกันสร้าง fine ซ้ำโดยไม่ตั้งใจ
 - [ ] ตรวจสอบ due_date และ overdue logic
@@ -715,7 +715,7 @@
 ## Tasks
 
 - [ ] unit tests สำหรับ models
-- [ ] tests สำหรับ reservation workflow
+- [ ] tests สำหรับ hold workflow
 - [ ] tests สำหรับ loan workflow
 - [ ] tests สำหรับ fine workflow
 - [ ] admin smoke test
@@ -765,15 +765,15 @@
 1. Project setup
 2. Base models
 3. Admin setup
-4. Reservation models
-5. Reservation admin logic
+4. Hold models
+5. Hold admin logic
 6. Loan models
 7. Loan admin logic
 8. Fine model
 9. Member pages
 10. Validation / tests / docs
 
-ห้ามทำ loan ก่อน reservation schema ชัด
+ห้ามทำ loan ก่อน hold schema ชัด
 ห้ามทำ fine ก่อน loan schema ชัด
 ห้ามทำ member pages ก่อน data layer ใช้งานได้จริง
 
@@ -800,8 +800,8 @@ AI ต้องปฏิบัติตามกติกานี้เสม�
 
 - [x] books app models
 - [x] books app admin
-- [x] reservations models
-- [x] reservations admin
+- [x] holds models
+- [x] holds admin
 - [ ] loans models
 - [ ] loans admin
 - [ ] fines models
@@ -833,23 +833,23 @@ AI ต้องปฏิบัติตามกติกานี้เสม�
 - Admin interface มี search, filter, และ ordering ครบ
 - สามารถจัดการข้อมูลหนังสือ ผู้แต่ง หมวดหมู่ และสำนักพิมพ์ได้อย่างสะดวก
 
-**Phase 3: Reservation System Data Layer** - Models ของระบบการจองครบถ้วน
+**Phase 3: Hold System Data Layer** - Models ของระบบการจองครบถ้วน
 
-- สร้าง models: ReservationBatch, Reservation
+- สร้าง models: Hold, HoldItem
 - สร้าง status choices (pending, confirmed, cancelled)
 - เพิ่ม helper methods: can_be_confirmed(), can_be_cancelled(), is_expired()
 - Migrations สร้างและ apply เรียบร้อยแล้ว
-- ความสัมพันธ์ user -> reservation_batches -> reservations ถูกต้อง
+- ความสัมพันธ์ user -> holds -> hold_items ถูกต้อง
 
-**Phase 4: Reservation Admin Workflow** - Admin จัดการการจองได้สมบูรณ์
+**Phase 4: Hold Admin Workflow** - Admin จัดการการจองได้สมบูรณ์
 
-- ลงทะเบียน ReservationBatch และ Reservation ใน Django Admin
+- ลงทะเบียน Hold และ HoldItem ใน Django Admin
 - เพิ่ม list_display, search_fields, list_filter สำหรับค้นหาและกรองข้อมูล
 - สร้าง admin actions:
-  - confirm_reservations: ยืนยันการจอง เปลี่ยนสถานะ และลด available_quantity
-  - cancel_reservations: ยกเลิกการจอง เปลี่ยนสถานะ และคืน available_quantity (ถ้าเคย confirm)
+  - confirm_holds: ยืนยันการจอง เปลี่ยนสถานะ และลด available_quantity
+  - cancel_holds: ยกเลิกการจอง เปลี่ยนสถานะ และคืน available_quantity (ถ้าเคย confirm)
 - ใช้ transaction.atomic() เพื่อความปลอดภัยของข้อมูล
-- แสดง inline reservations ใน ReservationBatch admin
+- แสดง inline holds ใน Hold admin
 - เพิ่ม validation และ error handling ครบถ้วน
 
 ### 📋 Next Phases

@@ -12,7 +12,7 @@
 
 ### Phase 0: Project Setup
 
-- Django project และ apps ทั้งหมดถูกสร้าง (users, books, reservations, loans, fines)
+- Django project และ apps ทั้งหมดถูกสร้าง (users, books, holds, loans, fines)
 - Database และ media files configuration พร้อมใช้งาน
 - Development environment พร้อม
 
@@ -32,13 +32,13 @@
 - ✅ **Fixed:** ใช้ Inline Admin สำหรับ Authors และ Categories (เพราะใช้ through model)
 - ✅ **UX:** เพิ่มปุ่ม "+" สำหรับเพิ่ม Author/Category/Publisher ได้ทันที (autocomplete_fields ใน inlines)
 
-### Phase 3: Reservation System Data Layer
+### Phase 3: Hold System Data Layer
 
-- ✅ ReservationBatch และ Reservation models
+- ✅ Hold และ HoldItem models
 - ✅ Status tracking (pending/confirmed/cancelled)
 - ✅ Business rules implementation
 
-### Phase 4: Reservation Admin Workflow
+### Phase 4: Hold Admin Workflow
 
 - ✅ Admin actions สำหรับยืนยัน/ยกเลิกการจอง
 - ✅ อัปเดต available_quantity อัตโนมัติ
@@ -48,7 +48,7 @@
 
 - ✅ LoanBatch และ LoanItem models
 - ✅ Status tracking (borrowed/returned/lost)
-- ✅ Link to reservations
+- ✅ Link to holds
 
 ### Phase 6: Loan Admin Workflow
 
@@ -77,11 +77,11 @@
 - User registration form with validation
 - Login/logout workflow
 - Book list page with search and filter
-- Book detail page with reservation functionality
-- My reservations page
+- Book detail page with hold functionality
+- My holds page
 - My loans page
 - My fines page
-- Member reservation workflow with shopping cart (จองหนังสือได้จริงแบบตะกร้า)
+- Member hold workflow with shopping cart (จองหนังสือได้จริงแบบตะกร้า)
 
 ## � Next Phase
 

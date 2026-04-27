@@ -1,26 +1,26 @@
-# Admin Reservation Dashboard Guide
+# Admin Hold Dashboard Guide
 
 ## Overview
 
-Admin dashboard ที่ `/dashboard/reservations` ช่วยให้เจ้าหน้าที่สามารถจัดการการจองของ user ได้อย่างมีประสิทธิภาพ โดยสามารถเลือกยืนยันเฉพาะหนังสือที่มีสต็อกเท่านั้น
+Admin dashboard ที่ `/dashboard/holds` ช่วยให้เจ้าหน้าที่สามารถจัดการการจองของ user ได้อย่างมีประสิทธิภาพ โดยสามารถเลือกยืนยันเฉพาะหนังสือที่มีสต็อกเท่านั้น
 
 ## การเข้าถึง Dashboard
 
-- **URL**: `/dashboard/reservations`
+- **URL**: `/dashboard/holds`
 - **Permission**: Staff members only (`@staff_member_required`)
-- **Navigation**: Sidebar → Reservations
+- **Navigation**: Sidebar → Holds
 
 ## ฟีเจอร์หลัก
 
-### 1. Reservation List View
+### 1. Hold List View
 
-แสดงรายการ reservation batches ทั้งหมดพร้อมข้อมูลสำคัญ:
+แสดงรายการ holds ทั้งหมดพร้อมข้อมูลสำคัญ:
 
 - User ที่จอง
 - จำนวนหนังสือในการจอง
 - สถานะ (Pending/Confirmed/Cancelled)
 - วันที่สร้าง
-- วันหมดอายุ (สำหรับ confirmed reservations)
+- วันหมดอายุ (สำหรับ confirmed holds)
 
 **ฟิลเตอร์สถานะ:**
 
@@ -29,7 +29,7 @@ Admin dashboard ที่ `/dashboard/reservations` ช่วยให้เจ�
 - Confirmed - ยืนยันแล้ว
 - Cancelled - ยกเลิกแล้ว
 
-### 2. Reservation Detail View
+### 2. Hold Detail View
 
 แสดงรายละเอียดการจอง 1 batch พร้อม:
 
@@ -53,7 +53,7 @@ Admin dashboard ที่ `/dashboard/reservations` ช่วยให้เจ�
 | Author             | ชื่อผู้แต่ง                                     |
 | Publisher          | สำนักพิมพ์                                      |
 | Stock Status       | 🟢 Available / 🔴 Out of Stock                  |
-| Reservation Status | Pending/Confirmed/Cancelled                     |
+| Hold Status       | Pending/Confirmed/Cancelled                     |
 
 **Stock Status Indicators:**
 
@@ -65,9 +65,9 @@ Admin dashboard ที่ `/dashboard/reservations` ช่วยให้เจ�
 ### สถานการณ์: การจองมี 5 หนังสือ แต่มีสต็อกเพียง 3 เล่ม
 
 ```
-Step 1: Admin เปิด Reservation Detail
+Step 1: Admin เปิด Hold Detail
 ┌────────────────────────────────────────────────────┐
-│ Reservation #123 - john_doe                        │
+│ Hold #123 - john_doe                        │
 ├────────────────────────────────────────────────────┤
 │ ☑ Select All                                       │
 ├────────────────────────────────────────────────────┤
@@ -118,7 +118,7 @@ Step 5: แสดงผลลัพธ์
 # ระบบตรวจสอบสต็อกก่อนยืนยัน
 if book.available_quantity > 0:
     # ✅ สามารถยืนยันได้
-    reservation.status = 'confirmed'
+    hold.status = 'confirmed'
     book.available_quantity -= 1
 else:
     # ❌ ไม่สามารถยืนยัน (checkbox disabled)
@@ -129,7 +129,7 @@ else:
 
 ```python
 # เมื่อยืนยันการจอง
-expiry_days = settings.RESERVATION_EXPIRY_DAYS  # default: 3
+expiry_days = settings.HOLD_EXPIRY_DAYS  # default: 3
 batch.expires_at = timezone.now() + timedelta(days=expiry_days)
 ```
 
@@ -157,7 +157,7 @@ else:
 
 ### สำหรับ Confirmed Batches:
 
-1. **Cancel This Reservation** - ยกเลิกและคืนสต็อก
+1. **Cancel This Hold** - ยกเลิกและคืนสต็อก
 
 ## Best Practices
 
@@ -203,21 +203,21 @@ else:
 
 ```python
 # List view
-/dashboard/reservations/
+/dashboard/holds/
 
 # Detail view
-/dashboard/reservations/<batch_id>/
+/dashboard/holds/<hold_id>/
 
 # Actions
-/dashboard/reservations/<batch_id>/confirm-selected/  # POST
-/dashboard/reservations/<batch_id>/cancel/            # POST
+/dashboard/holds/<hold_id>/confirm-books/  # POST
+/dashboard/holds/<hold_id>/cancel/         # POST
 ```
 
 ### Permissions
 
 ```python
 @staff_member_required
-def admin_reservation_detail_view(request, batch_id):
+def dashboard_hold_detail_view(request, hold_id):
     # Only staff members can access
 ```
 
@@ -235,7 +235,7 @@ with transaction.atomic():
 
 ```python
 # config/settings.py
-RESERVATION_EXPIRY_DAYS = 3  # วันหมดอายุหลังยืนยัน
+HOLD_EXPIRY_DAYS = 3  # วันหมดอายุหลังยืนยัน
 ```
 
 ### Customization
@@ -243,7 +243,7 @@ RESERVATION_EXPIRY_DAYS = 3  # วันหมดอายุหลังยื�
 ถ้าต้องการเปลี่ยนจำนวนวัน:
 
 ```python
-RESERVATION_EXPIRY_DAYS = 7  # เปลี่ยนเป็น 7 วัน
+HOLD_EXPIRY_DAYS = 7  # เปลี่ยนเป็น 7 วัน
 ```
 
 ## Troubleshooting
@@ -265,7 +265,7 @@ RESERVATION_EXPIRY_DAYS = 7  # เปลี่ยนเป็น 7 วัน
 
 ## Summary
 
-Admin Reservation Dashboard ช่วยให้การจัดการการจองมีประสิทธิภาพด้วย:
+Admin Hold Dashboard ช่วยให้การจัดการการจองมีประสิทธิภาพด้วย:
 
 1. ✅ **เลือกยืนยันได้เฉพาะที่มีสต็อก** - checkbox disabled สำหรับ out of stock
 2. ✅ **Auto-reject unselected** - ไม่ต้องกด reject ทีละเล่ม

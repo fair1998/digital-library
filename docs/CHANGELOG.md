@@ -128,7 +128,7 @@ class LoanBatch(models.Model):
 
 ---
 
-## [Enhancement] - 2026-03-26 - Admin Reservation Management with Auto-Rejection
+## [Enhancement] - 2026-03-26 - Admin Hold Management with Auto-Rejection
 
 ### 🎯 Selective Confirmation & Auto-Rejection
 
@@ -138,7 +138,7 @@ class LoanBatch(models.Model):
 
 **1. Selective Confirmation with Stock Checking**
 
-- Admin dashboard ที่ `/dashboard/reservations` แสดงรายละเอียดการจองแต่ละ batch
+- Admin dashboard ที่ `/dashboard/holds` แสดงรายละเอียดการจองแต่ละ batch
 - แสดงสถานะสต็อกของหนังสือแต่ละเล่มแบบ real-time:
   - 🟢 **Green badge**: มีสต็อกพร้อมยืนยัน (X/Y available)
   - 🔴 **Red badge**: Out of Stock (0/Y)
@@ -169,7 +169,7 @@ class LoanBatch(models.Model):
 **3. Automatic Expiry Date Setting**
 
 - เมื่อยืนยันการจอง → `expires_at` ถูก set อัตโนมัติ
-- Default: ปัจจุบัน + 3 วัน (configurable via `RESERVATION_EXPIRY_DAYS`)
+- Default: ปัจจุบัน + 3 วัน (configurable via `HOLD_EXPIRY_DAYS`)
 - User ต้องมารับหนังสือก่อนวันหมดอายุ
 - หลังหมดอายุ → admin ควรยกเลิกและคืนสต็อก
 
@@ -178,37 +178,37 @@ class LoanBatch(models.Model):
 **Removed Features:**
 
 - ❌ ลบปุ่ม "Reject" สำหรับหนังสือแต่ละเล่ม
-- ❌ ลบ `admin_reject_reservation_item_view` function
+- ❌ ลบ `admin_reject_hold_item_view` function
 - ❌ ลบ URL pattern สำหรับ reject action
-- ❌ ลบ JavaScript function `rejectReservation()`
+- ❌ ลบ JavaScript function `rejectHold()`
 - ❌ ลบ hidden reject form
 
-**Model Changes** (`reservations/models.py`):
+**Model Changes** (`holds/models.py`):
 
 ```python
 # Updated help_text
 expires_at = models.DateTimeField(
     null=True,
     blank=True,
-    help_text='Expiry time for confirmed reservation - user must pick up books before this time'
+    help_text='Expiry time for confirmed hold - user must pick up books before this time'
 )
 ```
 
-**View Changes** (`reservations/views.py`):
+**View Changes** (`holds/views.py`):
 
-1. **Modified: `admin_confirm_selected_reservations_view`**
+1. **Modified: `admin_confirm_selected_holds_view`**
 
    ```python
    # New logic:
-   - Get all pending reservations
+   - Get all pending holds
    - Split into selected vs unselected
    - Confirm selected (if stock available)
    - Auto-reject unselected
-   - Set expires_at = now() + timedelta(days=RESERVATION_EXPIRY_DAYS)
+   - Set expires_at = now() + timedelta(days=HOLD_EXPIRY_DAYS)
    - Update batch status
    ```
 
-2. **Modified: `admin_confirm_reservation_view`**
+2. **Modified: `admin_confirm_hold_view`**
 
    ```python
    # Add expires_at setting
@@ -218,10 +218,10 @@ expires_at = models.DateTimeField(
        batch.save()
    ```
 
-3. **Removed: `admin_reject_reservation_item_view`**
+3. **Removed: `admin_reject_hold_item_view`**
    - ไม่จำเป็นต้องใช้แล้วเพราะมี auto-rejection
 
-**Template Changes** (`templates/reservations/reservation_detail.html`):
+**Template Changes** (`templates/holds/hold_detail.html`):
 
 - ลบ Action column ออกจาก table
 - ลบปุ่ม "Reject" ทั้งหมด
@@ -229,15 +229,15 @@ expires_at = models.DateTimeField(
 - ลบ JavaScript function สำหรับ rejection
 - เน้นที่ checkbox selection เท่านั้น
 
-**URL Changes** (`reservations/urls.py`):
+**URL Changes** (`holds/urls.py`):
 
 ```python
 # Removed
-- path('reservations/<int:batch_id>/reject/<int:reservation_id>/', ...)
+- path('holds/<int:batch_id>/reject/<int:hold_item_id>/', ...)
 
 # Kept
-- path('reservations/<int:batch_id>/confirm-selected/', ...)
-- path('reservations/<int:batch_id>/cancel/', ...)
+- path('holds/<int:batch_id>/confirm-selected/', ...)
+- path('holds/<int:batch_id>/cancel/', ...)
 ```
 
 **Message Updates:**
@@ -261,27 +261,27 @@ f'ไม่สามารถยืนยันหนังสือต่อไ
 
 **Documentation:**
 
-- ✅ สร้าง `/docs/reservation-dashboard-guide.md` - คู่มือการใช้งาน admin dashboard
+- ✅ สร้าง `/docs/hold-dashboard-guide.md` - คู่มือการใช้งาน admin dashboard
 - ✅ อัพเดท `/docs/data_dictionary.md` - business rules สำหรับ expires_at
 - ✅ อัพเดท `/docs/ai-context.md` - workflow การยืนยันการจอง
 
 ---
 
-## [Enhancement] - 2026-03-26 - User Can Cancel Reservations & Admin-Controlled Expiry
+## [Enhancement] - 2026-03-26 - User Can Cancel Holds & Admin-Controlled Expiry
 
-### 🔄 Reservation Cancellation & Expiry Management
+### 🔄 Hold Cancellation & Expiry Management
 
 **ปรับปรุงระบบการจองให้มีความยืดหยุ่นมากขึ้น**
 
 **New Features:**
 
-**1. User Can Cancel Pending Reservations**
+**1. User Can Cancel Pending Holds**
 
-- เพิ่ม `can_be_cancelled_by_user()` method ใน ReservationBatch
+- เพิ่ม `can_be_cancelled_by_user()` method ใน Hold
 - User สามารถยกเลิกการจองที่อยู่ในสถานะ `pending` เท่านั้น
 - เมื่อยกเลิก:
   - เปลี่ยน batch status เป็น `cancelled`
-  - เปลี่ยน reservation items ทั้งหมดเป็น `cancelled`
+  - เปลี่ยน hold items ทั้งหมดเป็น `cancelled`
   - Transaction-safe with rollback
 - UI: ปุ่มยกเลิกแสดงเฉพาะ pending batches
 - Confirmation dialog ป้องกันการกดผิด
@@ -291,12 +291,12 @@ f'ไม่สามารถยืนยันหนังสือต่อไ
 - `expires_at` เปลี่ยนเป็น nullable field
 - **ไม่** set expires_at ตอนที่ user สร้างการจอง
 - Admin กำหนด expires_at ตอน **ยืนยัน** การจอง
-- Default: 3 วันจากวันที่ยืนยัน (configurable via `RESERVATION_EXPIRY_DAYS`)
+- Default: 3 วันจากวันที่ยืนยัน (configurable via `HOLD_EXPIRY_DAYS`)
 - แสดงข้อความ "รอเจ้าหน้าที่ยืนยันและกำหนดวันหมดอายุ" สำหรับ pending batches
 
 **Changes:**
 
-**Model Changes** (`reservations/models.py`):
+**Model Changes** (`holds/models.py`):
 
 ```python
 # Before
@@ -306,7 +306,7 @@ expires_at = models.DateTimeField()
 expires_at = models.DateTimeField(
     null=True,
     blank=True,
-    help_text='Will be set by admin when confirming reservation'
+    help_text='Will be set by admin when confirming hold'
 )
 ```
 
@@ -317,25 +317,25 @@ expires_at = models.DateTimeField(
 **View Changes**:
 
 1. `books/views.py` - `confirm_cart_view`:
-   - ไม่ set expires_at ตอนสร้าง ReservationBatch
+   - ไม่ set expires_at ตอนสร้าง Hold
    - ส่งข้อความเปลี่ยนเป็น "กรุณารอการยืนยันจากเจ้าหน้าที่" (ไม่มี "ภายใน 3 วัน")
 
-2. `reservations/views.py` - NEW: `cancel_reservation_view`:
+2. `holds/views.py` - NEW: `cancel_hold_view`:
    - POST-only, login required
    - ตรวจสอบ ownership (user ยกเลิกได้เฉพาะของตัวเอง)
    - ตรวจสอบ `can_be_cancelled_by_user()`
    - Transaction atomic
    - Update batch และ items status
 
-**Admin Changes** (`reservations/admin.py`):
+**Admin Changes** (`holds/admin.py`):
 
 - ลบ `save_model` override (ไม่ set expires_at ตอนสร้าง)
-- อัปเดต `confirm_reservations` action:
+- อัปเดต `confirm_holds` action:
   - Set `expires_at = timezone.now() + timedelta(days=expiry_days)`
   - Success message แสดงจำนวนวันหมดอายุ
-  - Configurable via `settings.RESERVATION_EXPIRY_DAYS`
+  - Configurable via `settings.HOLD_EXPIRY_DAYS`
 
-**Template Changes** (`templates/reservations/my_reservations.html`):
+**Template Changes** (`templates/holds/my_holds.html`):
 
 - แสดง expires_at เฉพาะเมื่อมีค่า (ยืนยันแล้ว)
 - แสดง badge "รอเจ้าหน้าที่ยืนยัน" สำหรับ pending batches ที่ยังไม่มี expires_at
@@ -343,15 +343,15 @@ expires_at = models.DateTimeField(
 - Confirmation dialog ก่อนยกเลิก
 - คำอธิบาย: "คุณสามารถยกเลิกการจองที่ยังไม่ได้รับการยืนยันได้"
 
-**URL Changes** (`reservations/urls.py`):
+**URL Changes** (`holds/urls.py`):
 
 ```python
-path('<int:batch_id>/cancel/', views.cancel_reservation_view, name='cancel_reservation')
+path('<int:batch_id>/cancel/', views.cancel_hold_view, name='cancel_hold')
 ```
 
 **Migration**:
 
-- `reservations/migrations/0003_alter_reservationbatch_expires_at.py`
+- `holds/migrations/0003_alter_holdbatch_expires_at.py`
 - เปลี่ยน expires_at เป็น nullable
 
 **Benefits:**
@@ -380,25 +380,25 @@ path('<int:batch_id>/cancel/', views.cancel_reservation_view, name='cancel_reser
 
 **Files Modified:**
 
-- `reservations/models.py` - expires_at nullable, add can_be_cancelled_by_user()
-- `reservations/views.py` - add cancel_reservation_view
-- `reservations/urls.py` - add cancel URL
-- `reservations/admin.py` - set expires_at on confirm
+- `holds/models.py` - expires_at nullable, add can_be_cancelled_by_user()
+- `holds/views.py` - add cancel_hold_view
+- `holds/urls.py` - add cancel URL
+- `holds/admin.py` - set expires_at on confirm
 - `books/views.py` - don't set expires_at on create
-- `templates/reservations/my_reservations.html` - add cancel button, conditional expiry display
-- `reservations/migrations/0003_alter_reservationbatch_expires_at.py` - NEW
+- `templates/holds/my_holds.html` - add cancel button, conditional expiry display
+- `holds/migrations/0003_alter_holdbatch_expires_at.py` - NEW
 
 **Settings:**
 
 เพิ่ม optional setting:
 
 ```python
-RESERVATION_EXPIRY_DAYS = 3  # Default if not set
+HOLD_EXPIRY_DAYS = 3  # Default if not set
 ```
 
 ---
 
-## [Feature] - 2026-03-26 - Shopping Cart System for Book Reservations
+## [Feature] - 2026-03-26 - Shopping Cart System for Book Holds
 
 ### 🛒 Shopping Cart Workflow (Phase 8 Enhancement)
 
@@ -425,8 +425,8 @@ RESERVATION_EXPIRY_DAYS = 3  # Default if not set
   - Real-time availability check
 - `remove_from_cart_view`: ลบหนังสือออกจากตะกร้า
 - `confirm_cart_view`: ยืนยันการจองทั้งหมด
-  - สร้าง ReservationBatch
-  - สร้าง Reservation items หลายรายการ
+  - สร้าง Hold
+  - สร้าง Hold items หลายรายการ
   - Transaction-safe
   - ตรวจสอบ availability ทุกเล่มก่อน confirm
   - Clear cart หลังยืนยันสำเร็จ
@@ -471,7 +471,7 @@ RESERVATION_EXPIRY_DAYS = 3  # Default if not set
 - `cart/` - view cart
 - `<id>/add-to-cart/` - add book to cart
 - `<id>/remove-from-cart/` - remove book from cart
-- `cart/confirm/` - confirm reservation
+- `cart/confirm/` - confirm hold
 - `<id>/reserve/` - deprecated (backward compatibility)
 
 **Technical Details:**
@@ -495,9 +495,9 @@ RESERVATION_EXPIRY_DAYS = 3  # Default if not set
 6. ระบบตรวจสอบ availability real-time
 7. User สามารถลบหนังสือที่ไม่ต้องการ
 8. User คลิก "ยืนยันการจอง"
-9. ระบบสร้าง ReservationBatch + Reservation items ทั้งหมด
+9. ระบบสร้าง Hold + HoldItems ทั้งหมด
 10. Cart ถูกล้าง
-11. Redirect ไปหน้า My Reservations
+11. Redirect ไปหน้า My Holds
 
 **Files Modified:**
 
@@ -520,13 +520,13 @@ RESERVATION_EXPIRY_DAYS = 3  # Default if not set
 
 ---
 
-## [Feature] - 2026-03-26 - Member Reservation Functionality
+## [Feature] - 2026-03-26 - Member Hold Functionality
 
 ### 🎉 Member Can Reserve Books (Phase 8 Final)
 
 **New Features:**
 
-**1. Book Reservation View**
+**1. Book Hold View**
 
 - สร้าง `reserve_book_view` ใน `books/views.py`
 - POST-only endpoint สำหรับจองหนังสือ
@@ -535,13 +535,13 @@ RESERVATION_EXPIRY_DAYS = 3  # Default if not set
 - Validation:
   - ตรวจสอบ `available_quantity > 0`
   - ป้องกันการจองหนังสือที่ไม่มีให้ยืม
-- สร้าง `ReservationBatch` อัตโนมัติ
+- สร้าง `Hold` อัตโนมัติ
   - Status: `pending`
   - Expires in 3 days
   - User: ผู้ที่ล็อกอินอยู่
-- สร้าง `Reservation` item สำหรับหนังสือที่เลือก
+- สร้าง `Hold` item สำหรับหนังสือที่เลือก
 - Success/error messages
-- Redirect to My Reservations หลังจองสำเร็จ
+- Redirect to My Holds หลังจองสำเร็จ
 
 **2. Updated Book Detail Page**
 
@@ -563,7 +563,7 @@ RESERVATION_EXPIRY_DAYS = 3  # Default if not set
 **Technical Details:**
 
 - Import dependencies: `timezone`, `timedelta`, `transaction`, `messages`
-- Import models: `ReservationBatch`, `Reservation`
+- Import models: `Hold`, `Hold`
 - Error handling ครบถ้วน
 - User-friendly error messages ภาษาไทย
 
@@ -571,10 +571,10 @@ RESERVATION_EXPIRY_DAYS = 3  # Default if not set
 
 1. Member คลิกปุ่ม "จองหนังสือ" ในหน้า Book Detail
 2. ระบบตรวจสอบ available_quantity
-3. สร้าง ReservationBatch (expires ใน 3 วัน)
-4. สร้าง Reservation item เชื่อมกับหนังสือ
+3. สร้าง Hold (expires ใน 3 วัน)
+4. สร้าง Hold item เชื่อมกับหนังสือ
 5. แสดง success message
-6. Redirect ไปหน้า My Reservations
+6. Redirect ไปหน้า My Holds
 7. Admin ต้องยืนยันการจองภายใน 3 วัน
 8. เมื่อ admin confirm → ลด available_quantity
 
@@ -594,11 +594,11 @@ All member-facing features are now fully functional:
 - ✅ Authentication (Register, Login, Logout)
 - ✅ Home Page
 - ✅ Book List with Search/Filter
-- ✅ Book Detail with Reservation
-- ✅ My Reservations
+- ✅ Book Detail with Hold
+- ✅ My Holds
 - ✅ My Loans
 - ✅ My Fines
-- ✅ **Member Reservation Workflow**
+- ✅ **Member Hold Workflow**
 
 ---
 
@@ -694,7 +694,7 @@ All member-facing features are now fully functional:
 
 - Book List Page
 - Book Detail Page with Reserve button
-- My Reservations Page
+- My Holds Page
 - My Loans Page
 - My Fines Page
 
@@ -708,51 +708,51 @@ All member-facing features are now fully functional:
 
 ## [Enhancement] - 2026-03-25
 
-### ✨ Admin Can Create Reservations for Users
+### ✨ Admin Can Create Holds for Users
 
 **Issue:** Admin ไม่สามารถสร้างการจองแทน user ได้ เพราะ `has_add_permission` return False
 
 **Changes:**
 
-- เปลี่ยน `ReservationBatchAdmin.has_add_permission()` จาก `return False` เป็น `return True`
-- เปลี่ยน `ReservationAdmin.has_add_permission()` จาก `return False` เป็น `return True`
-- **เปลี่ยน `ReservationInline.has_add_permission()` เป็น `return True` เพื่อให้เพิ่มหนังสือได้ใน Reservation Batch โดยตรง**
-- **ลบ `'book'` ออกจาก `readonly_fields` ใน ReservationInline เพื่อให้เลือกหนังสือได้**
-- **เพิ่ม `autocomplete_fields = ['book']` ใน ReservationInline สำหรับค้นหาหนังสือได้ง่าย**
-- **เปลี่ยน `extra = 1` ใน ReservationInline เพื่อแสดง empty form 1 แถว**
-- เพิ่ม `has_delete_permission` ใน ReservationBatchAdmin (return False)
-- เพิ่ม `save_model` override ใน ReservationBatchAdmin เพื่อตั้งค่า `expires_at` อัตโนมัติ
-- **สร้าง config `RESERVATION_EXPIRY_DAYS = 3` ใน settings.py เพื่อง่ายต่อ maintenance และ reuse ได้**
-- ปรับ readonly_fields ใน ReservationAdmin: ลบ `reservation_batch` และ `book` ออกเพื่อให้ admin เลือกได้
+- เปลี่ยน `HoldAdmin.has_add_permission()` จาก `return False` เป็น `return True`
+- เปลี่ยน `HoldAdmin.has_add_permission()` จาก `return False` เป็น `return True`
+- **เปลี่ยน `HoldInline.has_add_permission()` เป็น `return True` เพื่อให้เพิ่มหนังสือได้ใน Hold โดยตรง**
+- **ลบ `'book'` ออกจาก `readonly_fields` ใน HoldInline เพื่อให้เลือกหนังสือได้**
+- **เพิ่ม `autocomplete_fields = ['book']` ใน HoldInline สำหรับค้นหาหนังสือได้ง่าย**
+- **เปลี่ยน `extra = 1` ใน HoldInline เพื่อแสดง empty form 1 แถว**
+- เพิ่ม `has_delete_permission` ใน HoldAdmin (return False)
+- เพิ่ม `save_model` override ใน HoldAdmin เพื่อตั้งค่า `expires_at` อัตโนมัติ
+- **สร้าง config `HOLD_EXPIRY_DAYS = 3` ใน settings.py เพื่อง่ายต่อ maintenance และ reuse ได้**
+- ปรับ readonly_fields ใน HoldAdmin: ลบ `hold_batch` และ `book` ออกเพื่อให้ admin เลือกได้
 - เพิ่ม import `timezone`, `timedelta`, `settings` และ `Book` model
 
 **Workflow:**
 
-1. Admin ไปทื่ Reservation Batches → Add Reservation Batch
+1. Admin ไปทื่ Holdes → Add Hold
 2. เลือก User ที่ต้องการจองให้
 3. **เพิ่มหนังสือที่ต้องการจองได้ทันทีใน Inline table ข้างล่าง** (คลิกเลือก Book จาก dropdown)
 4. กด Save (ระบบจะตั้ง expires_at อัตโนมัติ)
-5. เมื่อพร้อม ใช้ admin action "Confirm selected reservations" เพื่อยืนยันการจอง
+5. เมื่อพร้อม ใช้ admin action "Confirm selected holds" เพื่อยืนยันการจอง
 
 **ทางเลือก (ถ้าไม่อยากใช้ Inline):**
 
-- ไปที่ Reservations → Add Reservation → เลือก Batch และ Book
+- ไปที่ Holds → Add Hold → เลือก Batch และ Book
 
 **Benefits:**
 
-- ✅ Admin สามารถสร้างการจองแทน user ได้ (use case: user โทรมาจอง, walk-in reservation)
-- ✅ **สามารถเพิ่มหนังสือได้ทันทีในหน้า Reservation Batch เดียว ไม่ต้องไปหน้าอื่น**
+- ✅ Admin สามารถสร้างการจองแทน user ได้ (use case: user โทรมาจอง, walk-in hold)
+- ✅ **สามารถเพิ่มหนังสือได้ทันทีในหน้า Hold เดียว ไม่ต้องไปหน้าอื่น**
 - ✅ **ใช้ autocomplete ค้นหาหนังสือได้ง่ายและรวดเร็ว**
 - ✅ ระบบตั้งค่า expires_at อัตโนมัติ (3 วัน)
 - ✅ **จำนวนวันหมดอายุอยู่ใน settings.py เพื่อง่ายต่อ maintenance และ reuse**
 - ✅ Admin ยังคงใช้ admin action ยืนยัน/ยกเลิกการจองได้เหมือนเดิม
-- ✅ ป้องกันการลบ reservation batch (ใช้ cancel แทน)
+- ✅ ป้องกันการลบ hold (ใช้ cancel แทน)
 
 **Technical Details:**
 
 - `save_model` ตรวจสอบว่าเป็นการสร้างใหม่ (`not change`) ก่อนตั้งค่า expires_at
-- **ใช้ `getattr(settings, 'RESERVATION_EXPIRY_DAYS', 3)` เพื่อดึงค่า config จาก settings และมี fallback เป็น 3**
-- **ReservationInline ใช้ `autocomplete_fields` เพื่อค้นหาหนังสือแบบ realtime**
+- **ใช้ `getattr(settings, 'HOLD_EXPIRY_DAYS', 3)` เพื่อดึงค่า config จาก settings และมี fallback เป็น 3**
+- **HoldInline ใช้ `autocomplete_fields` เพื่อค้นหาหนังสือแบบ realtime**
 - **ตั้ง `extra = 1` เพื่อแสดง empty form 1 แถวสำหรับเพิ่มหนังสือ**
 - `has_delete_permission` return False เพื่อบังคับใช้ workflow cancel
 - Validation เดิมยังคงทำงาน (ตรวจสอบ available_quantity ก่อน confirm)
@@ -942,7 +942,7 @@ class BookAdmin(admin.ModelAdmin):
   - เพิ่ม list_display: id, book, batch_user, batch_due_date, status, returned_at, created_at
   - เพิ่ม list_filter: status, created_at, returned_at, batch due_date
   - เพิ่ม search_fields: book title, user details
-  - เพิ่ม autocomplete_fields: book, loan_batch, reservation
+  - เพิ่ม autocomplete_fields: book, loan_batch, hold
   - เพิ่ม list_select_related เพื่อ optimize queries
   - เพิ่ม admin actions: mark_as_returned, mark_as_lost
 
@@ -965,9 +965,9 @@ class BookAdmin(admin.ModelAdmin):
   - แสดง success/error messages แบบ batch-by-batch
 
 - ปรับปรุง search และ autocomplete:
-  - เพิ่ม id ใน search_fields ของ Book, Reservation, ReservationBatch
-  - เพิ่ม autocomplete_fields ใน ReservationAdmin
-  - เพิ่ม autocomplete_fields ใน ReservationBatchAdmin
+  - เพิ่ม id ใน search_fields ของ Book, Hold, HoldItem
+  - เพิ่ม autocomplete_fields ใน HoldAdmin
+  - เพิ่ม autocomplete_fields ใน HoldAdmin
 
 #### Business Logic Implemented:
 
@@ -1025,9 +1025,9 @@ class BookAdmin(admin.ModelAdmin):
   - Meta options: db_table='loan_batches', ordering by created_at
   - `__str__` method แสดง batch ID และ username
 - สร้าง `LoanItem` model พร้อม:
-  - Fields ครบถ้วนตาม data dictionary (book, loan_batch, reservation, status, returned_at, created_at, updated_at)
+  - Fields ครบถ้วนตาม data dictionary (book, loan_batch, hold, status, returned_at, created_at, updated_at)
   - Status choices: borrowed, returned, lost
-  - ForeignKey ไปยัง Book, LoanBatch, และ Reservation (nullable)
+  - ForeignKey ไปยัง Book, LoanBatch, และ Hold (nullable)
   - Meta options: db_table='loan_items', ordering by created_at
   - `__str__` method แสดงชื่อหนังสือและสถานะ
 - Migrations ถูกสร้างและ apply เรียบร้อยแล้ว:
@@ -1037,7 +1037,7 @@ class BookAdmin(admin.ModelAdmin):
 
 #### Business Rules Implemented:
 
-- รองรับการยืมที่มาจาก reservation และไม่มาจาก reservation (ผ่าน nullable reservation field)
+- รองรับการยืมที่มาจาก hold และไม่มาจาก hold (ผ่าน nullable hold field)
 - ออกแบบ flow ยืมหลายเล่มใน batch เดียว (1 LoanBatch มีหลาย LoanItems)
 - พร้อมสำหรับตรวจสอบ available_quantity ก่อนสร้าง loan (จะทำใน Phase 6)
 - Status tracking: borrowed → returned หรือ lost
@@ -1056,7 +1056,7 @@ class BookAdmin(admin.ModelAdmin):
   - id (PK)
   - book_id (FK → books)
   - loan_batch_id (FK → loan_batches)
-  - reservation_id (FK → reservations, nullable)
+  - hold_item_id (FK → holds, nullable)
   - status (borrowed/returned/lost)
   - returned_at
   - created_at
@@ -1067,7 +1067,7 @@ class BookAdmin(admin.ModelAdmin):
 - User → LoanBatch (one-to-many)
 - LoanBatch → LoanItem (one-to-many)
 - Book → LoanItem (one-to-many)
-- Reservation → LoanItem (one-to-one, optional)
+- Hold → LoanItem (one-to-one, optional)
 
 #### Deliverables:
 
@@ -1075,42 +1075,42 @@ class BookAdmin(admin.ModelAdmin):
 - ✅ LoanItem model พร้อมใช้งาน
 - ✅ สร้าง loan batch ได้
 - ✅ สร้าง loan items หลายรายการได้
-- ✅ loan item เชื่อม reservation ได้ถ้ามาจากการจอง
+- ✅ loan item เชื่อม hold item ได้ถ้ามาจากการจอง
 - ✅ Migrations สำเร็จ
 
 ---
 
 ## [Phase 4 Complete] - 2026-03-25
 
-### ✅ Phase 4: Reservation Admin Workflow
+### ✅ Phase 4: Hold Admin Workflow
 
 **Status:** COMPLETED
 
 #### What was done:
 
-- ลงทะเบียน `ReservationBatch` และ `Reservation` models ใน Django Admin
-- ปรับปรุง `ReservationBatchAdmin`:
-  - เพิ่ม list_display: id, user, status, expires_at, reservation_count, timestamps
+- ลงทะเบียน `Hold` และ `Hold` models ใน Django Admin
+- ปรับปรุง `HoldAdmin`:
+  - เพิ่ม list_display: id, user, status, expires_at, hold_count, timestamps
   - เพิ่ม list_filter: status, expires_at, created_at
   - เพิ่ม search_fields: username, email, first_name, last_name
-  - เพิ่ม inline display สำหรับ reservations
-  - เพิ่ม admin actions: confirm_reservations, cancel_reservations
-- ปรับปรุง `ReservationAdmin`:
+  - เพิ่ม inline display สำหรับ holds
+  - เพิ่ม admin actions: confirm_holds, cancel_holds
+- ปรับปรุง `HoldAdmin`:
   - เพิ่ม list_display: id, book, batch_id, batch_user, batch_status, status, timestamps
   - เพิ่ม list_filter: status, created_at, batch status
   - เพิ่ม search_fields: book title, user username/email
   - เพิ่ม list_select_related เพื่อ optimize queries
-- สร้าง admin action `confirm_reservations`:
+- สร้าง admin action `confirm_holds`:
   - ตรวจสอบว่า batch สามารถยืนยันได้ (pending, ไม่หมดอายุ)
   - เปลี่ยน batch status เป็น confirmed
-  - เปลี่ยน reservation items ทั้งหมดเป็น confirmed
+  - เปลี่ยน hold items ทั้งหมดเป็น confirmed
   - ลด `books.available_quantity` สำหรับแต่ละเล่ม
   - ใช้ `transaction.atomic()` เพื่อป้องกันข้อมูลไม่สอดคล้อง
   - แสดง error/warning messages ที่ชัดเจน
-- สร้าง admin action `cancel_reservations`:
+- สร้าง admin action `cancel_holds`:
   - ตรวจสอบว่า batch สามารถยกเลิกได้ (pending หรือ confirmed)
   - เปลี่ยน batch status เป็น cancelled
-  - เปลี่ยน reservation items ทั้งหมดเป็น cancelled
+  - เปลี่ยน hold items ทั้งหมดเป็น cancelled
   - คืน `books.available_quantity` สำหรับ items ที่เคย confirmed
   - ใช้ `transaction.atomic()` เพื่อป้องกันข้อมูลไม่สอดคล้อง
   - แสดง error/warning messages ที่ชัดเจน
@@ -1149,44 +1149,44 @@ class BookAdmin(admin.ModelAdmin):
 
 ## [Phase 3 Complete] - 2026-03-25
 
-### ✅ Phase 3: Reservation System Data Layer
+### ✅ Phase 3: Hold System Data Layer
 
 **Status:** COMPLETED
 
 #### What was done:
 
-- สร้าง `ReservationBatch` model พร้อม:
+- สร้าง `Hold` model พร้อม:
   - Fields ครบถ้วนตาม data dictionary (user, status, expires_at, created_at, updated_at)
   - Status choices: pending, confirmed, cancelled
   - Helper methods: `is_expired()`, `can_be_confirmed()`, `can_be_cancelled()`
   - ForeignKey ไปยัง User model
-- สร้าง `Reservation` model พร้อม:
-  - Fields ครบถ้วนตาม data dictionary (book, reservation_batch, status, created_at, updated_at)
+- สร้าง `Hold` model พร้อม:
+  - Fields ครบถ้วนตาม data dictionary (book, hold_batch, status, created_at, updated_at)
   - Status choices: pending, confirmed, cancelled
   - Helper methods: `can_be_confirmed()`, `can_be_cancelled()`
-  - ForeignKey ไปยัง Book และ ReservationBatch
+  - ForeignKey ไปยัง Book และ Hold
 - Migrations ถูกสร้างและ apply เรียบร้อยแล้ว:
-  - `reservations/migrations/0001_initial.py`
-  - `reservations/migrations/0002_initial.py`
+  - `holds/migrations/0001_initial.py`
+  - `holds/migrations/0002_initial.py`
 
 #### Business Rules Implemented:
 
 - ตรวจสอบว่าการจองหมดอายุหรือไม่ผ่าน `is_expired()`
 - ตรวจสอบว่าสามารถยืนยันการจองได้หรือไม่ (ต้องเป็น pending, ไม่หมดอายุ, และหนังสือมีจำนวนเพียงพอ)
 - ตรวจสอบว่าสามารถยกเลิกการจองได้หรือไม่ (สถานะต้องเป็น pending หรือ confirmed)
-- 1 batch สามารถมีหลาย reservation items ได้
+- 1 batch สามารถมีหลาย hold items ได้
 
 #### Database Tables Created:
 
-- `reservation_batches`
-- `reservations`
+- `holds`
+- `holds`
 
 #### Deliverables:
 
 - ✅ Models ของการจองพร้อมใช้งาน
-- ✅ สร้าง reservation batch ได้
-- ✅ สร้าง reservation items หลายเล่มใน batch เดียวได้
-- ✅ ความสัมพันธ์ user -> reservation_batches -> reservations ถูกต้อง
+- ✅ สร้าง hold ได้
+- ✅ สร้าง hold items หลายเล่มใน batch เดียวได้
+- ✅ ความสัมพันธ์ user -> holds -> hold_items ถูกต้อง
 
 ---
 
@@ -1199,7 +1199,7 @@ class BookAdmin(admin.ModelAdmin):
 #### What was done:
 
 - สร้าง Django project `config/`
-- สร้าง apps ทั้งหมด: `users`, `books`, `reservations`, `loans`, `fines`
+- สร้าง apps ทั้งหมด: `users`, `books`, `holds`, `loans`, `fines`
 - ตั้งค่า `requirements.txt` พร้อม dependencies
 - ตั้งค่า database (SQLite for development)
 - ตั้งค่า media files configuration
@@ -1313,7 +1313,7 @@ class BookAdmin(admin.ModelAdmin):
 
 - [ ] สร้างหน้า home page
 - [ ] สร้างหน้า book list และ book detail
-- [ ] สร้างหน้า my reservations
+- [ ] สร้างหน้า my holds
 - [ ] สร้างหน้า my loans
 - [ ] สร้างหน้า my fines
 - [ ] เพิ่ม search และ filter ใน book list
@@ -1338,7 +1338,7 @@ digital-library/
 ├── config/              # Django project settings
 ├── books/               # Books app (✅ Complete)
 ├── users/               # Users app (ready)
-├── reservations/        # Reservations app (pending)
+├── holds/        # Holds app (pending)
 ├── loans/               # Loans app (pending)
 ├── fines/               # Fines app (pending)
 ├── media/               # Media files
@@ -1372,10 +1372,10 @@ digital-library/
 
 - `0001_initial.py` - สร้าง tables: authors, categories, publishers, books, book_authors, book_categories
 
-### Reservations App
+### Holds App
 
-- `0001_initial.py` - สร้าง table: reservation_batches
-- `0002_initial.py` - สร้าง table: reservations
+- `0001_initial.py` - สร้าง table: holds
+- `0002_initial.py` - สร้าง table: holds
 
 ### Loans App
 

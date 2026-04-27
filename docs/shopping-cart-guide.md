@@ -61,16 +61,16 @@ class Cart:
 3. แสดง success message
 4. Reload cart page
 
-### 4. Confirm Reservation
+### 4. Confirm Hold
 
 1. User คลิก "ยืนยันการจอง"
 2. ระบบตรวจสอบ availability ทุกเล่ม (with `select_for_update()`)
 3. ถ้ามีหนังสือไม่พร้อมยืม → แสดง error
-4. สร้าง `ReservationBatch` (expires ใน 3 วัน)
-5. สร้าง `Reservation` items สำหรับทุกเล่ม
+4. สร้าง `Hold` (expires ใน 3 วัน)
+5. สร้าง `Hold` items สำหรับทุกเล่ม
 6. เรียก `cart.clear()`
 7. แสดง success message
-8. Redirect ไป My Reservations
+8. Redirect ไป My Holds
 
 ## Views
 
@@ -101,7 +101,7 @@ class Cart:
 - Login required
 - Transaction atomic
 - Select for update (prevent race condition)
-- สร้าง ReservationBatch + Reservations
+- สร้าง Hold + HoldItems
 - Clear cart
 
 ## URLs
@@ -128,7 +128,7 @@ path('cart/confirm/', views.confirm_cart_view, name='confirm_cart')
   - Remove button
 - Summary card:
   - Total books count
-  - Reservation duration (3 days)
+  - Hold duration (3 days)
   - Terms and conditions
   - Confirm button (disabled if unavailable books exist)
 - Empty cart state
@@ -187,7 +187,7 @@ TEMPLATES = [{
 - ตรวจสอบ availability ทุกจุดที่สำคัญ:
   - Add to cart
   - View cart (real-time check)
-  - Confirm reservation
+  - Confirm hold
 - ป้องกันการจองหนังสือที่ไม่มีให้ยืม
 
 ## UX Features
@@ -232,7 +232,7 @@ TEMPLATES = [{
 - [ ] Save for later (wishlist)
 - [ ] Auto-remove unavailable books option
 - [ ] Cart expiration (auto-clear after X days)
-- [ ] Share cart (for group reservations)
+- [ ] Share cart (for group holds)
 - [ ] Email cart items
 
 ### Performance Optimization

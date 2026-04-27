@@ -1,6 +1,6 @@
 # Data Dictionary: Digital Library System
 
-This document describes the database schema for a digital library management system. The database consists of multiple tables that manage users, books, reservations, loans, and fines.
+This document describes the database schema for a digital library management system. The database consists of multiple tables that manage users, books, holds, loans, and fines.
 
 ---
 
@@ -41,7 +41,7 @@ This document describes the database schema for a digital library management sys
 | `description`        | text         | nullable                            | Book description or summary                                        |
 | `image_url`          | varchar(255) | nullable                            | File path / URL to book cover image (stored by Django file fields) |
 | `total_quantity`     | int          | not null, default `0`, check `>= 0` | Total copies of this book in the library (including borrowed ones) |
-| `available_quantity` | int          | not null, default `0`, check `>= 0` | Number of copies currently available for borrowing or reservation  |
+| `available_quantity` | int          | not null, default `0`, check `>= 0` | Number of copies currently available for borrowing or hold  |
 | `publish_year`       | int          | nullable, check `>= 0`              | Year the book was published                                        |
 | `publisher_id`       | int          | FK -> `publishers.id`, nullable     | Foreign key reference to publisher                                 |
 | `created_at`         | timestamp    | default `now()`                     | Timestamp when book was added to system                            |
@@ -114,40 +114,40 @@ This document describes the database schema for a digital library management sys
 
 ---
 
-## Table: `reservation_batches` (Reservation Transactions)
+## Table: `holds` (Hold Transactions)
 
 | Field        | Type        | Constraints                                                                                      | Description                                                                                                                                                                        |
 | ------------ | ----------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | int         | PK, increment                                                                                    | Primary key - Reservation batch identifier                                                                                                                                         |
-| `user_id`    | int         | not null, FK -> `users.id`                                                                       | Foreign key to user who made the reservation                                                                                                                                       |
+| `id`         | int         | PK, increment                                                                                    | Primary key - Hold identifier                                                                                                                                         |
+| `user_id`    | int         | not null, FK -> `users.id`                                                                       | Foreign key to user who made the hold                                                                                                                                       |
 | `status`     | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `completed`, `expired`, `cancelled`) | Batch status: `pending` = awaiting approval, `confirmed` = approved/pending pickup, `completed` = user picked up books, `expired` = pickup window expired, `cancelled` = cancelled |
-| `expires_at` | timestamp   | **nullable**                                                                                     | Expiry time for confirmed reservation - **Automatically set to 3 days from confirmation when admin confirms reservation** (null for pending reservations awaiting confirmation)    |
-| `created_at` | timestamp   | default `now()`                                                                                  | Timestamp when reservation batch was created                                                                                                                                       |
+| `expires_at` | timestamp   | **nullable**                                                                                     | Expiry time for confirmed hold - **Automatically set to 3 days from confirmation when admin confirms hold** (null for pending holds awaiting confirmation)    |
+| `created_at` | timestamp   | default `now()`                                                                                  | Timestamp when hold was created                                                                                                                                       |
 
-**Purpose:** Header/parent record for a single reservation transaction. One reservation batch can contain multiple books (stored in `reservations` table).
+**Purpose:** Header/parent record for a single hold transaction. One hold can contain multiple books (stored in `hold_items` table).
 
 **Business Rules:**
 
-- `expires_at` is **null** when user creates reservation (status = `pending`)
-- Admin confirms reservation → `expires_at` is **automatically set** to 3 days from confirmation time (configurable via `RESERVATION_EXPIRY_DAYS` setting)
+- `expires_at` is **null** when user creates hold (status = `pending`)
+- Admin confirms hold → `expires_at` is **automatically set** to 3 days from confirmation time (configurable via `HOLD_EXPIRY_DAYS` setting)
 - เมื่อผู้ใช้มารับหนังสือแล้ว ให้เปลี่ยน `status` เป็น `completed`
-- User must pick up books before `expires_at` or the reservation will be cancelled
-- User can cancel reservation while status is `pending`
+- User must pick up books before `expires_at` or the hold will be cancelled
+- User can cancel hold while status is `pending`
 - Once confirmed, only admin can cancel
 
 ---
 
-## Table: `reservations` (Individual Reserved Books)
+## Table: `hold_items` (Individual Held Books)
 
 | Field                  | Type        | Constraints                                                              | Description                                                                                 |
 | ---------------------- | ----------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `id`                   | int         | PK, increment                                                            | Primary key - Individual reservation item identifier                                        |
+| `id`                   | int         | PK, increment                                                            | Primary key - Individual hold item identifier                                        |
 | `book_id`              | int         | not null, FK -> `books.id`                                               | Foreign key to the book being reserved                                                      |
-| `reservation_batch_id` | int         | not null, FK -> `reservation_batches.id`                                 | Foreign key to parent reservation batch                                                     |
+| `hold_id`              | int         | not null, FK -> `holds.id`                                  | Foreign key to parent hold                                                              |
 | `status`               | varchar(20) | not null, default `pending`, check (`pending`, `confirmed`, `cancelled`) | Item status: `pending` = awaiting approval, `confirmed` = reserved, `cancelled` = cancelled |
-| `created_at`           | timestamp   | default `now()`                                                          | Timestamp when reservation item was created                                                 |
+| `created_at`           | timestamp   | default `now()`                                                          | Timestamp when hold item was created                                                 |
 
-**Purpose:** Child/detail records for individual books within a reservation batch. Each record represents one book reserved in a transaction.
+**Purpose:** Child/detail records for individual books within a hold. Each record represents one book reserved in a transaction.
 
 ---
 
@@ -179,12 +179,12 @@ This document describes the database schema for a digital library management sys
 | `id`             | int         | PK, increment                                                        | Primary key - Individual loan item identifier                                                                              |
 | `book_id`        | int         | not null, FK -> `books.id`                                           | Foreign key to the book being borrowed                                                                                     |
 | `loan_batch_id`  | int         | not null, FK -> `loan_batches.id`                                    | Foreign key to parent loan batch                                                                                           |
-| `reservation_id` | int         | nullable, **unique**, FK -> `reservations.id`                        | Foreign key to reservation (if this loan originated from a reservation) — **one reservation item can only be loaned once** |
+| `hold_item_id` | int         | nullable, **unique**, FK -> `hold_items.id`                   | Foreign key to hold item (if this loan originated from a hold) — **one hold item can only be loaned once** |
 | `status`         | varchar(20) | not null, default `borrowed`, check (`borrowed`, `returned`, `lost`) | Item status: `borrowed` = currently out, `returned` = returned, `lost` = lost/missing                                      |
 | `returned_at`    | timestamp   | nullable                                                             | Actual return timestamp (null if not yet returned)                                                                         |
 | `created_at`     | timestamp   | default `now()`                                                      | Timestamp when loan item was created                                                                                       |
 
-**Purpose:** Child/detail records for individual books within a loan batch. Each record represents one book borrowed in a transaction. Links to `reservations` if the loan was made from a prior reservation.
+**Purpose:** Child/detail records for individual books within a loan batch. Each record represents one book borrowed in a transaction. Links to `hold_items` if the loan was made from a prior hold.
 
 ---
 
@@ -237,18 +237,18 @@ This document describes the database schema for a digital library management sys
 - `book_categories.book_id` → `books.id` (Many-to-many junction)
 - `book_categories.category_id` → `categories.id` (Many-to-many junction)
 
-### Reservation Workflow:
+### Hold Workflow:
 
-- `reservation_batches.user_id` → `users.id` (Many reservation batches per user)
-- `reservations.book_id` → `books.id` (Each reservation item references a book)
-- `reservations.reservation_batch_id` → `reservation_batches.id` (Many items in one batch)
+- `holds.user_id` → `users.id` (Many holds per user)
+- `hold_items.book_id` → `books.id` (Each hold item references a book)
+- `hold_items.hold_id` → `holds.id` (Many items in one hold)
 
 ### Loan Workflow:
 
 - `loan_batches.user_id` → `users.id` (Many loan batches per user)
 - `loan_items.book_id` → `books.id` (Each loan item references a book)
 - `loan_items.loan_batch_id` → `loan_batches.id` (Many items in one batch)
-- `loan_items.reservation_id` → `reservations.id` (Optional: links loan to original reservation)
+- `loan_items.hold_item_id` → `hold_items.id` (Optional: links loan to original hold item)
 
 ### Fines:
 
@@ -261,6 +261,6 @@ This document describes the database schema for a digital library management sys
 
 1. **User Registration**: Users are managed via Django's built-in User model with custom `phone_number` field
 2. **Book Catalog**: Books can have multiple authors and categories through junction tables
-3. **Reservation Process**: Users create reservation batches containing multiple books, with expiration dates
-4. **Loan Process**: Books can be borrowed either from reservations or directly. Loan batches track multiple books with a common due date
+3. **Hold Process**: Users create holds containing multiple books, with expiration dates
+4. **Loan Process**: Books can be borrowed either from holds or directly. Loan batches track multiple books with a common due date
 5. **Fine Management**: Overdue, lost, or damaged books generate fines that must be paid
